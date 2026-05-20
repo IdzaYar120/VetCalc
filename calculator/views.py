@@ -2,7 +2,16 @@ import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from core import calculate_cri, calculate_bsa, SPECIES_K_FACTORS, SUPPORTED_DRUGS, COMPATIBILITY_MATRIX
+from core import (
+    calculate_cri, 
+    calculate_bsa, 
+    calculate_fluid_therapy,
+    calculate_potassium,
+    calculate_emergency_doses,
+    SPECIES_K_FACTORS, 
+    SUPPORTED_DRUGS, 
+    COMPATIBILITY_MATRIX
+)
 
 def dashboard_view(request):
     """
@@ -130,3 +139,83 @@ def api_audit_compatibility(request):
             
     except Exception as e:
         return JsonResponse({"error": f"Помилка при аудиті: {str(e)}"}, status=500)
+
+@csrf_exempt
+def api_calculate_fluid_therapy(request):
+    """
+    JSON API для розрахунку інфузійної терапії (відновлення дегідратації).
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Дозволено лише запити POST."}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        weight_kg = float(data.get("weight_kg", 0))
+        dehydration_percent = float(data.get("dehydration_percent", 0))
+        maintenance_rate_ml_kg_day = float(data.get("maintenance_rate_ml_kg_day", 50))
+        ongoing_losses_ml_day = float(data.get("ongoing_losses_ml_day", 0))
+        drip_factor = int(data.get("drip_factor", 20))
+        
+        results = calculate_fluid_therapy(
+            weight_kg=weight_kg,
+            dehydration_percent=dehydration_percent,
+            maintenance_rate_ml_kg_day=maintenance_rate_ml_kg_day,
+            ongoing_losses_ml_day=ongoing_losses_ml_day,
+            drip_factor=drip_factor
+        )
+        return JsonResponse(results)
+        
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Помилка при розрахунку інфузійної терапії: {str(e)}"}, status=500)
+
+@csrf_exempt
+def api_calculate_potassium(request):
+    """
+    JSON API для розрахунку безпечного введення калію.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Дозволено лише запити POST."}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        weight_kg = float(data.get("weight_kg", 0))
+        bag_volume_ml = float(data.get("bag_volume_ml", 0))
+        infusion_rate_ml_hr = float(data.get("infusion_rate_ml_hr", 0))
+        target_k_dose_meq_kg_hr = float(data.get("target_k_dose_meq_kg_hr", 0))
+        k_ampoule_conc_meq_ml = float(data.get("k_ampoule_conc_meq_ml", 2.0))
+        
+        results = calculate_potassium(
+            weight_kg=weight_kg,
+            bag_volume_ml=bag_volume_ml,
+            infusion_rate_ml_hr=infusion_rate_ml_hr,
+            target_k_dose_meq_kg_hr=target_k_dose_meq_kg_hr,
+            k_ampoule_conc_meq_ml=k_ampoule_conc_meq_ml
+        )
+        return JsonResponse(results)
+        
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Помилка при розрахунку безпеки калію: {str(e)}"}, status=500)
+
+@csrf_exempt
+def api_calculate_emergency(request):
+    """
+    JSON API для розрахунку екстрених реанімаційних доз CPR.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Дозволено лише запити POST."}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        weight_kg = float(data.get("weight_kg", 0))
+        
+        results = calculate_emergency_doses(weight_kg=weight_kg)
+        return JsonResponse(results)
+        
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Помилка при розрахунку екстрених доз: {str(e)}"}, status=500)

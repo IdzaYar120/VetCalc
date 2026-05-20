@@ -461,7 +461,10 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('cri-tab', this)">⚡ Постійна Інфузія (CRI)</button>
         <button class="tab-btn" onclick="switchTab('bsa-tab', this)">📊 Розрахунок площі тіла (BSA)</button>
-        <button class="tab-btn" onclick="switchTab('compat-tab', this)">🧪 Аудитор сумісності ліків</button>
+        <button class="tab-btn" onclick="switchTab('fluid-tab', this)">💧 Інфузійна терапія (Гідратація)</button>
+        <button class="tab-btn" onclick="switchTab('potassium-tab', this)">🧪 Безпека калію (K-max)</button>
+        <button class="tab-btn" onclick="switchTab('emergency-tab', this)">🚨 Реанімація (CPR)</button>
+        <button class="tab-btn" onclick="switchTab('compat-tab', this)">🔍 Аудитор сумісності ліків</button>
     </div>
 
     <!-- ---------------- ТАБ А: ПОСТІЙНА ІНФУЗІЯ (CRI) ---------------- -->
@@ -631,7 +634,305 @@
         </div>
     </div>
 
-    <!-- ---------------- ТАБ В: СУМІСНІСТЬ ЛІКІВ ---------------- -->
+    <!-- ---------------- ТАБ В: ІНФУЗІЙНА ТЕРАПІЯ (ГІДРАТАЦІЯ) ---------------- -->
+    <div id="fluid-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані Fluid Therapy -->
+            <div class="card">
+                <div class="card-title">📋 Параметри пацієнта та дегідратації</div>
+                <div id="fluid-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="fluid-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="fluid-weight" value="10.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fluid-dehydration">Дефіцит зневоднення (дегідратація, %)</label>
+                    <div class="input-group">
+                        <input type="number" id="fluid-dehydration" value="6.0" step="0.5" min="0" max="15">
+                        <span class="unit-addon">%</span>
+                    </div>
+                    <small style="color: var(--gray-text); font-size: 0.85rem; display: block; margin-top: 4px;">
+                        Легке: 5-6%, Середнє: 7-9%, Тяжке: 10-12%, Шок: 12-15%
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="fluid-maintenance">Фізіологічна добова потреба (Maintenance rate)</label>
+                    <div class="input-group">
+                        <input type="number" id="fluid-maintenance" value="50.0" step="5" min="0">
+                        <span class="unit-addon">мл/кг/добу</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fluid-losses">Поточні патологічні втрати (блювота, діарея тощо)</label>
+                    <div class="input-group">
+                        <input type="number" id="fluid-losses" value="100.0" step="10" min="0">
+                        <span class="unit-addon">мл/добу</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fluid-drip-factor">Фактор крапельниці (крапель/мл)</label>
+                    <div class="input-group">
+                        <select id="fluid-drip-factor">
+                            <option value="10">10 крапель/мл</option>
+                            <option value="15">15 крапель/мл</option>
+                            <option value="20" selected>20 крапель/мл</option>
+                            <option value="60">60 крапель/мл (мікрокрапельниця)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати Fluid Therapy -->
+            <div class="card">
+                <div class="card-title">📈 Результати розрахунку гідратації</div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="fluid-res-deficit">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span></div>
+                        <div class="metric-label">1. Об'єм дефіциту рідини (Rehydration)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="fluid-res-maintenance">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span></div>
+                        <div class="metric-label">2. Фізіологічна добова потреба (Maintenance)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="fluid-res-total">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span></div>
+                        <div class="metric-label">3. Загальний необхідний добовий об'єм</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="fluid-res-rate" style="color: var(--dark);">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span></div>
+                        <div class="metric-label">4. Швидкість потоку інфузомату</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="fluid-res-drip">0.00 <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span></div>
+                        <div class="metric-label">5. Швидкість введення крапельниці</div>
+                    </div>
+                </div>
+
+                <div class="math-box">
+                    <h4>🧮 Покроковий аудит гідратації:</h4>
+                    <p><strong>1. Дефіцит рідини (Rehydration volume):</strong></p>
+                    <div class="math-formula" id="math-fluid-deficit">Розрахунок...</div>
+                    <p><strong>2. Добова фізіологічна потреба:</strong></p>
+                    <div class="math-formula" id="math-fluid-maintenance">Розрахунок...</div>
+                    <p><strong>3. Загальний добовий об'єм інфузії:</strong></p>
+                    <div class="math-formula" id="math-fluid-total">Розрахунок...</div>
+                    <p><strong>4. Годинний потік розчину та краплі:</strong></p>
+                    <div class="math-formula" id="math-fluid-rate-drip">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ Г: БЕЗПЕКА КАЛІЮ (K-MAX) ---------------- -->
+    <div id="potassium-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані Potassium -->
+            <div class="card">
+                <div class="card-title">📋 Параметри введення та розведення калію</div>
+                <div id="potassium-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="k-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="k-weight" value="15.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="k-bag-volume">Об'єм флакону базового розчину (мл)</label>
+                    <div class="input-group">
+                        <input type="number" id="k-bag-volume" value="500.0" step="50" min="1">
+                        <span class="unit-addon">мл</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="k-infusion-rate">Швидкість інфузії розчину (мл/год)</label>
+                    <div class="input-group">
+                        <input type="number" id="k-infusion-rate" value="60.0" step="5" min="0.1">
+                        <span class="unit-addon">мл/год</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="k-target-dose">Бажана доза калію (мЕкв/кг/год) — <strong>K-max ліміт</strong></label>
+                    <div class="input-group">
+                        <input type="number" id="k-target-dose" value="0.2" step="0.05" min="0" max="1.5">
+                        <span class="unit-addon">мЕкв/кг/год</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <input type="range" id="k-target-dose-range" min="0" max="1.0" step="0.05" value="0.2" style="width: 100%; accent-color: var(--primary);">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--gray-text); margin-top: 4px;">
+                            <span>0.0 (без калію)</span>
+                            <span style="color: var(--danger-dark); font-weight: bold;">0.5 (Безпечний максимум)</span>
+                            <span>1.0 (Екстремальний)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="k-ampoule-conc">Концентрація ампули KCl (мЕкв/мл)</label>
+                    <div class="input-group">
+                        <select id="k-ampoule-conc">
+                            <option value="1.0">1.0 мЕкв/мл (KCl 7.5%)</option>
+                            <option value="1.34">1.34 мЕкв/мл (KCl 10%)</option>
+                            <option value="2.0" selected>2.0 мЕкв/мл (KCl 15%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати Potassium -->
+            <div class="card">
+                <div class="card-title">🛡️ Аудит безпеки калію та розведення</div>
+                
+                <!-- Банер безпеки (реактивний) -->
+                <div id="k-safety-alert" class="success-card">
+                    <div class="success-title">✅ Показники безпеки в межах норми</div>
+                    <div class="success-text">Введена швидкість калію не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="k-res-hourly-dose">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/год</span></div>
+                        <div class="metric-label">1. Годинне надходження калію пацієнту</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="k-res-conc-in-fluid">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/мл</span></div>
+                        <div class="metric-label">2. Необхідна концентрація калію в суміші</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="k-res-total-needed">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span></div>
+                        <div class="metric-label">3. Загальна доза калію на весь флакон</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="k-res-volume-added" style="color: var(--primary-dark);">0.00 <span style="font-size: 1.1rem; color: var(--gray-text);">мл</span></div>
+                        <div class="metric-label" style="font-weight: 700; color: var(--dark);">4. ОБ'ЄМ розчину KCl з ампули ДЛЯ ДОДАВАННЯ у флакон</div>
+                    </div>
+                </div>
+
+                <div class="math-box" style="margin-top: 20px;">
+                    <h4>🧮 Покроковий калійний аудит:</h4>
+                    <p><strong>1. Розрахунок годинної дози пацієнту:</strong></p>
+                    <div class="math-formula" id="math-k-hourly">Розрахунок...</div>
+                    <p><strong>2. Концентрація калію у флаконі:</strong></p>
+                    <div class="math-formula" id="math-k-conc">Розрахунок...</div>
+                    <p><strong>3. Об'єм KCl для введення у флакон:</strong></p>
+                    <div class="math-formula" id="math-k-volume">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ Д: РЕАНІМАЦІЙНІ ДОЗИ (CPR) ---------------- -->
+    <div id="emergency-tab" class="tab-content">
+        <div class="card">
+            <div class="card-title">🚨 Реанімаційний калькулятор першої лінії (CPR Emergency List)</div>
+            <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.95rem;">
+                Миттєве відображення точних клінічних об'ємів лікарських засобів для невідкладної ветеринарної допомоги на основі ваги пацієнта (за стандартами RECOVER Initiative).
+            </p>
+
+            <div class="form-group" style="max-width: 400px; margin-bottom: 25px;">
+                <label for="emergency-weight" style="font-size: 1.1rem;">Введіть точну вагу пацієнта (кг):</label>
+                <div class="input-group">
+                    <input type="number" id="emergency-weight" value="10.0" step="0.1" min="0.01" style="font-size: 1.2rem; padding: 12px 16px;">
+                    <span class="unit-addon" style="font-size: 1.1rem; padding: 12px 20px;">кг</span>
+                </div>
+            </div>
+
+            <div id="emergency-error-banner" class="alert-error" style="display: none;"></div>
+
+            <div class="matrix-container">
+                <table class="compatibility-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; width: 22%;">Препарат та концентрація</th>
+                            <th style="width: 15%;">Показання до введення</th>
+                            <th style="width: 13%;">Клінічна доза</th>
+                            <th style="width: 15%;">Абсолютна доза (мг)</th>
+                            <th style="width: 18%; text-align: center; background-color: var(--primary-light); color: var(--primary-dark); font-weight: bold; font-size: 1.05rem;">
+                                ОБ'ЄМ ДЛЯ ВВЕДЕННЯ (мл)
+                            </th>
+                            <th style="width: 17%;">Примітки безпеки</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Адреналін (Епінефрин)</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">1 мг/мл (1:1000)</span></td>
+                            <td>Зупинка серця / CPR<br>(Низька доза)</td>
+                            <td>0.01 мг/кг</td>
+                            <td id="em-adr-low-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                            <td id="em-adr-low-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--success); background-color: #f7fbf9;">0.00 мл</td>
+                            <td id="em-adr-low-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Адреналін (Епінефрин)</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">1 мг/мл (1:1000)</span></td>
+                            <td>Зупинка серця / CPR<br>(Висока доза)</td>
+                            <td>0.1 мг/кг</td>
+                            <td id="em-adr-high-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                            <td id="em-adr-high-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--danger-dark); background-color: #fffafa;">0.00 мл</td>
+                            <td id="em-adr-high-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Атропін сульфат</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">0.5 мг/мл</span></td>
+                            <td>Брадикардія, асистолія, CPR</td>
+                            <td>0.04 мг/кг</td>
+                            <td id="em-atr-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                            <td id="em-atr-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--dark);">0.00 мл</td>
+                            <td id="em-atr-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Лідокаїн 2%</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">20 мг/мл</span></td>
+                            <td>Шлуночкова аритмія<br>(<strong>СОБАКИ</strong>)</td>
+                            <td>2.0 мг/кг</td>
+                            <td id="em-lido-dog-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                            <td id="em-lido-dog-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--dark);">0.00 мл</td>
+                            <td id="em-lido-dog-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Лідокаїн 2%</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">20 мг/мл</span></td>
+                            <td>⚠️ Шлуночкова аритмія<br>(<strong>КОТИ</strong>)</td>
+                            <td>0.2 мг/кг</td>
+                            <td id="em-lido-cat-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                            <td id="em-lido-cat-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--danger-dark); background-color: #fffdf5;">0.00 мл</td>
+                            <td id="em-lido-cat-info" style="font-size: 0.85rem; color: var(--gray-text); font-weight: 500;">Завантаження...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Налоксон</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">0.4 мг/мл</span></td>
+                            <td>Передозування опіоїдів, апное</td>
+                            <td>0.04 мг/кг</td>
+                            <td id="em-nal-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                            <td id="em-nal-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--dark);">0.00 мл</td>
+                            <td id="em-nal-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Дексаметазон</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">4 мг/мл</span></td>
+                            <td>Анафілактичний шок, криза</td>
+                            <td>1.0 мг/кг</td>
+                            <td id="em-dex-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                            <td id="em-dex-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--dark);">0.00 мл</td>
+                            <td id="em-dex-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 15px; background-color: var(--dark-light); border-radius: 8px; padding: 15px; font-size: 0.9rem; color: var(--gray-text); border: 1px solid var(--border);">
+                ℹ️ <strong>Клінічна примітка RECOVER:</strong> Дозування розраховані для негайного внутрішньовенного (IV) або внутрішньокісткового (IO) введення. У разі відсутності IV/IO доступу, деякі препарати (Адреналін, Атропін, Налоксон) можуть бути введені ендотрахеально (IT) у подвоєному дозуванні, розведені фізрозчином.
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ Е: СУМІСНІСТЬ ЛІКІВ ---------------- -->
     <div id="compat-tab" class="tab-content">
         <div class="card">
             <div class="card-title">🧪 Інтерактивний аудит суміші препаратів</div>
@@ -961,6 +1262,293 @@
         });
     }
 
+    // 3. Автоматичний розрахунок інфузійної терапії (Гідратація)
+    function runFluidCalculation() {
+        const weight = parseFloat(document.getElementById('fluid-weight').value) || 0;
+        const dehydration = parseFloat(document.getElementById('fluid-dehydration').value) || 0;
+        const maintenance = parseFloat(document.getElementById('fluid-maintenance').value) || 0;
+        const losses = parseFloat(document.getElementById('fluid-losses').value) || 0;
+        const dripFactor = parseInt(document.getElementById('fluid-drip-factor').value) || 20;
+
+        const errorBanner = document.getElementById('fluid-error-banner');
+
+        if (weight <= 0) {
+            showFluidError("❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.");
+            return;
+        }
+        if (dehydration < 0 || dehydration > 15) {
+            showFluidError("❌ Помилка валідації: Дефіцит зневоднення має бути в межах від 0% до 15%.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        fetch('/api/calculate-fluid-therapy/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                weight_kg: weight,
+                dehydration_percent: dehydration,
+                maintenance_rate_ml_kg_day: maintenance,
+                ongoing_losses_ml_day: losses,
+                drip_factor: dripFactor
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('fluid-res-deficit').innerHTML = `${data.dehydration_deficit_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+            document.getElementById('fluid-res-maintenance').innerHTML = `${data.maintenance_ml_day.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
+            document.getElementById('fluid-res-total').innerHTML = `${data.total_fluid_required_ml_day.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
+            document.getElementById('fluid-res-rate').innerHTML = `${data.hourly_fluid_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
+            document.getElementById('fluid-res-drip').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
+
+            // Покроковий аудит
+            document.getElementById('math-fluid-deficit').textContent = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${data.dehydration_deficit_ml.toFixed(2)} мл рідини`;
+            document.getElementById('math-fluid-maintenance').textContent = `Maintenance = ${weight} кг * ${maintenance} мл/кг/добу = ${data.maintenance_ml_day.toFixed(2)} мл/добу`;
+            document.getElementById('math-fluid-total').textContent = `Total = ${data.dehydration_deficit_ml.toFixed(2)} мл (дефіцит) + ${data.maintenance_ml_day.toFixed(2)} мл (потреба) + ${losses} мл (втрати) = ${data.total_fluid_required_ml_day.toFixed(2)} мл/добу`;
+            document.getElementById('math-fluid-rate-drip').innerHTML = `Потік = ${data.total_fluid_required_ml_day.toFixed(2)} мл / 24 год = <strong>${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год</strong><br>` +
+                `Краплі = (${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = <strong>${data.drops_per_minute.toFixed(2)} крапель/хв</strong>`;
+        })
+        .catch(err => {
+            showFluidError(`❌ Помилка: ${err.message}`);
+        });
+    }
+
+    function showFluidError(msg) {
+        const errorBanner = document.getElementById('fluid-error-banner');
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetFluidResults();
+    }
+
+    function resetFluidResults() {
+        document.getElementById('fluid-res-deficit').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+        document.getElementById('fluid-res-maintenance').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
+        document.getElementById('fluid-res-total').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
+        document.getElementById('fluid-res-rate').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
+        document.getElementById('fluid-res-drip').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
+        document.getElementById('math-fluid-deficit').textContent = "Розрахунок скасовано.";
+        document.getElementById('math-fluid-maintenance').textContent = "Розрахунок скасовано.";
+        document.getElementById('math-fluid-total').textContent = "Розрахунок скасовано.";
+        document.getElementById('math-fluid-rate-drip').textContent = "Розрахунок скасовано.";
+    }
+
+    // 4. Автоматичний розрахунок безпеки калію (K-max)
+    function runPotassiumCalculation() {
+        const weight = parseFloat(document.getElementById('k-weight').value) || 0;
+        const bagVolume = parseFloat(document.getElementById('k-bag-volume').value) || 0;
+        const infusionRate = parseFloat(document.getElementById('k-infusion-rate').value) || 0;
+        const targetDose = parseFloat(document.getElementById('k-target-dose').value) || 0;
+        const ampouleConc = parseFloat(document.getElementById('k-ampoule-conc').value) || 2.0;
+
+        const errorBanner = document.getElementById('potassium-error-banner');
+        const safetyAlert = document.getElementById('k-safety-alert');
+
+        if (weight <= 0) {
+            showPotassiumError("❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.");
+            return;
+        }
+        if (bagVolume <= 0) {
+            showPotassiumError("❌ Помилка валідації: Об'єм флакону розчину повинен бути строго більше 0 мл.");
+            return;
+        }
+        if (infusionRate <= 0) {
+            showPotassiumError("❌ Помилка валідації: Швидкість інфузії повинна бути строго більше 0 мл/год.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        fetch('/api/calculate-potassium/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                weight_kg: weight,
+                bag_volume_ml: bagVolume,
+                infusion_rate_ml_hr: infusionRate,
+                target_k_dose_meq_kg_hr: targetDose,
+                k_ampoule_conc_meq_ml: ampouleConc
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('k-res-hourly-dose').innerHTML = `${data.hourly_k_delivered_meq_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/год</span>`;
+            document.getElementById('k-res-conc-in-fluid').innerHTML = `${data.required_k_concentration_meq_ml.toFixed(4)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/мл</span>`;
+            document.getElementById('k-res-total-needed').innerHTML = `${data.total_k_needed_for_bag_meq.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
+            document.getElementById('k-res-volume-added').innerHTML = `${data.kcl_volume_to_add_ml.toFixed(2)} <span style="font-size: 1.1rem; color: var(--gray-text);">мл</span>`;
+
+            // Реактивне оновлення банера безпеки
+            if (data.is_safe) {
+                safetyAlert.className = "success-card";
+                safetyAlert.style.borderLeft = "4px solid var(--success)";
+                safetyAlert.innerHTML = `
+                    <div class="success-title">✅ Показники безпеки в межах норми</div>
+                    <div class="success-text">Введена швидкість калію (${targetDose.toFixed(2)} мЕкв/кг/год) не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
+                `;
+            } else {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
+                safetyAlert.innerHTML = `
+                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;">🚨 КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</div>
+                    <div class="danger-text" style="color: var(--danger-dark); font-weight: 500;">
+                        Розраховане введення калію становить <strong>${targetDose.toFixed(2)} мЕкв/кг/год</strong>, що ПЕРЕВИЩУЄ кардіологічний ліміт безпеки <strong>0.5 мЕкв/кг/год</strong>!<br>
+                        Негайне введення цієї суміші може спровокувати смертельну аритмію або зупинку серця! Будь ласка, зменшіть цільову дозу або швидкість інфузії!
+                    </div>
+                `;
+            }
+
+            // Покроковий аудит
+            document.getElementById('math-k-hourly').textContent = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год`;
+            document.getElementById('math-k-conc').textContent = `C_K = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл`;
+            document.getElementById('math-k-volume').textContent = `V_KCl = (${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${data.kcl_volume_to_add_ml.toFixed(2)} мл`;
+        })
+        .catch(err => {
+            showPotassiumError(`❌ Помилка: ${err.message}`);
+        });
+    }
+
+    function showPotassiumError(msg) {
+        const errorBanner = document.getElementById('potassium-error-banner');
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetPotassiumResults();
+    }
+
+    function resetPotassiumResults() {
+        document.getElementById('k-res-hourly-dose').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/год</span>`;
+        document.getElementById('k-res-conc-in-fluid').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/мл</span>`;
+        document.getElementById('k-res-total-needed').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
+        document.getElementById('k-res-volume-added').innerHTML = `0.00 <span style="font-size: 1.1rem; color: var(--gray-text);">мл</span>`;
+        document.getElementById('math-k-hourly').textContent = "Розрахунок скасовано.";
+        document.getElementById('math-k-conc').textContent = "Розрахунок скасовано.";
+        document.getElementById('math-k-volume').textContent = "Розрахунок скасовано.";
+
+        const safetyAlert = document.getElementById('k-safety-alert');
+        safetyAlert.className = "success-card";
+        safetyAlert.innerHTML = `
+            <div class="success-title">✅ Очікування коректних даних</div>
+            <div class="success-text">Введіть коректні параметри пацієнта для розрахунку калійної безпеки.</div>
+        `;
+    }
+
+    // 5. Автоматичний розрахунок реанімаційних доз CPR (Emergency)
+    function runEmergencyCalculation() {
+        const weight = parseFloat(document.getElementById('emergency-weight').value) || 0;
+        const errorBanner = document.getElementById('emergency-error-banner');
+
+        if (weight <= 0) {
+            errorBanner.textContent = "❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.";
+            errorBanner.style.display = 'block';
+            resetEmergencyResults();
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        fetch('/api/calculate-emergency/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                weight_kg: weight
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            const drugs = data.emergency_drugs;
+            
+            // Адреналін низька доза
+            const adrLow = drugs.adrenaline_low;
+            document.getElementById('em-adr-low-mg').textContent = `${adrLow.absolute_dose_mg.toFixed(3)} мг`;
+            document.getElementById('em-adr-low-ml').textContent = `${adrLow.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-adr-low-info').textContent = adrLow.safety_notes;
+
+            // Адреналін висока доза
+            const adrHigh = drugs.adrenaline_high;
+            document.getElementById('em-adr-high-mg').textContent = `${adrHigh.absolute_dose_mg.toFixed(3)} мг`;
+            document.getElementById('em-adr-high-ml').textContent = `${adrHigh.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-adr-high-info').textContent = adrHigh.safety_notes;
+
+            // Атропін
+            const atr = drugs.atropine;
+            document.getElementById('em-atr-mg').textContent = `${atr.absolute_dose_mg.toFixed(3)} мг`;
+            document.getElementById('em-atr-ml').textContent = `${atr.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-atr-info').textContent = atr.safety_notes;
+
+            // Лідокаїн собаки
+            const lidoDog = drugs.lidocaine_dog;
+            document.getElementById('em-lido-dog-mg').textContent = `${lidoDog.absolute_dose_mg.toFixed(3)} мг`;
+            document.getElementById('em-lido-dog-ml').textContent = `${lidoDog.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-lido-dog-info').textContent = lidoDog.safety_notes;
+
+            // Лідокаїн коти
+            const lidoCat = drugs.lidocaine_cat;
+            document.getElementById('em-lido-cat-mg').textContent = `${lidoCat.absolute_dose_mg.toFixed(3)} мг`;
+            document.getElementById('em-lido-cat-ml').textContent = `${lidoCat.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-lido-cat-info').textContent = lidoCat.safety_notes;
+
+            // Налоксон
+            const nal = drugs.naloxone;
+            document.getElementById('em-nal-mg').textContent = `${nal.absolute_dose_mg.toFixed(3)} мг`;
+            document.getElementById('em-nal-ml').textContent = `${nal.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-nal-info').textContent = nal.safety_notes;
+
+            // Дексаметазон
+            const dex = drugs.dexamethasone;
+            document.getElementById('em-dex-mg').textContent = `${dex.absolute_dose_mg.toFixed(3)} мг`;
+            document.getElementById('em-dex-ml').textContent = `${dex.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-dex-info').textContent = dex.safety_notes;
+        })
+        .catch(err => {
+            errorBanner.textContent = `❌ Помилка: ${err.message}`;
+            errorBanner.style.display = 'block';
+            resetEmergencyResults();
+        });
+    }
+
+    function resetEmergencyResults() {
+        const ids = [
+            'em-adr-low-mg', 'em-adr-low-ml',
+            'em-adr-high-mg', 'em-adr-high-ml',
+            'em-atr-mg', 'em-atr-ml',
+            'em-lido-dog-mg', 'em-lido-dog-ml',
+            'em-lido-cat-mg', 'em-lido-cat-ml',
+            'em-nal-mg', 'em-nal-ml',
+            'em-dex-mg', 'em-dex-ml'
+        ];
+        ids.forEach(id => {
+            document.getElementById(id).textContent = id.endsWith('mg') ? "0.00 мг" : "0.00 мл";
+        });
+        
+        const infoIds = [
+            'em-adr-low-info', 'em-adr-high-info', 'em-atr-info',
+            'em-lido-dog-info', 'em-lido-cat-info', 'em-nal-info', 'em-dex-info'
+        ];
+        infoIds.forEach(id => {
+            document.getElementById(id).textContent = "Очікування...";
+        });
+    }
+
     // Слухачі подій для реактивних авто-розрахунків при введенні
     // 1. Для CRI
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
@@ -976,10 +1564,48 @@
         document.getElementById(id).addEventListener('change', runBsaCalculation);
     });
 
+    // 3. Для Fluid Therapy (Гідратація)
+    const fluidInputIds = ['fluid-weight', 'fluid-dehydration', 'fluid-maintenance', 'fluid-losses', 'fluid-drip-factor'];
+    fluidInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runFluidCalculation);
+        document.getElementById(id).addEventListener('change', runFluidCalculation);
+    });
+
+    // 4. Для Potassium (Безпека калію)
+    const potassiumInputIds = ['k-weight', 'k-bag-volume', 'k-infusion-rate', 'k-target-dose', 'k-ampoule-conc'];
+    potassiumInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runPotassiumCalculation);
+        document.getElementById(id).addEventListener('change', runPotassiumCalculation);
+    });
+
+    // Зв'язування слайдера і текстового поля калію
+    const kDoseInput = document.getElementById('k-target-dose');
+    const kDoseRange = document.getElementById('k-target-dose-range');
+
+    kDoseInput.addEventListener('input', function() {
+        kDoseRange.value = this.value;
+        runPotassiumCalculation();
+    });
+
+    kDoseRange.addEventListener('input', function() {
+        kDoseInput.value = this.value;
+        runPotassiumCalculation();
+    });
+
+    // 5. Для Emergency CPR (Реанімація)
+    const emergencyInputIds = ['emergency-weight'];
+    emergencyInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runEmergencyCalculation);
+        document.getElementById(id).addEventListener('change', runEmergencyCalculation);
+    });
+
     // Первинний запуск при завантаженні для ініціалізації
     document.addEventListener('DOMContentLoaded', () => {
         runCriCalculation();
         runBsaCalculation();
+        runFluidCalculation();
+        runPotassiumCalculation();
+        runEmergencyCalculation();
     });
 </script>
 
