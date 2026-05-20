@@ -1,0 +1,987 @@
+{% load calculator_extras %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ветеринарний Аудитор Дозування та Інфузій 🐾</title>
+    <!-- Google Fonts: Outfit for clean, modern look & Roboto Mono for data displays -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #17b978;
+            --primary-light: #e8f8f1;
+            --primary-dark: #118a59;
+            --dark: #1e3d59;
+            --dark-light: #f7f9fc;
+            --border: #e1e8ed;
+            --gray-text: #657786;
+            --danger: #e53e3e;
+            --danger-light: #fff5f5;
+            --danger-dark: #c53030;
+            --success: #38a169;
+            --success-light: #f0fff4;
+            --shadow: rgba(0, 0, 0, 0.04);
+            --transition: all 0.25s ease-in-out;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f4f6f8;
+            color: #2c3e50;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            border: 1px solid var(--border);
+        }
+
+        /* Брендинг */
+        header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--dark-light);
+            padding-bottom: 20px;
+        }
+
+        .app-title {
+            color: var(--dark);
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-subtitle {
+            color: var(--primary);
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Застереження */
+        .disclaimer-banner {
+            background-color: #fff9e6;
+            border-left: 5px solid #ffb300;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: #7a5c00;
+            font-weight: 500;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 30px;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 14px 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--gray-text);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--dark);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Двоколонковий адаптивний макет */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            color: var(--dark);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--dark-light);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Форми та інпути */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--dark);
+            background-color: #ffffff;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(23, 185, 120, 0.15);
+        }
+
+        .input-group .unit-addon {
+            background-color: var(--dark-light);
+            border: 1.5px solid var(--border);
+            border-left: none;
+            padding: 10px 16px;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            font-weight: 600;
+            color: var(--gray-text);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .input-group input {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        /* Метрики результатів */
+        .metrics-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .metric-card {
+            background-color: var(--dark-light);
+            border: 1px solid #eef2f6;
+            border-radius: 10px;
+            padding: 18px;
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+            border-color: var(--border);
+        }
+
+        .metric-value {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--gray-text);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
+
+        /* Математичні розрахунки */
+        .math-box {
+            background-color: #fafbfc;
+            border: 1.5px dashed var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+
+        .math-box h4 {
+            color: var(--dark);
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .math-formula {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: block;
+            margin: 6px 0;
+            overflow-x: auto;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        /* Картки сумісності */
+        .danger-card {
+            background-color: var(--danger-light);
+            border-left: 6px solid var(--danger);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(229, 62, 62, 0.04);
+        }
+
+        .danger-title {
+            color: var(--danger-dark);
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
+
+        .danger-text {
+            color: #9b2c2c;
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+
+        .success-card {
+            background-color: var(--success-light);
+            border-left: 6px solid var(--success);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(56, 161, 105, 0.04);
+        }
+
+        .success-title {
+            color: #22543d;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
+
+        .success-text {
+            color: #276749;
+            font-size: 0.95rem;
+        }
+
+        /* Мультиселект сумісності */
+        .drug-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .checkbox-card {
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            background: #ffffff;
+            user-select: none;
+        }
+
+        .checkbox-card:hover {
+            border-color: var(--primary);
+            background-color: var(--dark-light);
+        }
+
+        .checkbox-card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .checkbox-card input {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        /* Таблиця глобальної сумісності */
+        .matrix-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table.compatibility-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: inherit;
+            min-width: 600px;
+        }
+
+        table.compatibility-table th, table.compatibility-table td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table.compatibility-table th {
+            background-color: var(--dark-light);
+            color: var(--dark);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        table.compatibility-table th:first-child {
+            text-align: left;
+        }
+
+        table.compatibility-table td:first-child {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        table.compatibility-table tr:hover {
+            background-color: #fafbfc;
+        }
+
+        .status-badge {
+            font-weight: 600;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: block;
+            width: 100%;
+        }
+
+        .status-badge.comp {
+            background-color: var(--success-light);
+            color: #137333;
+        }
+
+        .status-badge.incomp {
+            background-color: var(--danger-light);
+            color: #c5221f;
+        }
+
+        .alert-error {
+            background-color: var(--danger-light);
+            color: var(--danger-dark);
+            border: 1px solid rgba(229, 62, 62, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="app-title">🐾 Ветеринарний Аудитор Дозування та Інфузій</div>
+        <div class="app-subtitle">Автоматизована експертна система розрахунків з повним контролем безпеки</div>
+    </header>
+
+    <!-- Застереження згідно з правилами безпеки -->
+    <div class="disclaimer-banner">
+        ⚠️ <strong>Клінічне застереження:</strong> Ця програма є допоміжним інструментом підтримки прийняття рішень. 
+        Усі розраховані дози, параметри інфузій та сумісність лікарських засобів повинні бути обов'язково перевірені та підтверджені 
+        ліцензованим ветеринарним лікарем перед клінічним введенням тварині.
+    </div>
+
+    <!-- Вкладки навігації -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('cri-tab', this)">⚡ Постійна Інфузія (CRI)</button>
+        <button class="tab-btn" onclick="switchTab('bsa-tab', this)">📊 Розрахунок площі тіла (BSA)</button>
+        <button class="tab-btn" onclick="switchTab('compat-tab', this)">🧪 Аудитор сумісності ліків</button>
+    </div>
+
+    <!-- ---------------- ТАБ А: ПОСТІЙНА ІНФУЗІЯ (CRI) ---------------- -->
+    <div id="cri-tab" class="tab-content active">
+        <div class="grid-layout">
+            <!-- Вхідні дані CRI -->
+            <div class="card">
+                <div class="card-title">📋 Параметри пацієнта та інфузії</div>
+                
+                <div id="cri-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="cri-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="cri-weight" value="12.5" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cri-bag-volume">Об'єм флакону з розчином (мл)</label>
+                    <div class="input-group">
+                        <input type="number" id="cri-bag-volume" value="500.0" step="50" min="1">
+                        <span class="unit-addon">мл</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cri-dose">Цільова доза препарату</label>
+                    <div class="input-group">
+                        <input type="number" id="cri-dose" value="5.0" step="0.1" min="0">
+                        <select id="cri-dose-unit" style="max-width: 140px;">
+                            <option value="мкг/кг/хв">мкг/кг/хв</option>
+                            <option value="мг/кг/год">мг/кг/год</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cri-amp-conc">Концентрація препарату в ампулі (мг/мл)</label>
+                    <div class="input-group">
+                        <input type="number" id="cri-amp-conc" value="10.0" step="0.5" min="0.01">
+                        <span class="unit-addon">мг/мл</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cri-add-vol">Об'єм препарату, що додається у флакон (мл)</label>
+                    <div class="input-group">
+                        <input type="number" id="cri-add-vol" value="5.0" step="0.5" min="0">
+                        <span class="unit-addon">мл</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cri-drip-factor">Фактор крапельниці (крапель/мл)</label>
+                    <div class="input-group">
+                        <select id="cri-drip-factor">
+                            <option value="10">10 крапель/мл</option>
+                            <option value="15">15 крапель/мл</option>
+                            <option value="20" selected>20 крапель/мл</option>
+                            <option value="60">60 крапель/мл (мікрокрапельниця)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати CRI -->
+            <div class="card">
+                <div class="card-title">📈 Результати розрахунку інфузії</div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="cri-res-bag-conc">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мг/мл</span></div>
+                        <div class="metric-label">1. Загальна концентрація препарату у флаконі</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="cri-res-infusion-rate">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span></div>
+                        <div class="metric-label">2. Швидкість потоку інфузії</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="cri-res-drip-rate">0.00 <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span></div>
+                        <div class="metric-label">3. Швидкість введення крапельниці</div>
+                    </div>
+                </div>
+
+                <div class="math-box">
+                    <h4>🧮 Покроковий математичний аудит:</h4>
+                    <p><strong>1. Годинне дозування пацієнта:</strong></p>
+                    <div class="math-formula" id="math-hourly-dose">Розрахунок...</div>
+                    <p><strong>2. Концентрація суміші у флаконі:</strong></p>
+                    <div class="math-formula" id="math-bag-conc">Розрахунок...</div>
+                    <p><strong>3. Розрахункова швидкість інфузомату:</strong></p>
+                    <div class="math-formula" id="math-flow-rate">Розрахунок...</div>
+                    <p><strong>4. Розрахункова швидкість крапельниці:</strong></p>
+                    <div class="math-formula" id="math-drip-rate">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ Б: ТОКСИКОЛОГІЧНИЙ BSA ---------------- -->
+    <div id="bsa-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані BSA -->
+            <div class="card">
+                <div class="card-title">📋 Параметри для розрахунку BSA</div>
+                
+                <div id="bsa-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="bsa-species">Вид тварини (Meeh constant K)</label>
+                    <div class="input-group">
+                        <select id="bsa-species">
+                            {% for sp in species_list %}
+                                <option value="{{ sp }}">{{ sp }} (K={{ species_k_factors|dict_get:sp }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bsa-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="bsa-weight" value="8.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bsa-dose">Цільова доза на площу тіла (мг/м²)</label>
+                    <div class="input-group">
+                        <input type="number" id="bsa-dose" value="35.0" step="1" min="0">
+                        <span class="unit-addon">мг/м²</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати BSA -->
+            <div class="card">
+                <div class="card-title">📊 Токсикологічні показники</div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="bsa-res-m2">0.00 <span style="font-size: 1rem; color: var(--gray-text);">м²</span></div>
+                        <div class="metric-label">Розрахована площа поверхні тіла (BSA)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="bsa-res-dose">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мг</span></div>
+                        <div class="metric-label">Абсолютна повна доза препарату</div>
+                    </div>
+                </div>
+
+                <div class="math-box">
+                    <h4>🧮 Покроковий Meeh-аудит:</h4>
+                    <p>Формула площі поверхні тіла:</p>
+                    <div class="math-formula">BSA (м²) = [K * (Вага_в_грамах ** 2/3)] / 10000</div>
+                    
+                    <p><strong>1. Конвертація маси тварини в грами:</strong></p>
+                    <div class="math-formula" id="math-bsa-weight-g">Розрахунок...</div>
+                    <p><strong>2. Обчислення площі поверхні (BSA):</strong></p>
+                    <div class="math-formula" id="math-bsa-calc">Розрахунок...</div>
+                    <p><strong>3. Кінцева абсолютна доза:</strong></p>
+                    <div class="math-formula" id="math-bsa-dose">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ В: СУМІСНІСТЬ ЛІКІВ ---------------- -->
+    <div id="compat-tab" class="tab-content">
+        <div class="card">
+            <div class="card-title">🧪 Інтерактивний аудит суміші препаратів</div>
+            <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.95rem;">
+                Виберіть кілька лікарських засобів, які планується змішувати в одному шприці або вводити через одну інфузійну лінію, 
+                щоб миттєво перевірити їх на хімічну та фізичну сумісність.
+            </p>
+
+            <div class="drug-selector-grid">
+                {% for drug in supported_drugs %}
+                    <div class="checkbox-card" onclick="toggleDrugCheckbox(this)">
+                        <input type="checkbox" name="audit-drugs" value="{{ drug }}" onclick="event.stopPropagation(); triggerAudit();">
+                        <span>{{ drug }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div id="compat-audit-result">
+                <div class="success-card">
+                    <div class="success-title">ℹ️ Очікування вибору</div>
+                    <div class="success-text">Будь ласка, виберіть щонайменше два препарати вище, щоб запустити автоматичний аудит сумісності.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🗺️ Глобальна матриця сумісності анестетиків/екстрених ліків</div>
+            <p style="color: var(--gray-text); font-size: 0.95rem;">
+                Базовий довідковий реєстр взаємодії ліків для ветеринарної практики:
+            </p>
+
+            <div class="matrix-container">
+                <table class="compatibility-table">
+                    <thead>
+                        <tr>
+                            <th>Назва препарату</th>
+                            {% for drug in supported_drugs %}
+                                <th style="text-align: center;">{{ drug }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row_drug in supported_drugs %}
+                            <tr>
+                                <td>{{ row_drug }}</td>
+                                {% for col_drug in supported_drugs %}
+                                    <td>
+                                        {% with matrix_row=compatibility_matrix|dict_get:row_drug %}
+                                            {% with cell=matrix_row|dict_get:col_drug %}
+                                                {% if cell.status == "Сумісний" %}
+                                                    <span class="status-badge comp">✔ СУМІСНИЙ</span>
+                                                {% else %}
+                                                    <span class="status-badge incomp" title="{{ cell.reason }}">❌ НЕСУМІСНИЙ</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% endwith %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Зміна вкладок
+    function switchTab(tabId, btn) {
+        // Деактивація всіх кнопок і контенту
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Активація вибраних
+        btn.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // Керування чекбоксами вибору препаратів
+    function toggleDrugCheckbox(card) {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        checkbox.checked = !checkbox.checked;
+        if (checkbox.checked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+        triggerAudit();
+    }
+
+    // Синхронізація стилю кліку на сам чекбокс
+    document.querySelectorAll('.checkbox-card input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const card = this.closest('.checkbox-card');
+            if (this.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+            triggerAudit();
+        });
+    });
+
+    // ---------------- РЕАКТИВНА AJAX-ВЗАЄМОДІЯ З BACKEND ----------------
+
+    // 1. Автоматичний розрахунок CRI
+    function runCriCalculation() {
+        const weight = parseFloat(document.getElementById('cri-weight').value) || 0;
+        const bagVolume = parseFloat(document.getElementById('cri-bag-volume').value) || 0;
+        const dose = parseFloat(document.getElementById('cri-dose').value) || 0;
+        const doseUnit = document.getElementById('cri-dose-unit').value;
+        const ampConc = parseFloat(document.getElementById('cri-amp-conc').value) || 0;
+        const addVol = parseFloat(document.getElementById('cri-add-vol').value) || 0;
+        const dripFactor = parseInt(document.getElementById('cri-drip-factor').value) || 20;
+
+        const errorBanner = document.getElementById('cri-error-banner');
+        
+        // Клінічна валідація на клієнті
+        if (weight <= 0) {
+            showCriError("❌ Помилка валідації: Вага тварини повинна бути строго більше 0 кг.");
+            return;
+        }
+        if (bagVolume <= 0) {
+            showCriError("❌ Помилка валідації: Об'єм флакону розчину повинен бути строго більше 0 мл.");
+            return;
+        }
+        if (ampConc <= 0) {
+            showCriError("❌ Помилка валідації: Концентрація препарату в ампулі повинна бути строго більше 0 мг/мл.");
+            return;
+        }
+        if (addVol === 0) {
+            showCriWarning("⚠️ Попередження: Об'єм доданого препарату дорівнює 0 мл. Концентрація і швидкість інфузії рівні нулю.");
+            return;
+        }
+
+        // Приховуємо банери помилок
+        errorBanner.style.display = 'none';
+
+        // Виклик API
+        fetch('/api/calculate-cri/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                weight_kg: weight,
+                bag_volume_ml: bagVolume,
+                target_dose: dose,
+                target_dose_unit: doseUnit,
+                ampoule_conc_mg_ml: ampConc,
+                drug_volume_added_ml: addVol,
+                drip_factor: dripFactor
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Оновлення метрик на сторінці
+            document.getElementById('cri-res-bag-conc').innerHTML = `${data.bag_concentration_mg_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг/мл</span>`;
+            document.getElementById('cri-res-infusion-rate').innerHTML = `${data.infusion_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
+            document.getElementById('cri-res-drip-rate').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
+
+            // Оновлення математичного аудиту
+            const doseUnitText = doseUnit === "mcg/kg/min" || doseUnit === "мкг/кг/хв" ? "мкг/кг/хв" : "мг/кг/год";
+            let hourlyDoseFormula = "";
+            if (doseUnit === "мкг/кг/хв") {
+                hourlyDoseFormula = `D_hr = (${dose} мкг/кг/хв * ${weight} кг * 60 хв) / 1000 = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
+            } else {
+                hourlyDoseFormula = `D_hr = ${dose} мг/кг/год * ${weight} кг = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
+            }
+            document.getElementById('math-hourly-dose').textContent = hourlyDoseFormula;
+            document.getElementById('math-bag-conc').textContent = `C_bag = (${addVol} мл * ${ampConc} мг/мл) / (${bagVolume} мл + ${addVol} мл) = ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл`;
+            document.getElementById('math-flow-rate').textContent = `Rate = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год / ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл = ${data.infusion_rate_ml_hr.toFixed(2)} мл/год`;
+            document.getElementById('math-drip-rate').textContent = `Drops = (${data.infusion_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = ${data.drops_per_minute.toFixed(2)} крапель/хв`;
+        })
+        .catch(err => {
+            showCriError(`❌ Помилка розрахунку: ${err.message}`);
+        });
+    }
+
+    function showCriError(msg) {
+        const errorBanner = document.getElementById('cri-error-banner');
+        errorBanner.style.backgroundColor = 'var(--danger-light)';
+        errorBanner.style.color = 'var(--danger-dark)';
+        errorBanner.style.border = '1px solid rgba(229, 62, 62, 0.2)';
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetCriResults();
+    }
+
+    function showCriWarning(msg) {
+        const errorBanner = document.getElementById('cri-error-banner');
+        errorBanner.style.backgroundColor = '#fff9e6';
+        errorBanner.style.color = '#7a5c00';
+        errorBanner.style.border = '1px solid rgba(255, 179, 0, 0.2)';
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetCriResults();
+    }
+
+    function resetCriResults() {
+        document.getElementById('cri-res-bag-conc').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мг/мл</span>`;
+        document.getElementById('cri-res-infusion-rate').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
+        document.getElementById('cri-res-drip-rate').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
+        document.getElementById('math-hourly-dose').textContent = "Розрахунок припинено через некоректні дані.";
+        document.getElementById('math-bag-conc').textContent = "Розрахунок припинено.";
+        document.getElementById('math-flow-rate').textContent = "Розрахунок припинено.";
+        document.getElementById('math-drip-rate').textContent = "Розрахунок припинено.";
+    }
+
+    // 2. Автоматичний розрахунок BSA
+    function runBsaCalculation() {
+        const species = document.getElementById('bsa-species').value;
+        const weight = parseFloat(document.getElementById('bsa-weight').value) || 0;
+        const dose = parseFloat(document.getElementById('bsa-dose').value) || 0;
+        const errorBanner = document.getElementById('bsa-error-banner');
+
+        if (weight <= 0) {
+            errorBanner.textContent = "❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.";
+            errorBanner.style.display = 'block';
+            resetBsaResults();
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        fetch('/api/calculate-bsa/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                weight_kg: weight,
+                species: species,
+                target_dose_per_m2: dose
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('bsa-res-m2').innerHTML = `${data.bsa_m2.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">м²</span>`;
+            document.getElementById('bsa-res-dose').innerHTML = `${data.absolute_dosage.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг</span>`;
+
+            // Покрокова математика
+            document.getElementById('math-bsa-weight-g').textContent = `W_g = ${weight} кг * 1000 = ${data.weight_g.toFixed(0)} г`;
+            document.getElementById('math-bsa-calc').textContent = `BSA = (${data.k_factor} * (${data.weight_g.toFixed(0)} ** 2/3)) / 10000 = ${data.bsa_m2.toFixed(2)} м²`;
+            document.getElementById('math-bsa-dose').textContent = `Доза = ${data.bsa_m2.toFixed(2)} м² * ${dose} мг/м² = ${data.absolute_dosage.toFixed(2)} мг`;
+        })
+        .catch(err => {
+            errorBanner.textContent = `❌ Помилка: ${err.message}`;
+            errorBanner.style.display = 'block';
+            resetBsaResults();
+        });
+    }
+
+    function resetBsaResults() {
+        document.getElementById('bsa-res-m2').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">м²</span>`;
+        document.getElementById('bsa-res-dose').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мг</span>`;
+        document.getElementById('math-bsa-weight-g').textContent = "Розрахунок скасовано.";
+        document.getElementById('math-bsa-calc').textContent = "Розрахунок скасовано.";
+        document.getElementById('math-bsa-dose').textContent = "Розрахунок скасовано.";
+    }
+
+    // 3. Автоматичний аудит сумісності ліків
+    function triggerAudit() {
+        const checkedBoxes = document.querySelectorAll('input[name="audit-drugs"]:checked');
+        const selectedDrugs = Array.from(checkedBoxes).map(cb => cb.value);
+        const resultContainer = document.getElementById('compat-audit-result');
+
+        if (selectedDrugs.length < 2) {
+            resultContainer.innerHTML = `
+                <div class="success-card" style="background-color: var(--dark-light); border-left-color: var(--gray-text);">
+                    <div class="success-title" style="color: var(--dark);">ℹ️ Очікування вибору</div>
+                    <div class="success-text" style="color: var(--gray-text);">Виберіть щонайменше два препарати вище для запуску аудиту сумісності.</div>
+                </div>
+            `;
+            return;
+        }
+
+        fetch('/api/audit-compatibility/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                selected_drugs: selectedDrugs
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "Incompatible") {
+                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark);">🚨 Виявлені загрози несумісності:</h3>';
+                data.incompatibilities.forEach(inc => {
+                    html += `
+                        <div class="danger-card">
+                            <div class="danger-title">❌ КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</div>
+                            <div class="danger-text"><strong>Клінічне обґрунтування несумісності:</strong> ${inc.reason}</div>
+                        </div>
+                    `;
+                });
+                resultContainer.innerHTML = html;
+            } else {
+                resultContainer.innerHTML = `
+                    <div class="success-card">
+                        <div class="success-title">✅ Безпечна комбінація підтверджена</div>
+                        <div class="success-text">${data.message}</div>
+                    </div>
+                `;
+            }
+        })
+        .catch(err => {
+            resultContainer.innerHTML = `
+                <div class="danger-card">
+                    <div class="danger-title">Помилка аудиту</div>
+                    <div class="danger-text">${err.message}</div>
+                </div>
+            `;
+        });
+    }
+
+    // Слухачі подій для реактивних авто-розрахунків при введенні
+    // 1. Для CRI
+    const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
+    criInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runCriCalculation);
+        document.getElementById(id).addEventListener('change', runCriCalculation);
+    });
+
+    // 2. Для BSA
+    const bsaInputIds = ['bsa-species', 'bsa-weight', 'bsa-dose'];
+    bsaInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runBsaCalculation);
+        document.getElementById(id).addEventListener('change', runBsaCalculation);
+    });
+
+    // Первинний запуск при завантаженні для ініціалізації
+    document.addEventListener('DOMContentLoaded', () => {
+        runCriCalculation();
+        runBsaCalculation();
+    });
+</script>
+
+</body>
+</html>
