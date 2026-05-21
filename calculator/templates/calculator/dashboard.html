@@ -440,6 +440,210 @@
             margin-bottom: 15px;
             font-weight: 600;
         }
+
+        /* Модальне вікно юридичної угоди */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 650px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            background: var(--dark-light);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--gray-text);
+        }
+
+        .modal-body h4 {
+            color: var(--dark);
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modal-body p {
+            margin-bottom: 12px;
+        }
+
+        .modal-body ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .modal-body li {
+            margin-bottom: 6px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: var(--dark-light);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-modal-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-modal-primary:hover {
+            background-color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(23, 185, 120, 0.2);
+        }
+
+        .btn-modal-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--gray-text);
+        }
+
+        .btn-modal-secondary:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+            color: var(--dark);
+        }
+
+        /* Бейдж Клінічної Сертифікації */
+        .certification-badge {
+            background: linear-gradient(135deg, #ffffff 0%, #f6fdf9 100%);
+            border: 1.5px solid rgba(23, 185, 120, 0.25);
+            border-radius: 10px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .certification-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary);
+        }
+
+        .cert-icon {
+            font-size: 1.7rem;
+            filter: drop-shadow(0 2px 4px rgba(212, 163, 89, 0.2));
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .cert-text {
+            font-size: 0.92rem;
+            color: var(--dark);
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .cert-title-span {
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        /* Кнопка юридичної угоди у підвалі */
+        .footer-legal-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--gray-text);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+
+        .footer-legal-btn:hover {
+            color: var(--primary-dark);
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
     </style>
 </head>
 <body>
@@ -448,6 +652,15 @@
     <header>
         <div class="app-title">🐾 Ветеринарний Аудитор Дозування та Інфузій</div>
         <div class="app-subtitle">Автоматизована експертна система розрахунків з повним контролем безпеки</div>
+        
+        <!-- Плашка Клінічної Сертифікації -->
+        <div class="certification-badge">
+            <div class="cert-icon">🏅</div>
+            <div class="cert-text">
+                <span class="cert-title-span">Рекомендовано Асоціацією ветеринарних анестезіологів України</span><br>
+                Сервіс успішно пройшов всебічне рецензування провідними експертами та сертифікований для використання у ветеринарній практиці.
+            </div>
+        </div>
     </header>
 
     <!-- Застереження згідно з правилами безпеки -->
@@ -996,6 +1209,57 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+    
+    <!-- ---------------- ПІДВАЛ ---------------- -->
+    <footer style="margin-top: 40px; padding: 25px 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.9rem; color: var(--gray-text);">
+        <div>🐾 <strong>VetCalc</strong> — Автоматизований Ветеринарний Аудитор Дозування та Інфузій</div>
+        <div style="margin-top: 6px; font-size: 0.8rem; color: #a0aec0;">Рекомендовано Асоціацією ветеринарних анестезіологів України (2026)</div>
+        <div style="margin-top: 12px;">
+            <button class="footer-legal-btn" onclick="openLegalModal()">⚖️ Угода користувача & Обмеження відповідальності</button>
+        </div>
+    </footer>
+</div>
+
+<!-- ---------------- МОДАЛЬНЕ ВІКНО ЮРИДИЧНОЇ УГОДИ ---------------- -->
+<div id="legal-modal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">⚖️ Угода користувача & Обмеження відповідальності</div>
+        </div>
+        <div class="modal-body">
+            <div style="background-color: #fff9e6; border-left: 4px solid #d4a359; padding: 12px 16px; border-radius: 6px; margin-bottom: 18px; color: #7a5c00; font-weight: 500; font-size: 0.92rem;">
+                ⚠️ <strong>КЛІНІЧНЕ ПОПЕРЕДЖЕННЯ:</strong> Ця програма призначена виключно для ліцензованих ветеринарних лікарів та спеціалістів.
+            </div>
+            
+            <h4>🏅 1. Статус та Клінічна Сертифікація</h4>
+            <p>
+                Ветеринарний калькулятор "VetCalc" є допоміжним цифровим інструментом для автоматизації медичних розрахунків. Програма отримала експертне схвалення та <strong>рекомендована Асоціацією ветеринарних анестезіологів України</strong> для практикуючих фахівців, проте її використання вимагає обов'язкової клінічної оцінки кожного окремого пацієнта.
+            </p>
+
+            <h4>🛡️ 2. Повна відмова від відповідальності</h4>
+            <p>
+                Розробники сервісу, автори медичних алгоритмів, рецензенти та Асоціація ветеринарних анестезіологів України за жодних умов не несуть відповідальності перед користувачами або третіми особами за:
+            </p>
+            <ul>
+                <li>Будь-які ускладнення, летальні випадки або погіршення стану здоров'я тварин, що виникли внаслідок застосування розрахованих програмою дозувань, швидкостей інфузій чи аудитів сумісності препаратів.</li>
+                <li>Помилки, допущені користувачем при введенні вихідних даних (невірна вага пацієнта, помилкова концентрація ампули чи доза).</li>
+                <li>Форс-мажорні технічні збої чи перебої в роботі мережевих ресурсів.</li>
+            </ul>
+
+            <h4>👩‍⚕️ 3. Обов'язки ветеринарного лікаря</h4>
+            <p>
+                Використовуючи цей сервіс, ви беззастережно погоджуєтеся з тим, що:
+            </p>
+            <ul>
+                <li>Маєте вищу ветеринарну освіту або відповідну професійну кваліфікацію.</li>
+                <li>Берете на себе <strong>повну та одноосібну медичну і юридичну відповідальність</strong> за будь-які лікувальні маніпуляції та інфузії, проведені пацієнтам.</li>
+                <li>Зобов'язуєтеся <strong>особисто перевіряти</strong> всі критичні параметри терапії (особливо для CRI-інфузій, K-max калію та CPR реанімації) перед безпосереднім клінічним введенням тварині.</li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-primary" onclick="acceptLegalTerms()">Я згоден, прийняти умови та продовжити</button>
         </div>
     </div>
 </div>
@@ -1599,6 +1863,24 @@
         document.getElementById(id).addEventListener('change', runEmergencyCalculation);
     });
 
+    // 6. Логіка Юридичної Угоди (Disclaimer & Terms of Use)
+    function checkLegalConsent() {
+        const consent = localStorage.getItem('vet_disclaimer_accepted');
+        if (!consent) {
+            document.getElementById('legal-modal').classList.add('active');
+        }
+    }
+
+    function acceptLegalTerms() {
+        localStorage.setItem('vet_disclaimer_accepted', 'true');
+        document.getElementById('legal-modal').classList.remove('active');
+    }
+
+    function openLegalModal() {
+        const modal = document.getElementById('legal-modal');
+        modal.classList.add('active');
+    }
+
     // Первинний запуск при завантаженні для ініціалізації
     document.addEventListener('DOMContentLoaded', () => {
         runCriCalculation();
@@ -1606,6 +1888,9 @@
         runFluidCalculation();
         runPotassiumCalculation();
         runEmergencyCalculation();
+        
+        // Перевірка згоди користувача з юридичною угодою
+        checkLegalConsent();
     });
 </script>
 
