@@ -13,9 +13,33 @@
     <meta name="apple-mobile-web-app-title" content="VetCalc">
     <link rel="apple-touch-icon" href="/vet_logo.svg">
     <!-- Google Fonts: Outfit for clean, modern look & Roboto Mono for data displays -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
+            /* Light theme variables */
+            --bg-app: hsl(215, 28%, 95%);
+            --bg-container: rgba(255, 255, 255, 0.85);
+            --bg-card: rgba(255, 255, 255, 0.7);
+            --bg-metric-card: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 244, 0.5) 100%);
+            --bg-metric-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 244, 0.7) 100%);
+            --bg-math-box: rgba(15, 23, 42, 0.02);
+            --bg-formula: rgba(255, 255, 255, 0.85);
+            --bg-tabs: rgba(15, 23, 42, 0.04);
+            --bg-tab-hover: rgba(255, 255, 255, 0.5);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --bg-input-focus: #ffffff;
+            --bg-addon: hsl(215, 25%, 95%);
+            --bg-th: hsl(215, 25%, 95%);
+            --bg-td-first: rgba(255, 255, 255, 0.5);
+            --bg-table-container: rgba(255, 255, 255, 0.5);
+            --bg-modal: rgba(255, 255, 255, 0.9);
+            --bg-modal-header: rgba(255, 255, 255, 0.5);
+            --bg-modal-footer: rgba(255, 255, 255, 0.5);
+            --bg-badge-cert: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 244, 0.6) 100%);
+            --bg-danger-card: linear-gradient(135deg, hsl(354, 100%, 99%) 0%, hsl(354, 100%, 97%) 100%);
+            --bg-success-card: linear-gradient(135deg, hsl(142, 60%, 99%) 0%, hsl(142, 60%, 97%) 100%);
+            
             --primary: hsl(156, 72%, 38%);
             --primary-light: hsl(156, 60%, 96%);
             --primary-dark: hsl(156, 75%, 28%);
@@ -28,12 +52,69 @@
             --danger-dark: hsl(354, 65%, 40%);
             --success: hsl(142, 60%, 42%);
             --success-light: hsl(142, 60%, 96%);
+            --success-dark: hsl(142, 60%, 25%);
             --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
             --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.06);
             --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.08);
             --glass-bg: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.6);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Ambient Glow colors */
+            --glow-1: hsla(156, 72%, 38%, 0.08);
+            --glow-2: hsla(210, 40%, 96%, 0.1);
+            --glow-3: hsla(156, 72%, 38%, 0.05);
+            --glow-4: hsla(217, 30%, 18%, 0.04);
+        }
+
+        body.dark-theme {
+            /* Dark theme variables */
+            --bg-app: hsl(222, 47%, 9%);
+            --bg-container: rgba(30, 41, 59, 0.65);
+            --bg-card: rgba(15, 23, 42, 0.45);
+            --bg-metric-card: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(20, 83, 45, 0.15) 100%);
+            --bg-metric-hover: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(20, 83, 45, 0.25) 100%);
+            --bg-math-box: rgba(255, 255, 255, 0.02);
+            --bg-formula: rgba(15, 23, 42, 0.6);
+            --bg-tabs: rgba(0, 0, 0, 0.25);
+            --bg-tab-hover: rgba(255, 255, 255, 0.06);
+            --bg-input: rgba(15, 23, 42, 0.8);
+            --bg-input-focus: rgba(15, 23, 42, 0.95);
+            --bg-addon: rgba(30, 41, 59, 0.8);
+            --bg-th: rgba(15, 23, 42, 0.7);
+            --bg-td-first: rgba(15, 23, 42, 0.3);
+            --bg-table-container: rgba(15, 23, 42, 0.25);
+            --bg-modal: rgba(30, 41, 59, 0.85);
+            --bg-modal-header: rgba(15, 23, 42, 0.4);
+            --bg-modal-footer: rgba(15, 23, 42, 0.4);
+            --bg-badge-cert: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(20, 83, 45, 0.15) 100%);
+            --bg-danger-card: linear-gradient(135deg, rgba(127, 29, 29, 0.2) 0%, rgba(127, 29, 29, 0.1) 100%);
+            --bg-success-card: linear-gradient(135deg, rgba(20, 83, 45, 0.2) 0%, rgba(20, 83, 45, 0.1) 100%);
+            
+            --primary: hsl(156, 72%, 45%);
+            --primary-light: hsl(156, 60%, 15%);
+            --primary-dark: hsl(156, 75%, 85%);
+            --dark: hsl(210, 40%, 98%);
+            --dark-light: rgba(15, 23, 42, 0.3);
+            --border: rgba(255, 255, 255, 0.08);
+            --gray-text: hsl(215, 20%, 65%);
+            --danger: hsl(354, 70%, 53%);
+            --danger-light: rgba(220, 38, 38, 0.15);
+            --danger-dark: hsl(354, 85%, 75%);
+            --success: hsl(142, 60%, 42%);
+            --success-light: rgba(22, 163, 74, 0.15);
+            --success-dark: hsl(142, 65%, 80%);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            
+            /* Ambient Glow colors */
+            --glow-1: hsla(156, 72%, 45%, 0.12);
+            --glow-2: hsla(217, 30%, 18%, 0.2);
+            --glow-3: hsla(156, 72%, 45%, 0.08);
+            --glow-4: hsla(222, 47%, 10%, 0.3);
         }
 
         * {
@@ -44,30 +125,60 @@
 
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: hsl(215, 28%, 95%);
+            background-color: var(--bg-app);
             background-image: 
-                radial-gradient(at 0% 0%, hsla(156, 72%, 38%, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(210, 40%, 96%, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, hsla(156, 72%, 38%, 0.05) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, hsla(217, 30%, 18%, 0.04) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, var(--glow-1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, var(--glow-2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, var(--glow-3) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, var(--glow-4) 0px, transparent 50%);
             background-attachment: fixed;
-            color: hsl(217, 24%, 20%);
+            color: var(--dark);
             line-height: 1.6;
             padding: 30px 20px;
             min-height: 100vh;
+            transition: background-color 0.5s ease, color 0.3s ease, background-image 0.5s ease;
+        }
+
+        /* Ambient Background Glow Circles */
+        .ambient-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.45;
+            z-index: -1;
+            pointer-events: none;
+            transition: all 0.8s ease-in-out;
+        }
+        .glow-1 {
+            top: -10%;
+            left: -10%;
+            width: 45vw;
+            height: 45vw;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+        }
+        .glow-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, hsla(217, 90%, 60%, 0.15) 0%, transparent 70%);
+        }
+        body.dark-theme .glow-2 {
+            background: radial-gradient(circle, hsla(250, 90%, 60%, 0.12) 0%, transparent 70%);
         }
 
         .container {
             max-width: 1240px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px) saturate(190%);
-            -webkit-backdrop-filter: blur(20px) saturate(190%);
+            background: var(--bg-container);
+            backdrop-filter: blur(24px) saturate(190%);
+            -webkit-backdrop-filter: blur(24px) saturate(190%);
             border-radius: 24px;
-            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             padding: 40px;
             border: 1px solid var(--glass-border);
             position: relative;
+            transition: background-color 0.5s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         @media (max-width: 768px) {
@@ -82,6 +193,7 @@
             margin-bottom: 30px;
             border-bottom: 1px solid var(--border);
             padding-bottom: 25px;
+            transition: border-color 0.3s ease;
         }
 
         .app-title {
@@ -92,6 +204,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            transition: color 0.3s ease;
         }
 
         .app-subtitle {
@@ -100,16 +213,17 @@
             font-weight: 600;
             margin-top: 6px;
             letter-spacing: 0.2px;
+            transition: color 0.3s ease;
         }
 
         /* Застереження */
         .disclaimer-banner {
-            background: linear-gradient(135deg, hsl(45, 100%, 96%) 0%, hsl(40, 100%, 94%) 100%);
+            background: linear-gradient(135deg, hsla(45, 100%, 96%, 0.95) 0%, hsla(40, 100%, 94%, 0.95) 100%);
             border-left: 5px solid hsl(40, 95%, 48%);
             padding: 18px 22px;
             border-radius: 12px;
             margin-bottom: 30px;
-            color: hsl(35, 80%, 25%);
+            color: hsl(35, 80%, 20%);
             font-weight: 500;
             font-size: 0.95rem;
             box-shadow: var(--shadow-sm);
@@ -118,19 +232,28 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-theme .disclaimer-banner {
+            background: linear-gradient(135deg, rgba(217, 119, 6, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+            color: hsl(40, 95%, 80%);
+            border-color: rgba(217, 119, 6, 0.3);
+            border-left-color: hsl(40, 95%, 48%);
         }
 
         /* Вкладки */
         .tabs {
             display: flex;
-            background: rgba(15, 23, 42, 0.04);
+            background: var(--bg-tabs);
             padding: 6px;
             border-radius: 16px;
             margin-bottom: 30px;
             gap: 6px;
             overflow-x: auto;
             scrollbar-width: none;
-            border: 1px solid rgba(15, 23, 42, 0.02);
+            border: 1px solid var(--border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .tabs::-webkit-scrollbar {
@@ -156,13 +279,13 @@
 
         .tab-btn:hover {
             color: var(--dark);
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--bg-tab-hover);
         }
 
         .tab-btn.active {
-            color: #ffffff;
+            color: #ffffff !important;
             background: var(--primary);
-            box-shadow: 0 4px 14px rgba(23, 185, 120, 0.3);
+            box-shadow: 0 4px 14px rgba(23, 185, 120, 0.35);
             transform: translateY(-1px);
         }
 
@@ -170,8 +293,21 @@
             display: none;
         }
 
+        /* Tab Transition Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .tab-content.active {
             display: block;
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Двоколонковий адаптивний макет */
@@ -188,9 +324,9 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             padding: 28px;
@@ -200,9 +336,9 @@
         }
 
         .card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             box-shadow: var(--shadow-lg);
-            border-color: rgba(23, 185, 120, 0.2);
+            border-color: rgba(23, 185, 120, 0.35);
         }
 
         .card-title {
@@ -216,6 +352,7 @@
             align-items: center;
             gap: 10px;
             letter-spacing: -0.2px;
+            transition: border-color 0.3s ease, color 0.3s ease;
         }
 
         /* Форми та інпути */
@@ -230,6 +367,7 @@
             margin-bottom: 8px;
             font-size: 0.92rem;
             letter-spacing: 0.1px;
+            transition: color 0.3s ease;
         }
 
         .input-group {
@@ -248,7 +386,7 @@
             font-family: inherit;
             font-size: 0.98rem;
             color: var(--dark);
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: var(--bg-input);
             transition: var(--transition);
             outline: none;
             box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02);
@@ -256,12 +394,12 @@
 
         .input-group input:focus, .input-group select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(23, 185, 120, 0.12), inset 0 1px 2px rgba(15, 23, 42, 0.02);
-            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(23, 185, 120, 0.18), inset 0 1px 2px rgba(15, 23, 42, 0.02);
+            background-color: var(--bg-input-focus);
         }
 
         .input-group .unit-addon {
-            background-color: hsl(215, 25%, 95%);
+            background-color: var(--bg-addon);
             border: 1.5px solid var(--border);
             border-left: none;
             padding: 12px 18px;
@@ -287,6 +425,37 @@
             border-bottom-right-radius: 0;
         }
 
+        /* Custom styled Range Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+            height: 8px;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--danger) 100%);
+            height: 8px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #ffffff;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            height: 20px;
+            width: 20px;
+            margin-top: -6px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(23, 185, 120, 0.4);
+        }
+
         /* Метрики результатів */
         .metrics-grid {
             display: flex;
@@ -295,7 +464,7 @@
         }
 
         .metric-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 244, 0.5) 100%);
+            background: var(--bg-metric-card);
             border: 1px solid rgba(23, 185, 120, 0.12);
             border-radius: 16px;
             padding: 22px;
@@ -320,8 +489,8 @@
         .metric-card:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
-            border-color: rgba(23, 185, 120, 0.3);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 244, 0.7) 100%);
+            border-color: rgba(23, 185, 120, 0.35);
+            background: var(--bg-metric-hover);
         }
 
         .metric-value {
@@ -334,6 +503,7 @@
             display: flex;
             align-items: baseline;
             gap: 6px;
+            transition: color 0.3s ease;
         }
 
         .metric-label {
@@ -343,17 +513,18 @@
             text-transform: uppercase;
             letter-spacing: 0.8px;
             margin-top: 8px;
+            transition: color 0.3s ease;
         }
 
         /* Математичні розрахунки */
         .math-box {
-            background-color: rgba(15, 23, 42, 0.02);
+            background-color: var(--bg-math-box);
             border: 1.5px dashed var(--border);
             border-radius: 12px;
             padding: 18px;
             margin-top: 20px;
             font-size: 0.95rem;
-            color: hsl(217, 15%, 35%);
+            color: var(--gray-text);
             transition: var(--transition);
         }
 
@@ -370,11 +541,12 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            transition: color 0.3s ease;
         }
 
         .math-formula {
             font-family: 'Roboto Mono', monospace;
-            background-color: rgba(255, 255, 255, 0.85);
+            background-color: var(--bg-formula);
             border: 1px solid var(--border);
             padding: 10px 14px;
             border-radius: 8px;
@@ -384,11 +556,12 @@
             color: var(--dark);
             font-size: 0.9rem;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
         }
 
         /* Картки сумісності */
         .danger-card {
-            background: linear-gradient(135deg, hsl(354, 100%, 99%) 0%, hsl(354, 100%, 97%) 100%);
+            background: var(--bg-danger-card);
             border-left: 5px solid var(--danger);
             border-radius: 12px;
             padding: 18px 22px;
@@ -412,16 +585,18 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: color 0.3s ease;
         }
 
         .danger-text {
-            color: hsl(354, 60%, 25%);
+            color: var(--danger-dark);
             font-size: 0.96rem;
             line-height: 1.5;
+            opacity: 0.9;
         }
 
         .success-card {
-            background: linear-gradient(135deg, hsl(142, 60%, 99%) 0%, hsl(142, 60%, 97%) 100%);
+            background: var(--bg-success-card);
             border-left: 5px solid var(--success);
             border-radius: 12px;
             padding: 18px 22px;
@@ -438,19 +613,21 @@
         }
 
         .success-title {
-            color: hsl(142, 65%, 20%);
+            color: var(--success-dark);
             font-weight: 700;
             font-size: 1.1rem;
             margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: color 0.3s ease;
         }
 
         .success-text {
-            color: hsl(142, 60%, 25%);
+            color: var(--success-dark);
             font-size: 0.96rem;
             line-height: 1.5;
+            opacity: 0.9;
         }
 
         /* Мультиселект сумісності */
@@ -470,7 +647,7 @@
             align-items: center;
             gap: 12px;
             transition: var(--transition);
-            background: rgba(255, 255, 255, 0.7);
+            background: var(--bg-card);
             user-select: none;
             box-shadow: var(--shadow-sm);
         }
@@ -506,7 +683,8 @@
             border-radius: 16px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--bg-table-container);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         table.compatibility-table {
@@ -521,6 +699,7 @@
             padding: 16px;
             border-bottom: 1px solid var(--border);
             border-right: 1px solid var(--border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         table.compatibility-table th:last-child, table.compatibility-table td:last-child {
@@ -528,7 +707,7 @@
         }
 
         table.compatibility-table th {
-            background-color: hsl(215, 25%, 95%);
+            background-color: var(--bg-th);
             color: var(--dark);
             font-weight: 700;
             text-align: center;
@@ -544,7 +723,7 @@
         table.compatibility-table td:first-child {
             font-weight: 700;
             color: var(--dark);
-            background-color: rgba(255, 255, 255, 0.5);
+            background-color: var(--bg-td-first);
         }
 
         table.compatibility-table tr:last-child td {
@@ -569,13 +748,13 @@
 
         .status-badge.comp {
             background-color: var(--success-light);
-            color: #137333;
+            color: var(--success-dark);
             border: 1px solid rgba(56, 161, 105, 0.2);
         }
 
         .status-badge.incomp {
             background-color: var(--danger-light);
-            color: #c5221f;
+            color: var(--danger-dark);
             border: 1px solid rgba(229, 62, 62, 0.2);
         }
 
@@ -587,6 +766,7 @@
             border-radius: 8px;
             margin-bottom: 15px;
             font-weight: 600;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* Модальне вікно юридичної угоди */
@@ -614,9 +794,9 @@
         }
 
         .modal-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background: var(--bg-modal);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             width: 90%;
@@ -624,9 +804,9 @@
             max-height: 85vh;
             display: flex;
             flex-direction: column;
-            box-shadow: var(--shadow-lg), 0 25px 50px -12px rgba(15, 23, 42, 0.2);
+            box-shadow: var(--shadow-lg), 0 25px 50px -12px rgba(15, 23, 42, 0.25);
             transform: scale(0.95) translateY(10px);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s ease;
             overflow: hidden;
         }
 
@@ -636,11 +816,12 @@
 
         .modal-header {
             padding: 24px 30px;
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--bg-modal-header);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            transition: background-color 0.5s ease, border-color 0.3s ease;
         }
 
         .modal-title {
@@ -651,6 +832,7 @@
             align-items: center;
             gap: 12px;
             letter-spacing: -0.3px;
+            transition: color 0.3s ease;
         }
 
         .modal-body {
@@ -658,7 +840,7 @@
             overflow-y: auto;
             font-size: 0.98rem;
             line-height: 1.65;
-            color: hsl(217, 15%, 35%);
+            color: var(--gray-text);
         }
 
         .modal-body h4 {
@@ -670,6 +852,7 @@
             align-items: center;
             gap: 8px;
             font-size: 1.05rem;
+            transition: color 0.3s ease;
         }
 
         .modal-body p {
@@ -687,11 +870,12 @@
 
         .modal-footer {
             padding: 20px 30px;
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--bg-modal-footer);
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: flex-end;
             gap: 14px;
+            transition: background-color 0.5s ease, border-color 0.3s ease;
         }
 
         .btn-modal {
@@ -734,7 +918,7 @@
 
         /* Бейдж Клінічної Сертифікації */
         .certification-badge {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 244, 0.6) 100%);
+            background: var(--bg-badge-cert);
             border: 1.5px solid rgba(23, 185, 120, 0.2);
             border-radius: 16px;
             padding: 16px 22px;
@@ -769,6 +953,9 @@
             font-size: 2rem;
             filter: drop-shadow(0 4px 6px rgba(212, 163, 89, 0.2));
             animation: pulse-slow 3s infinite ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         @keyframes pulse-slow {
@@ -781,6 +968,7 @@
             color: var(--dark);
             font-weight: 500;
             line-height: 1.5;
+            transition: color 0.3s ease;
         }
 
         .cert-title-span {
@@ -788,6 +976,7 @@
             color: var(--primary-dark);
             font-size: 1.05rem;
             letter-spacing: -0.1px;
+            transition: color 0.3s ease;
         }
 
         /* Кнопка юридичної угоди у підвалі */
@@ -795,7 +984,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.6);
+            background: var(--bg-card);
             border: 1.5px solid var(--border);
             color: var(--gray-text);
             padding: 10px 18px;
@@ -814,6 +1003,38 @@
             background-color: var(--primary-light);
             transform: translateY(-1px);
             box-shadow: var(--shadow-md);
+        }
+
+        /* Theme Toggle Button style */
+        .theme-toggle-btn {
+            background: rgba(15, 23, 42, 0.05);
+            border: 1.5px solid var(--border);
+            color: var(--dark);
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(23, 185, 120, 0.25);
+            transform: scale(1.05);
+        }
+
+        body.dark-theme .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        body.dark-theme .theme-toggle-btn:hover {
+            background: var(--primary);
+            color: #ffffff;
         }
 
         /* Network Status Badge & PWA support */
@@ -836,7 +1057,7 @@
         }
 
         .network-offline {
-            background-color: #fff5f5;
+            background-color: var(--danger-light);
             color: var(--danger-dark);
             border: 1px solid rgba(229, 62, 62, 0.2);
             animation: pulse-slow 2s infinite ease-in-out;
@@ -849,6 +1070,20 @@
     </style>
 </head>
 <body>
+<!-- Ambient Background Glow Circles -->
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+
+<script>
+    // Попереднє застосування теми для уникнення мерехтіння
+    (function() {
+        const savedTheme = localStorage.getItem('vetcalc_theme') || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+    })();
+</script>
 
 <div class="container">
     <header>
@@ -857,13 +1092,30 @@
                 <img src="/vet_logo.svg" alt="VetCalc Logo" style="width: 48px; height: 48px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));">
                 <span>Ветеринарний Аудитор Дозування та Інфузій</span>
             </div>
-            <div id="network-status" class="network-badge network-online">🟢 Онлайн</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button id="theme-toggle" class="theme-toggle-btn" title="Перемикнути тему">
+                    <i id="theme-toggle-icon" data-lucide="sun"></i>
+                </button>
+                <script>
+                    (function() {
+                        const savedTheme = localStorage.getItem('vetcalc_theme') || 
+                            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                        if (savedTheme === 'dark') {
+                            document.getElementById('theme-toggle-icon').setAttribute('data-lucide', 'moon');
+                        }
+                    })();
+                </script>
+                <div id="network-status" class="network-badge network-online">
+                    <i data-lucide="wifi"></i>
+                    <span>Онлайн</span>
+                </div>
+            </div>
         </div>
         <div class="app-subtitle" style="margin-top: 8px;">Автоматизована експертна система розрахунків з повним контролем безпеки</div>
         
         <!-- Плашка Клінічної Сертифікації -->
         <div class="certification-badge">
-            <div class="cert-icon">🏅</div>
+            <div class="cert-icon"><i data-lucide="award"></i></div>
             <div class="cert-text">
                 <span class="cert-title-span">Рекомендовано Асоціацією ветеринарних анестезіологів України</span><br>
                 Сервіс успішно пройшов всебічне рецензування провідними експертами та сертифікований для використання у ветеринарній практиці.
@@ -873,19 +1125,22 @@
 
     <!-- Застереження згідно з правилами безпеки -->
     <div class="disclaimer-banner">
-        ⚠️ <strong>Клінічне застереження:</strong> Ця програма є допоміжним інструментом підтримки прийняття рішень. 
-        Усі розраховані дози, параметри інфузій та сумісність лікарських засобів повинні бути обов'язково перевірені та підтверджені 
-        ліцензованим ветеринарним лікарем перед клінічним введенням тварині.
+        <i data-lucide="alert-triangle" style="stroke-width: 2.5; flex-shrink: 0; transform: translateY(2px);"></i>
+        <div>
+            <strong>Клінічне застереження:</strong> Ця програма є допоміжним інструментом підтримки прийняття рішень. 
+            Усі розраховані дози, параметри інфузій та сумісність лікарських засобів повинні бути обов'язково перевірені та підтверджені 
+            ліцензованим ветеринарним лікарем перед клінічним введенням тварині.
+        </div>
     </div>
 
     <!-- Вкладки навігації -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('cri-tab', this)">⚡ Постійна Інфузія (CRI)</button>
-        <button class="tab-btn" onclick="switchTab('bsa-tab', this)">📊 Розрахунок площі тіла (BSA)</button>
-        <button class="tab-btn" onclick="switchTab('fluid-tab', this)">💧 Інфузійна терапія (Гідратація)</button>
-        <button class="tab-btn" onclick="switchTab('potassium-tab', this)">🧪 Безпека калію (K-max)</button>
-        <button class="tab-btn" onclick="switchTab('emergency-tab', this)">🚨 Реанімація (CPR)</button>
-        <button class="tab-btn" onclick="switchTab('compat-tab', this)">🔍 Аудитор сумісності ліків</button>
+        <button class="tab-btn active" onclick="switchTab('cri-tab', this)"><i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Постійна Інфузія (CRI)</span></button>
+        <button class="tab-btn" onclick="switchTab('bsa-tab', this)"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px;"></i> <span>Розрахунок площі тіла (BSA)</span></button>
+        <button class="tab-btn" onclick="switchTab('fluid-tab', this)"><i data-lucide="droplet" style="width: 18px; height: 18px;"></i> <span>Інфузійна терапія (Гідратація)</span></button>
+        <button class="tab-btn" onclick="switchTab('potassium-tab', this)"><i data-lucide="flask-conical" style="width: 18px; height: 18px;"></i> <span>Безпека калію (K-max)</span></button>
+        <button class="tab-btn" onclick="switchTab('emergency-tab', this)"><i data-lucide="heart-pulse" style="width: 18px; height: 18px;"></i> <span>Реанімація (CPR)</span></button>
+        <button class="tab-btn" onclick="switchTab('compat-tab', this)"><i data-lucide="clipboard-check" style="width: 18px; height: 18px;"></i> <span>Аудитор сумісності ліків</span></button>
     </div>
 
     <!-- ---------------- ТАБ А: ПОСТІЙНА ІНФУЗІЯ (CRI) ---------------- -->
@@ -893,7 +1148,7 @@
         <div class="grid-layout">
             <!-- Вхідні дані CRI -->
             <div class="card">
-                <div class="card-title">📋 Параметри пацієнта та інфузії</div>
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри пацієнта та інфузії</span></div>
                 
                 <div id="cri-error-banner" class="alert-error" style="display: none;"></div>
 
@@ -955,7 +1210,7 @@
 
             <!-- Результати CRI -->
             <div class="card">
-                <div class="card-title">📈 Результати розрахунку інфузії</div>
+                <div class="card-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку інфузії</span></div>
                 
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -973,7 +1228,7 @@
                 </div>
 
                 <div class="math-box">
-                    <h4>🧮 Покроковий математичний аудит:</h4>
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий математичний аудит:</span></h4>
                     <p><strong>1. Годинне дозування пацієнта:</strong></p>
                     <div class="math-formula" id="math-hourly-dose">Розрахунок...</div>
                     <p><strong>2. Концентрація суміші у флаконі:</strong></p>
@@ -992,7 +1247,7 @@
         <div class="grid-layout">
             <!-- Вхідні дані BSA -->
             <div class="card">
-                <div class="card-title">📋 Параметри для розрахунку BSA</div>
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри для розрахунку BSA</span></div>
                 
                 <div id="bsa-error-banner" class="alert-error" style="display: none;"></div>
 
@@ -1026,7 +1281,7 @@
 
             <!-- Результати BSA -->
             <div class="card">
-                <div class="card-title">📊 Токсикологічні показники</div>
+                <div class="card-title"><i data-lucide="bar-chart-2" style="color: var(--primary);"></i> <span>Токсикологічні показники</span></div>
                 
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -1040,7 +1295,7 @@
                 </div>
 
                 <div class="math-box">
-                    <h4>🧮 Покроковий Meeh-аудит:</h4>
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий Meeh-аудит:</span></h4>
                     <p>Формула площі поверхні тіла:</p>
                     <div class="math-formula">BSA (м²) = [K * (Вага_в_грамах ** 2/3)] / 10000</div>
                     
@@ -1060,7 +1315,7 @@
         <div class="grid-layout">
             <!-- Вхідні дані Fluid Therapy -->
             <div class="card">
-                <div class="card-title">📋 Параметри пацієнта та дегідратації</div>
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри пацієнта та дегідратації</span></div>
                 <div id="fluid-error-banner" class="alert-error" style="display: none;"></div>
 
                 <div class="form-group">
@@ -1113,7 +1368,7 @@
 
             <!-- Результати Fluid Therapy -->
             <div class="card">
-                <div class="card-title">📈 Результати розрахунку гідратації</div>
+                <div class="card-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку гідратації</span></div>
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-value" id="fluid-res-deficit">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span></div>
@@ -1138,7 +1393,7 @@
                 </div>
 
                 <div class="math-box">
-                    <h4>🧮 Покроковий аудит гідратації:</h4>
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий аудит гідратації:</span></h4>
                     <p><strong>1. Дефіцит рідини (Rehydration volume):</strong></p>
                     <div class="math-formula" id="math-fluid-deficit">Розрахунок...</div>
                     <p><strong>2. Добова фізіологічна потреба:</strong></p>
@@ -1157,7 +1412,7 @@
         <div class="grid-layout">
             <!-- Вхідні дані Potassium -->
             <div class="card">
-                <div class="card-title">📋 Параметри введення та розведення калію</div>
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри введення та розведення калію</span></div>
                 <div id="potassium-error-banner" class="alert-error" style="display: none;"></div>
 
                 <div class="form-group">
@@ -1214,11 +1469,11 @@
 
             <!-- Результати Potassium -->
             <div class="card">
-                <div class="card-title">🛡️ Аудит безпеки калію та розведення</div>
+                <div class="card-title"><i data-lucide="shield-alert" style="color: var(--primary);"></i> <span>Аудит безпеки калію та розведення</span></div>
                 
                 <!-- Банер безпеки (реактивний) -->
                 <div id="k-safety-alert" class="success-card">
-                    <div class="success-title">✅ Показники безпеки в межах норми</div>
+                    <div class="success-title"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>Показники безпеки в межах норми</span></div>
                     <div class="success-text">Введена швидкість калію не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
                 </div>
 
@@ -1242,7 +1497,7 @@
                 </div>
 
                 <div class="math-box" style="margin-top: 20px;">
-                    <h4>🧮 Покроковий калійний аудит:</h4>
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий калійний аудит:</span></h4>
                     <p><strong>1. Розрахунок годинної дози пацієнту:</strong></p>
                     <div class="math-formula" id="math-k-hourly">Розрахунок...</div>
                     <p><strong>2. Концентрація калію у флаконі:</strong></p>
@@ -1257,7 +1512,7 @@
     <!-- ---------------- ТАБ Д: РЕАНІМАЦІЙНІ ДОЗИ (CPR) ---------------- -->
     <div id="emergency-tab" class="tab-content">
         <div class="card">
-            <div class="card-title">🚨 Реанімаційний калькулятор першої лінії (CPR Emergency List)</div>
+            <div class="card-title"><i data-lucide="heart-pulse" style="color: var(--danger);"></i> <span>Реанімаційний калькулятор першої лінії (CPR Emergency List)</span></div>
             <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.95rem;">
                 Миттєве відображення точних клінічних об'ємів лікарських засобів для невідкладної ветеринарної допомоги на основі ваги пацієнта (за стандартами RECOVER Initiative).
             </p>
@@ -1321,7 +1576,7 @@
                         </tr>
                         <tr>
                             <td><strong>Лідокаїн 2%</strong><br><span style="font-size: 0.85rem; color: var(--gray-text);">20 мг/мл</span></td>
-                            <td>⚠️ Шлуночкова аритмія<br>(<strong>КОТИ</strong>)</td>
+                            <td><i data-lucide="alert-triangle" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; color: var(--danger);"></i> Шлуночкова аритмія<br>(<strong>КОТИ</strong>)</td>
                             <td>0.2 мг/кг</td>
                             <td id="em-lido-cat-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
                             <td id="em-lido-cat-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; text-align: center; color: var(--danger-dark); background-color: #fffdf5;">0.00 мл</td>
@@ -1348,7 +1603,7 @@
             </div>
             
             <div style="margin-top: 15px; background-color: var(--dark-light); border-radius: 8px; padding: 15px; font-size: 0.9rem; color: var(--gray-text); border: 1px solid var(--border);">
-                ℹ️ <strong>Клінічна примітка RECOVER:</strong> Дозування розраховані для негайного внутрішньовенного (IV) або внутрішньокісткового (IO) введення. У разі відсутності IV/IO доступу, деякі препарати (Адреналін, Атропін, Налоксон) можуть бути введені ендотрахеально (IT) у подвоєному дозуванні, розведені фізрозчином.
+                <i data-lucide="info" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> <strong>Клінічна примітка RECOVER:</strong> Дозування розраховані для негайного внутрішньовенного (IV) або внутрішньокісткового (IO) введення. У разі відсутності IV/IO доступу, деякі препарати (Адреналін, Атропін, Налоксон) можуть бути введені ендотрахеально (IT) у подвоєному дозуванні, розведені фізрозчином.
             </div>
         </div>
     </div>
@@ -1356,7 +1611,7 @@
     <!-- ---------------- ТАБ Е: СУМІСНІСТЬ ЛІКІВ ---------------- -->
     <div id="compat-tab" class="tab-content">
         <div class="card">
-            <div class="card-title">🧪 Інтерактивний аудит суміші препаратів</div>
+            <div class="card-title"><i data-lucide="flask-conical" style="color: var(--primary);"></i> <span>Інтерактивний аудит суміші препаратів</span></div>
             <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.95rem;">
                 Виберіть кілька лікарських засобів, які планується змішувати в одному шприці або вводити через одну інфузійну лінію, 
                 щоб миттєво перевірити їх на хімічну та фізичну сумісність.
@@ -1380,7 +1635,7 @@
         </div>
 
         <div class="card">
-            <div class="card-title">🗺️ Глобальна матриця сумісності анестетиків/екстрених ліків</div>
+            <div class="card-title"><i data-lucide="grid" style="color: var(--primary);"></i> <span>Глобальна матриця сумісності анестетиків/екстрених ліків</span></div>
             <p style="color: var(--gray-text); font-size: 0.95rem;">
                 Базовий довідковий реєстр взаємодії ліків для ветеринарної практики:
             </p>
@@ -1404,9 +1659,9 @@
                                         {% with matrix_row=compatibility_matrix|dict_get:row_drug %}
                                             {% with cell=matrix_row|dict_get:col_drug %}
                                                 {% if cell.status == "Сумісний" %}
-                                                    <span class="status-badge comp">✔ СУМІСНИЙ</span>
+                                                    <span class="status-badge comp"><i data-lucide="check" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> СУМІСНИЙ</span>
                                                 {% else %}
-                                                    <span class="status-badge incomp" title="{{ cell.reason }}">❌ НЕСУМІСНИЙ</span>
+                                                    <span class="status-badge incomp" title="{{ cell.reason }}"><i data-lucide="x" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> НЕСУМІСНИЙ</span>
                                                 {% endif %}
                                             {% endwith %}
                                         {% endwith %}
@@ -1422,10 +1677,10 @@
     
     <!-- ---------------- ПІДВАЛ ---------------- -->
     <footer style="margin-top: 40px; padding: 25px 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.9rem; color: var(--gray-text);">
-        <div>🐾 <strong>VetCalc</strong> — Автоматизований Ветеринарний Аудитор Дозування та Інфузій</div>
+        <div><i data-lucide="shield-check" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; color: var(--primary);"></i> <strong>VetCalc</strong> — Автоматизований Ветеринарний Аудитор Дозування та Інфузій</div>
         <div style="margin-top: 6px; font-size: 0.8rem; color: #a0aec0;">Рекомендовано Асоціацією ветеринарних анестезіологів України (2026)</div>
         <div style="margin-top: 12px;">
-            <button class="footer-legal-btn" onclick="openLegalModal()">⚖️ Угода користувача & Обмеження відповідальності</button>
+            <button class="footer-legal-btn" onclick="openLegalModal()"><i data-lucide="scale" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Угода користувача & Обмеження відповідальності</button>
         </div>
     </footer>
 </div>
@@ -1434,19 +1689,19 @@
 <div id="legal-modal" class="modal-overlay">
     <div class="modal-card">
         <div class="modal-header">
-            <div class="modal-title">⚖️ Угода користувача & Обмеження відповідальності</div>
+            <div class="modal-title"><i data-lucide="scale" style="width: 20px; height: 20px; color: var(--primary);"></i> <span>Угода користувача & Обмеження відповідальності</span></div>
         </div>
         <div class="modal-body">
-            <div style="background-color: #fff9e6; border-left: 4px solid #d4a359; padding: 12px 16px; border-radius: 6px; margin-bottom: 18px; color: #7a5c00; font-weight: 500; font-size: 0.92rem;">
-                ⚠️ <strong>КЛІНІЧНЕ ПОПЕРЕДЖЕННЯ:</strong> Ця програма призначена виключно для ліцензованих ветеринарних лікарів та спеціалістів.
+            <div style="background-color: #fff9e6; border-left: 4px solid #d4a359; padding: 12px 16px; border-radius: 6px; margin-bottom: 18px; color: #7a5c00; font-weight: 500; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: #7a5c00; flex-shrink: 0;"></i> <strong>КЛІНІЧНЕ ПОПЕРЕДЖЕННЯ:</strong> Ця програма призначена виключно для ліцензованих ветеринарних лікарів та спеціалістов.
             </div>
             
-            <h4>🏅 1. Статус та Клінічна Сертифікація</h4>
+            <h4><i data-lucide="award" style="color: var(--primary); width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> <span>1. Статус та Клінічна Сертифікація</span></h4>
             <p>
                 Ветеринарний калькулятор "VetCalc" є допоміжним цифровим інструментом для автоматизації медичних розрахунків. Програма отримала експертне схвалення та <strong>рекомендована Асоціацією ветеринарних анестезіологів України</strong> для практикуючих фахівців, проте її використання вимагає обов'язкової клінічної оцінки кожного окремого пацієнта.
             </p>
 
-            <h4>🛡️ 2. Повна відмова від відповідальності</h4>
+            <h4><i data-lucide="shield" style="color: var(--danger); width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> <span>2. Повна відмова від відповідальності</span></h4>
             <p>
                 Розробники сервісу, автори медичних алгоритмів, рецензенти та Асоціація ветеринарних анестезіологів України за жодних умов не несуть відповідальності перед користувачами або третіми особами за:
             </p>
@@ -1456,7 +1711,7 @@
                 <li>Форс-мажорні технічні збої чи перебої в роботі мережевих ресурсів.</li>
             </ul>
 
-            <h4>👩‍⚕️ 3. Обов'язки ветеринарного лікаря</h4>
+            <h4><i data-lucide="user-check" style="color: var(--primary); width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> <span>3. Обов'язки ветеринарного лікаря</span></h4>
             <p>
                 Використовуючи цей сервіс, ви беззастережно погоджуєтеся з тим, що:
             </p>
@@ -1481,6 +1736,7 @@
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(tabId).classList.add('active');
+        if (window.lucide) lucide.createIcons();
     }
 
     // Керування чекбоксами вибору препаратів
@@ -1555,9 +1811,10 @@
                 hourlyDoseFormula = `D_hr = ${dose} мг/кг/год * ${weight} кг = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
             }
             document.getElementById('math-hourly-dose').textContent = hourlyDoseFormula;
-            document.getElementById('math-bag-conc').innerHTML = `C_bag = (${addVol} мл * ${ampConc} мг/мл) / (${bagVolume} мл + ${addVol} мл) = ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-bag-conc').innerHTML = `C_bag = (${addVol} мл * ${ampConc} мг/мл) / (${bagVolume} мл + ${addVol} мл) = ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
             document.getElementById('math-flow-rate').textContent = `Rate = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год / ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл = ${data.infusion_rate_ml_hr.toFixed(2)} мл/год`;
             document.getElementById('math-drip-rate').textContent = `Drops = (${data.infusion_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = ${data.drops_per_minute.toFixed(2)} крапель/хв`;
+            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -1656,8 +1913,9 @@
             document.getElementById('bsa-res-dose').innerHTML = `${data.absolute_dosage.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг</span>`;
 
             document.getElementById('math-bsa-weight-g').textContent = `W_g = ${weight} кг * 1000 = ${data.weight_g.toFixed(0)} г`;
-            document.getElementById('math-bsa-calc').innerHTML = `BSA = (${data.k_factor} * (${data.weight_g.toFixed(0)} ** 2/3)) / 10000 = ${data.bsa_m2.toFixed(2)} м² <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-bsa-calc').innerHTML = `BSA = (${data.k_factor} * (${data.weight_g.toFixed(0)} ** 2/3)) / 10000 = ${data.bsa_m2.toFixed(2)} м² <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
             document.getElementById('math-bsa-dose').textContent = `Доза = ${data.bsa_m2.toFixed(2)} м² * ${dose} мг/м² = ${data.absolute_dosage.toFixed(2)} мг`;
+            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -1709,10 +1967,11 @@
         if (selectedDrugs.length < 2) {
             resultContainer.innerHTML = `
                 <div class="success-card" style="background-color: var(--dark-light); border-left-color: var(--gray-text);">
-                    <div class="success-title" style="color: var(--dark);">ℹ️ Очікування вибору</div>
+                    <div class="success-title" style="color: var(--dark); display: flex; align-items: center; gap: 8px;"><i data-lucide="info" style="color: var(--gray-text); width: 20px; height: 20px;"></i> <span>Очікування вибору</span></div>
                     <div class="success-text" style="color: var(--gray-text);">Виберіть щонайменше два препарати вище для запуску аудиту сумісності.</div>
                 </div>
             `;
+            if (window.lucide) lucide.createIcons();
             return;
         }
 
@@ -1734,11 +1993,11 @@
             }
 
             if (incompatibilities.length > 0) {
-                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark);">🚨 Виявлені загрози несумісності <span class="offline-notice">[🔌 Автономно]</span>:</h3>';
+                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark); display: flex; align-items: center; gap: 8px;"><i data-lucide="alert-triangle" style="color: var(--danger);"></i> <span>Виявлені загрози несумісності</span> <span class="offline-notice">[🔌 Автономно]</span>:</h3>';
                 incompatibilities.forEach(inc => {
                     html += `
                         <div class="danger-card">
-                            <div class="danger-title">❌ КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</div>
+                            <div class="danger-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="x-circle" style="color: var(--danger); width: 20px; height: 20px;"></i> <span>КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</span></div>
                             <div class="danger-text"><strong>Клінічне обґрунтування несумісності:</strong> ${inc.reason}</div>
                         </div>
                     `;
@@ -1747,11 +2006,12 @@
             } else {
                 resultContainer.innerHTML = `
                     <div class="success-card">
-                        <div class="success-title">✅ Безпечна комбінація підтверджена <span class="offline-notice">[🔌 Автономно]</span></div>
+                        <div class="success-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px;"></i> <span>Безпечна комбінація підтверджена</span> <span class="offline-notice">[🔌 Автономно]</span></div>
                         <div class="success-text">Суміш препаратів (${selectedDrugs.join(', ')}) є хімічно та фізично сумісною за базовою матрицею.</div>
                     </div>
                 `;
             }
+            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -1767,11 +2027,11 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === "Incompatible") {
-                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark);">🚨 Виявлені загрози несумісності:</h3>';
+                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark); display: flex; align-items: center; gap: 8px;"><i data-lucide="alert-triangle" style="color: var(--danger);"></i> <span>Виявлені загрози несумісності:</span></h3>';
                 data.incompatibilities.forEach(inc => {
                     html += `
                         <div class="danger-card">
-                            <div class="danger-title">❌ КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</div>
+                            <div class="danger-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="x-circle" style="color: var(--danger); width: 20px; height: 20px;"></i> <span>КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</span></div>
                             <div class="danger-text"><strong>Клінічне обґрунтування несумісності:</strong> ${inc.reason}</div>
                         </div>
                     `;
@@ -1780,11 +2040,12 @@
             } else {
                 resultContainer.innerHTML = `
                     <div class="success-card">
-                        <div class="success-title">✅ Безпечна комбінація підтверджена</div>
+                        <div class="success-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px;"></i> <span>Безпечна комбінація підтверджена</span></div>
                         <div class="success-text">${data.message}</div>
                     </div>
                 `;
             }
+            if (window.lucide) lucide.createIcons();
         })
         .catch(err => {
             console.warn("Помилка сумісності API, перехід на офлайн-режим:", err);
@@ -1820,11 +2081,12 @@
             document.getElementById('fluid-res-rate').innerHTML = `${data.hourly_fluid_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
             document.getElementById('fluid-res-drip').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
 
-            document.getElementById('math-fluid-deficit').innerHTML = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${data.dehydration_deficit_ml.toFixed(2)} мл рідини <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-fluid-deficit').innerHTML = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${data.dehydration_deficit_ml.toFixed(2)} мл рідини <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
             document.getElementById('math-fluid-maintenance').textContent = `Maintenance = ${weight} кг * ${maintenance} мл/кг/добу = ${data.maintenance_ml_day.toFixed(2)} мл/добу`;
             document.getElementById('math-fluid-total').textContent = `Total = ${data.dehydration_deficit_ml.toFixed(2)} мл (дефіцит) + ${data.maintenance_ml_day.toFixed(2)} мл (потреба) + ${losses} мл (втрати) = ${data.total_fluid_required_ml_day.toFixed(2)} мл/добу`;
             document.getElementById('math-fluid-rate-drip').innerHTML = `Потік = ${data.total_fluid_required_ml_day.toFixed(2)} мл / 24 год = <strong>${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год</strong><br>` +
                 `Краплі = (${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = <strong>${data.drops_per_minute.toFixed(2)} крапель/хв</strong>`;
+            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -1926,14 +2188,14 @@
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
                 safetyAlert.innerHTML = `
-                    <div class="success-title">✅ Показники безпеки в межах норми <span class="offline-notice">[🔌 Автономно]</span></div>
+                    <div class="success-title"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>Показники безпеки в межах норми</span> <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></div>
                     <div class="success-text">Введена швидкість калію (${targetDose.toFixed(2)} мЕкв/кг/год) не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
                 `;
             } else {
                 safetyAlert.className = "danger-card";
                 safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
                 safetyAlert.innerHTML = `
-                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;">🚨 КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ! <span class="offline-notice">[🔌 Автономно]</span></div>
+                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;"><i data-lucide="alert-triangle" style="color: var(--danger); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</span> <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></div>
                     <div class="danger-text" style="color: var(--danger-dark); font-weight: 500;">
                         Розраховане введення калію становить <strong>${targetDose.toFixed(2)} мЕкв/кг/год</strong>, що ПЕРЕВИЩУЄ кардіологічний ліміт безпеки <strong>0.5 мЕкв/кг/год</strong>!<br>
                         Негайне введення цієї суміші може спровокувати смертельну аритмію або зупинку серця! Будь ласка, зменшіть цільову дозу або швидкість інфузії!
@@ -1941,9 +2203,10 @@
                 `;
             }
 
-            document.getElementById('math-k-hourly').innerHTML = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-k-hourly').innerHTML = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
             document.getElementById('math-k-conc').textContent = `C_K = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл`;
             document.getElementById('math-k-volume').textContent = `V_KCl = (${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${data.kcl_volume_to_add_ml.toFixed(2)} мл`;
+            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -1981,14 +2244,14 @@
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
                 safetyAlert.innerHTML = `
-                    <div class="success-title">✅ Показники безпеки в межах норми</div>
+                    <div class="success-title"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>Показники безпеки в межах норми</span></div>
                     <div class="success-text">Введена швидкість калію (${targetDose.toFixed(2)} мЕкв/кг/год) не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
                 `;
             } else {
                 safetyAlert.className = "danger-card";
                 safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
                 safetyAlert.innerHTML = `
-                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;">🚨 КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</div>
+                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;"><i data-lucide="alert-triangle" style="color: var(--danger); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</span></div>
                     <div class="danger-text" style="color: var(--danger-dark); font-weight: 500;">
                         Розраховане введення калію становить <strong>${targetDose.toFixed(2)} мЕкв/кг/год</strong>, що ПЕРЕВИЩУЄ кардіологічний ліміт безпеки <strong>0.5 мЕкв/кг/год</strong>!<br>
                         Негайне введення цієї суміші може спровокувати смертельну аритмію або зупинку серця! Будь ласка, зменшіть цільову дозу або швидкість інфузії!
@@ -1999,6 +2262,7 @@
             document.getElementById('math-k-hourly').textContent = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${hourlyK.toFixed(2)} мЕкв/год`;
             document.getElementById('math-k-conc').textContent = `C_K = ${hourlyK.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${concK.toFixed(4)} мЕкв/мл`;
             document.getElementById('math-k-volume').textContent = `V_KCl = (${concK.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${volK.toFixed(2)} мл`;
+            if (window.lucide) lucide.createIcons();
         })
         .catch(err => {
             console.warn("Помилка калію API, перехід на офлайн-режим:", err);
@@ -2025,9 +2289,10 @@
         const safetyAlert = document.getElementById('k-safety-alert');
         safetyAlert.className = "success-card";
         safetyAlert.innerHTML = `
-            <div class="success-title">✅ Очікування коректних даних</div>
+            <div class="success-title"><i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>Очікування коректних даних</span></div>
             <div class="success-text">Введіть коректні параметри пацієнта для розрахунку калійної безпеки.</div>
         `;
+        if (window.lucide) lucide.createIcons();
     }
 
     // 6. Розрахунок CPR (Emergency)
@@ -2050,7 +2315,8 @@
             const adrLow = drugs.adrenaline_low;
             document.getElementById('em-adr-low-mg').textContent = `${adrLow.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-adr-low-ml').textContent = `${adrLow.volume_ml.toFixed(3)} мл`;
-            document.getElementById('em-adr-low-info').innerHTML = `${adrLow.safety_notes} <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('em-adr-low-info').innerHTML = `${adrLow.safety_notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
+            if (window.lucide) lucide.createIcons();
 
             const adrHigh = drugs.adrenaline_high;
             document.getElementById('em-adr-high-mg').textContent = `${adrHigh.absolute_dose_mg.toFixed(3)} мг`;
@@ -2222,6 +2488,34 @@
         document.getElementById(id).addEventListener('change', runEmergencyCalculation);
     });
 
+    // ---------------- КЕРУВАННЯ ТЕМОЮ (LIGHT/DARK) ----------------
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeToggleIcon = document.getElementById('theme-toggle-icon');
+    
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+            themeToggleIcon.setAttribute('data-lucide', 'moon');
+        } else {
+            document.body.classList.remove('dark-theme');
+            themeToggleIcon.setAttribute('data-lucide', 'sun');
+        }
+        if (window.lucide) lucide.createIcons();
+    }
+    
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('vetcalc_theme', newTheme);
+        applyTheme(newTheme);
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('vetcalc_theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+
     // ---------------- ЮРИДИЧНА УГОДА ----------------
     function checkLegalConsent() {
         const consent = localStorage.getItem('vet_disclaimer_accepted');
@@ -2245,11 +2539,12 @@
         const badge = document.getElementById('network-status');
         if (navigator.onLine) {
             badge.className = 'network-badge network-online';
-            badge.innerHTML = '🟢 Онлайн';
+            badge.innerHTML = '<i data-lucide="wifi" style="width: 16px; height: 16px;"></i> <span>Онлайн</span>';
         } else {
             badge.className = 'network-badge network-offline';
-            badge.innerHTML = '🔌 Автономно (Офлайн)';
+            badge.innerHTML = '<i data-lucide="wifi-off" style="width: 16px; height: 16px;"></i> <span>Автономно (Офлайн)</span>';
         }
+        if (window.lucide) lucide.createIcons();
         
         // Перераховуємо поточну вкладку при зміні стану мережі для візуальної синхронізації
         runCriCalculation();
@@ -2280,6 +2575,9 @@
 
     // Первинний запуск при завантаженні для ініціалізації
     document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('vetcalc_theme') || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(savedTheme);
         updateNetworkStatus();
         registerServiceWorker();
         checkLegalConsent();

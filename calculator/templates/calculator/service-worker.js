@@ -3,7 +3,8 @@ const ASSETS_TO_CACHE = [
     '/',
     '/manifest.json',
     '/vet_logo.svg',
-    'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap'
+    'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap',
+    'https://unpkg.com/lucide@latest'
 ];
 
 // Install Service Worker and cache essential shell resources
@@ -73,7 +74,8 @@ self.addEventListener('fetch', event => {
                     if (response.status === 200 && (
                         url.origin === self.location.origin ||
                         url.host.includes('fonts.googleapis.com') ||
-                        url.host.includes('fonts.gstatic.com')
+                        url.host.includes('fonts.gstatic.com') ||
+                        url.host.includes('unpkg.com')
                     )) {
                         const responseClone = response.clone();
                         caches.open(CACHE_NAME).then(cache => {
