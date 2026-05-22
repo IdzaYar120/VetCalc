@@ -8,14 +8,15 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, Any, Union
 from core.database import SPECIES_K_FACTORS
 
-def precise_round(value: Union[float, Decimal, str]) -> Decimal:
+def precise_round(value: Union[float, Decimal, str], decimals: int = 2) -> Decimal:
     """
-    Округляє значення строго до 2 десяткових знаків за допомогою ROUND_HALF_UP.
+    Округляє значення строго до вказаної кількості десяткових знаків за допомогою ROUND_HALF_UP.
     Це запобігає похибкам двійкового представлення з рухомою комою в Python.
     """
     if not isinstance(value, Decimal):
         value = Decimal(str(value))
-    return value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    fmt = '0.' + '0' * decimals if decimals > 0 else '0'
+    return value.quantize(Decimal(fmt), rounding=ROUND_HALF_UP)
 
 def calculate_cri(
     weight_kg: float,
@@ -235,10 +236,10 @@ def calculate_potassium(
     is_safe = target_k_dose_meq_kg_hr <= 0.5
 
     return {
-        "hourly_k_meq_hr": float(precise_round(hourly_k_meq)),
-        "k_concentration_meq_ml": float(precise_round(k_conc_in_fluid)),
-        "total_k_needed_meq": float(precise_round(total_k_needed_meq)),
-        "k_volume_added_ml": float(precise_round(k_volume_added_ml)),
+        "hourly_k_meq_hr": float(precise_round(hourly_k_meq, 3)),
+        "k_concentration_meq_ml": float(precise_round(k_conc_in_fluid, 4)),
+        "total_k_needed_meq": float(precise_round(total_k_needed_meq, 3)),
+        "k_volume_added_ml": float(precise_round(k_volume_added_ml, 4)),
         "is_safe": is_safe
     }
 
@@ -284,38 +285,38 @@ def calculate_emergency_doses(weight_kg: float) -> Dict[str, Any]:
 
     return {
         "adrenaline_low": {
-            "dose_mg": float(precise_round(epi_low_mg)),
-            "volume_ml": float(precise_round(epi_low_ml)),
+            "dose_mg": float(precise_round(epi_low_mg, 4)),
+            "volume_ml": float(precise_round(epi_low_ml, 4)),
             "info": "Низька доза CPR. Застосовується першочергово при зупинці серця кожні 3-5 хвилин."
         },
         "adrenaline_high": {
-            "dose_mg": float(precise_round(epi_high_mg)),
-            "volume_ml": float(precise_round(epi_high_ml)),
+            "dose_mg": float(precise_round(epi_high_mg, 4)),
+            "volume_ml": float(precise_round(epi_high_ml, 4)),
             "info": "Висока доза CPR. Застосовується виключно при тривалій реанімації (>10 хвилин)."
         },
         "atropine": {
-            "dose_mg": float(precise_round(atropine_mg)),
-            "volume_ml": float(precise_round(atropine_ml)),
+            "dose_mg": float(precise_round(atropine_mg, 4)),
+            "volume_ml": float(precise_round(atropine_ml, 4)),
             "info": "При вираженій брадикардії або асистолії. Концентрація розчину 0.5 мг/мл."
         },
         "lidocaine_dog": {
-            "dose_mg": float(precise_round(lido_dog_mg)),
-            "volume_ml": float(precise_round(lido_dog_ml)),
+            "dose_mg": float(precise_round(lido_dog_mg, 4)),
+            "volume_ml": float(precise_round(lido_dog_ml, 4)),
             "info": "Для собак при шлуночковій тахікардії. Концентрація 2% (20 мг/мл)."
         },
         "lidocaine_cat": {
-            "dose_mg": float(precise_round(lido_cat_mg)),
-            "volume_ml": float(precise_round(lido_cat_ml)),
+            "dose_mg": float(precise_round(lido_cat_mg, 4)),
+            "volume_ml": float(precise_round(lido_cat_ml, 4)),
             "info": "⚠️ ДЛЯ КОТІВ! Знижене дозування через кардіодепресивний ефект та високу чутливість."
         },
         "naloxone": {
-            "dose_mg": float(precise_round(naloxone_mg)),
-            "volume_ml": float(precise_round(naloxone_ml)),
+            "dose_mg": float(precise_round(naloxone_mg, 4)),
+            "volume_ml": float(precise_round(naloxone_ml, 4)),
             "info": "Антагоніст опіоїдів при передозуванні чи пригніченні дихання. Концентрація 0.4 мг/мл."
         },
         "dexamethasone": {
-            "dose_mg": float(precise_round(dexa_mg)),
-            "volume_ml": float(precise_round(dexa_ml)),
+            "dose_mg": float(precise_round(dexa_mg, 4)),
+            "volume_ml": float(precise_round(dexa_ml, 4)),
             "info": "Глюкокортикоїд при гострому анафілактичному шоці. Концентрація 4 мг/мл."
         }
     }
