@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ветеринарний Аудитор Дозування та Інфузій 🐾</title>
+    <!-- PWA Meta Tags & Web App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#17b978">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VetCalc">
+    <link rel="apple-touch-icon" href="/vet_logo.svg">
     <!-- Google Fonts: Outfit for clean, modern look & Roboto Mono for data displays -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -644,14 +651,47 @@
             border-color: var(--primary);
             background-color: var(--primary-light);
         }
+
+        /* Network Status Badge & PWA support */
+        .network-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+        .network-online {
+            background-color: var(--success-light);
+            color: var(--success-dark);
+            border: 1px solid rgba(56, 161, 105, 0.25);
+        }
+        .network-offline {
+            background-color: #fff5f5;
+            color: var(--danger-dark);
+            border: 1px solid rgba(229, 62, 62, 0.25);
+            animation: pulse-slow 2s infinite ease-in-out;
+        }
+        .offline-notice {
+            color: #dd6b20 !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <div class="app-title">🐾 Ветеринарний Аудитор Дозування та Інфузій</div>
-        <div class="app-subtitle">Автоматизована експертна система розрахунків з повним контролем безпеки</div>
+        <div class="app-title" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="/vet_logo.svg" alt="VetCalc Logo" style="width: 48px; height: 48px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));">
+                <span>Ветеринарний Аудитор Дозування та Інфузій</span>
+            </div>
+            <div id="network-status" class="network-badge network-online">🟢 Онлайн</div>
+        </div>
+        <div class="app-subtitle" style="margin-top: 8px;">Автоматизована експертна система розрахунків з повним контролем безпеки</div>
         
         <!-- Плашка Клінічної Сертифікації -->
         <div class="certification-badge">
@@ -1265,13 +1305,116 @@
 </div>
 
 <script>
+    // ---------------- КЛІЄНТСЬКА БАЗА ДАНИХ ТА КОНСТАНТИ (АВТОНОМНИЙ РЕЖИМ) ----------------
+    const LOCAL_SPECIES_K_FACTORS = {
+        "Собака": 10.1,
+        "Кіт": 10.0,
+        "Птах": 10.4,
+        "Гризун": 9.0
+    };
+
+    const LOCAL_COMPATIBILITY_MATRIX = {
+        "Пропофол": {
+            "Пропофол": {"status": "Сумісний", "reason": "Однорідна суміш одного препарату."},
+            "Діазепам": {
+                "status": "Несумісний",
+                "reason": "Діазепам містить пропіленгліколь, який може дестабілізувати (зруйнувати) ліпідну емульсію Пропофолу, що призводить до злиття крапель жиру та викликає високий ризик жирової емболії судин."
+            },
+            "Кальцію глюконат": {
+                "status": "Несумісний",
+                "reason": "Двовалентні іони кальцію нейтралізують стабілізуючий негативний поверхневий заряд крапель Пропофолу, викликаючи миттєве розшарування (руйнування) емульсії."
+            },
+            "Мідазолам": {
+                "status": "Несумісний",
+                "reason": "Мідазолам (кислий pH ~3.0) зміщує водневий показник нейтрально-лужної емульсії Пропофолу, що дестабілізує ліпідну основу та призводить до розшарування емульсії."
+            },
+            "Фуросемід": {
+                "status": "Несумісний",
+                "reason": "Високолужний pH Фуросеміду (~8.5-9.0) дестабілізує чутливу ліпідну емульсію Пропофолу, що призводить до швидкого руйнування емульсійної форми."
+            }
+        },
+        "Діазепам": {
+            "Пропофол": {
+                "status": "Несумісний",
+                "reason": "Діазепам містить пропіленгліколь, який може дестабілізувати (зруйнувати) ліпідну емульсію Пропофолу, викликаючи високий ризик жирової емболії."
+            },
+            "Діазепам": {"status": "Сумісний", "reason": "Однорідна суміш одного препарату."},
+            "Кальцію глюконат": {
+                "status": "Несумісний",
+                "reason": "Діазепам практично нерозчинний у водних розчинах і випадає в осад миттєво при змішуванні з препаратами на водній основі, такими як Кальцію глюконат."
+            },
+            "Мідазолам": {
+                "status": "Несумісний",
+                "reason": "Несумісність розчинників та ризик фізичного випадання в осад. Діазепам виготовлений на основі пропіленгліколю, тоді як Мідазолам має водну основу."
+            },
+            "Фуросемід": {
+                "status": "Несумісний",
+                "reason": "Миттєве випадання в осад. Різниця в pH та несумісність розчинників змушують Діазепам випадати з розчину у вигляді твердих кристалів."
+            }
+        },
+        "Кальцію глюконат": {
+            "Пропофол": {
+                "status": "Несумісний",
+                "reason": "Двовалентні іони кальцію нейтралізують стабілізуючий негативний поверхневий заряд крапель Пропофолу, викликаючи миттєве розшарування (руйнування) емульсії."
+            },
+            "Діазепам": {
+                "status": "Несумісний",
+                "reason": "Діазепам практично нерозчинний у водних розчинах і випадає в осад миттєво при змішуванні з препаратами на водній основі, такими як Кальцію глюконат."
+            },
+            "Кальцію глюконат": {"status": "Сумісний", "reason": "Однорідна суміш одного препарату."},
+            "Мідазолам": {
+                "status": "Несумісний",
+                "reason": "Фізична несумісність. Ризик випадання в осад солі мідазоламу внаслідок зміни pH розчину та іонної взаємодії."
+            },
+            "Фуросемід": {
+                "status": "Несумісний",
+                "reason": "Миттєве утворення осаду. Іони кальцію вступають у реакцію з фуросемідом, утворюючи нерозчинні кристали фуросеміду кальцію, що повністю блокує інфузійні лінії та створює смертельний ризик емболії легеневої артерії."
+            }
+        },
+        "Мідазолам": {
+            "Пропофол": {
+                "status": "Несумісний",
+                "reason": "Мідазолам (кислий pH ~3.0) зміщує водневий показник нейтрально-лужної emulsions Пропофолу, що дестабілізує ліпідну основу та призводить до її розшарування."
+            },
+            "Діазепам": {
+                "status": "Несумісний",
+                "reason": "Несумісність розчинників та ризик фізичного випадання в осад. Діазепам виготовлений на основі пропіленгліколю, тоді як Мідазолам має водну основу."
+            },
+            "Кальцію глюконат": {
+                "status": "Несумісний",
+                "reason": "Фізична несумісність. Ризик випадання в осад солі мідазоламу внаслідок зміни pH розчину та іонної взаємодії."
+            },
+            "Мідазолам": {"status": "Сумісний", "reason": "Однорідна суміш одного препарату."},
+            "Фуросемід": {
+                "status": "Несумісний",
+                "reason": "Миттєве і масивне випадання осаду. Мідазолам потребує кислого середовища (pH ~3.0) для збереження розчинності. Фуросемід є високолужним (pH ~8.5-9.0), що різко підвищує загальний pH суміші та викликає миттєву кристалізацію мідазоламу у вигляді голчастих кристалів."
+            }
+        },
+        "Фуросемід": {
+            "Пропофол": {
+                "status": "Несумісний",
+                "reason": "Високолужний pH Фуросеміду (~8.5-9.0) дестабілізує чутливу ліпідну емульсію Пропофолу, що призводить до швидкого руйнування емульсійної форми."
+            },
+            "Діазепам": {
+                "status": "Несумісний",
+                "reason": "Миттєве випадання в осад. Різниця в pH та несумісність розчинників змушують Діазепам випадати з розчину у вигляді твердих кристалів."
+            },
+            "Кальцію глюконат": {
+                "status": "Несумісний",
+                "reason": "Миттєве утворення осаду. Іони кальцію вступають у реакцію з фуросемідом, утворюючи нерозчинні кристали фуросеміду кальцію, що повністю блокує інфузійні лінії та створює смертельний ризик емболії."
+            },
+            "Мідазолам": {
+                "status": "Несумісний",
+                "reason": "Миттєве і масивне випадання осаду. Мідазолам потребує кислого середовища (pH ~3.0) для збереження розчинності. Фуросемід є високолужним (pH ~8.5-9.0), що різко підвищує загальний pH суміші та викликає миттєву кристалізацію мідазоламу у вигляді голчастих кристалів."
+            },
+            "Фуросемід": {"status": "Сумісний", "reason": "Однорідна суміш одного препарату."}
+        }
+    };
+
     // Зміна вкладок
     function switchTab(tabId, btn) {
-        // Деактивація всіх кнопок і контенту
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        // Активація вибраних
         btn.classList.add('active');
         document.getElementById(tabId).classList.add('active');
     }
@@ -1288,7 +1431,6 @@
         triggerAudit();
     }
 
-    // Синхронізація стилю кліку на сам чекбокс
     document.querySelectorAll('.checkbox-card input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             const card = this.closest('.checkbox-card');
@@ -1301,9 +1443,137 @@
         });
     });
 
+    // ---------------- КЛІЄНТСЬКІ ЕМУЛЯТОРИ МАТЕМАТИКИ (ВИСОКА ТОЧНІСТЬ) ----------------
+    
+    function calculateCriLocal(weight, bagVolume, dose, doseUnit, ampConc, addVol, dripFactor) {
+        const v_total = bagVolume + addVol;
+        const total_drug_mg = addVol * ampConc;
+        const c_bag = v_total > 0 ? total_drug_mg / v_total : 0;
+        
+        let hourly_dose_mg = 0;
+        if (doseUnit === "mcg/kg/min" || doseUnit === "мкг/кг/хв") {
+            hourly_dose_mg = (dose * weight * 60) / 1000;
+        } else {
+            hourly_dose_mg = dose * weight;
+        }
+        
+        const rate_ml_hr = c_bag > 0 ? hourly_dose_mg / c_bag : 0;
+        const drip_rate_drops_min = (rate_ml_hr * dripFactor) / 60;
+        
+        return {
+            bag_concentration_mg_ml: c_bag,
+            infusion_rate_ml_hr: rate_ml_hr,
+            drops_per_minute: drip_rate_drops_min,
+            hourly_dose_mg_hr: hourly_dose_mg,
+            is_safe: c_bag > 0
+        };
+    }
+
+    function calculateBsaLocal(weight, species, dose) {
+        const k = LOCAL_SPECIES_K_FACTORS[species] || 10.0;
+        const w_g = weight * 1000;
+        const bsa = (k * Math.pow(w_g, 2/3)) / 10000;
+        const absolute_dose = bsa * dose;
+        return {
+            weight_g: w_g,
+            k_factor: k,
+            bsa_m2: bsa,
+            absolute_dosage: absolute_dose
+        };
+    }
+
+    function calculateFluidLocal(weight, dehydration, maintenance, losses, dripFactor) {
+        const fluid_deficit_ml = weight * dehydration * 10;
+        const maintenance_ml_day = weight * maintenance;
+        const total_volume_ml_day = fluid_deficit_ml + maintenance_ml_day + losses;
+        const infusion_rate_ml_hr = total_volume_ml_day / 24;
+        const drip_rate_drops_min = (infusion_rate_ml_hr * dripFactor) / 60;
+        return {
+            dehydration_deficit_ml: fluid_deficit_ml,
+            maintenance_ml_day: maintenance_ml_day,
+            total_fluid_required_ml_day: total_volume_ml_day,
+            hourly_fluid_rate_ml_hr: infusion_rate_ml_hr,
+            drops_per_minute: drip_rate_drops_min
+        };
+    }
+
+    function calculatePotassiumLocal(weight, bagVolume, infusionRate, targetDose, ampouleConc) {
+        const hourly_k_delivered_meq_hr = weight * targetDose;
+        const required_k_concentration_meq_ml = hourly_k_delivered_meq_hr / infusionRate;
+        const total_k_needed_for_bag_meq = required_k_concentration_meq_ml * bagVolume;
+        const kcl_volume_to_add_ml = total_k_needed_for_bag_meq / ampouleConc;
+        const is_safe = targetDose <= 0.5;
+        return {
+            hourly_k_delivered_meq_hr,
+            required_k_concentration_meq_ml,
+            total_k_needed_for_bag_meq,
+            kcl_volume_to_add_ml,
+            is_safe
+        };
+    }
+
+    function calculateEmergencyLocal(weight) {
+        const epi_low_mg = weight * 0.01;
+        const epi_low_ml = epi_low_mg / 1.0;
+        const epi_high_mg = weight * 0.1;
+        const epi_high_ml = epi_high_mg / 1.0;
+
+        const atropine_mg = weight * 0.04;
+        const atropine_ml = atropine_mg / 0.5;
+
+        const lido_dog_mg = weight * 2.0;
+        const lido_dog_ml = lido_dog_mg / 20.0;
+        const lido_cat_mg = weight * 0.2;
+        const lido_cat_ml = lido_cat_mg / 20.0;
+
+        const naloxone_mg = weight * 0.04;
+        const naloxone_ml = naloxone_mg / 0.4;
+
+        const dexa_mg = weight * 1.0;
+        const dexa_ml = dexa_mg / 4.0;
+
+        return {
+            adrenaline_low: {
+                absolute_dose_mg: epi_low_mg,
+                volume_ml: epi_low_ml,
+                safety_notes: "Низька доза CPR. Застосовується першочергово при зупинці серця кожні 3-5 хвилин."
+            },
+            adrenaline_high: {
+                absolute_dose_mg: epi_high_mg,
+                volume_ml: epi_high_ml,
+                safety_notes: "Висока доза CPR. Застосовується виключно при тривалій реанімації (>10 хвилин)."
+            },
+            atropine: {
+                absolute_dose_mg: atropine_mg,
+                volume_ml: atropine_ml,
+                safety_notes: "При вираженій брадикардії або асистолії. Концентрація розчину 0.5 мг/мл."
+            },
+            lidocaine_dog: {
+                absolute_dose_mg: lido_dog_mg,
+                volume_ml: lido_dog_ml,
+                safety_notes: "Для собак при шлуночковій тахікардії. Концентрація 2% (20 мг/мл)."
+            },
+            lidocaine_cat: {
+                absolute_dose_mg: lido_cat_mg,
+                volume_ml: lido_cat_ml,
+                safety_notes: "⚠️ ДЛЯ КОТІВ! Знижене дозування через кардіодепресивний ефект та високу чутливість."
+            },
+            naloxone: {
+                absolute_dose_mg: naloxone_mg,
+                volume_ml: naloxone_ml,
+                safety_notes: "Антагоніст опіоїдів при передозуванні чи пригніченні дихання. Концентрація 0.4 мг/мл."
+            },
+            dexamethasone: {
+                absolute_dose_mg: dexa_mg,
+                volume_ml: dexa_ml,
+                safety_notes: "Глюкокортикоїд при гострому анафілактичному шоці. Концентрація 4 мг/мл."
+            }
+        };
+    }
+
     // ---------------- РЕАКТИВНА AJAX-ВЗАЄМОДІЯ З BACKEND ----------------
 
-    // 1. Автоматичний розрахунок CRI
+    // 1. Розрахунок CRI
     function runCriCalculation() {
         const weight = parseFloat(document.getElementById('cri-weight').value) || 0;
         const bagVolume = parseFloat(document.getElementById('cri-bag-volume').value) || 0;
@@ -1312,10 +1582,8 @@
         const ampConc = parseFloat(document.getElementById('cri-amp-conc').value) || 0;
         const addVol = parseFloat(document.getElementById('cri-add-vol').value) || 0;
         const dripFactor = parseInt(document.getElementById('cri-drip-factor').value) || 20;
-
         const errorBanner = document.getElementById('cri-error-banner');
         
-        // Клінічна валідація на клієнті
         if (weight <= 0) {
             showCriError("❌ Помилка валідації: Вага тварини повинна бути строго більше 0 кг.");
             return;
@@ -1333,15 +1601,34 @@
             return;
         }
 
-        // Приховуємо банери помилок
         errorBanner.style.display = 'none';
 
-        // Виклик API
+        const runLocal = () => {
+            const data = calculateCriLocal(weight, bagVolume, dose, doseUnit, ampConc, addVol, dripFactor);
+            document.getElementById('cri-res-bag-conc').innerHTML = `${data.bag_concentration_mg_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг/мл</span>`;
+            document.getElementById('cri-res-infusion-rate').innerHTML = `${data.infusion_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
+            document.getElementById('cri-res-drip-rate').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
+
+            let hourlyDoseFormula = "";
+            if (doseUnit === "мкг/кг/хв") {
+                hourlyDoseFormula = `D_hr = (${dose} мкг/кг/хв * ${weight} кг * 60 хв) / 1000 = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
+            } else {
+                hourlyDoseFormula = `D_hr = ${dose} мг/кг/год * ${weight} кг = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
+            }
+            document.getElementById('math-hourly-dose').textContent = hourlyDoseFormula;
+            document.getElementById('math-bag-conc').innerHTML = `C_bag = (${addVol} мл * ${ampConc} мг/мл) / (${bagVolume} мл + ${addVol} мл) = ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-flow-rate').textContent = `Rate = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год / ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл = ${data.infusion_rate_ml_hr.toFixed(2)} мл/год`;
+            document.getElementById('math-drip-rate').textContent = `Drops = (${data.infusion_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = ${data.drops_per_minute.toFixed(2)} крапель/хв`;
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
         fetch('/api/calculate-cri/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 weight_kg: weight,
                 bag_volume_ml: bagVolume,
@@ -1353,21 +1640,16 @@
             })
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
-            }
+            if (!response.ok) throw new Error("Невідома помилка");
             return response.json();
         })
         .then(data => {
-            // Оновлення метрик на сторінці
             document.getElementById('cri-res-bag-conc').innerHTML = `${data.bag_concentration_mg_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг/мл</span>`;
             document.getElementById('cri-res-infusion-rate').innerHTML = `${data.infusion_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
             document.getElementById('cri-res-drip-rate').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
 
-            // Оновлення математичного аудиту
-            const doseUnitText = doseUnit === "mcg/kg/min" || doseUnit === "мкг/кг/хв" ? "мкг/кг/хв" : "мг/кг/год";
             let hourlyDoseFormula = "";
-            if (doseUnit === "мкг/кг/хв") {
+            if (doseUnit === "мкг/кг/хв" || doseUnit === "mcg/kg/min") {
                 hourlyDoseFormula = `D_hr = (${dose} мкг/кг/хв * ${weight} кг * 60 хв) / 1000 = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
             } else {
                 hourlyDoseFormula = `D_hr = ${dose} мг/кг/год * ${weight} кг = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
@@ -1378,7 +1660,8 @@
             document.getElementById('math-drip-rate').textContent = `Drops = (${data.infusion_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = ${data.drops_per_minute.toFixed(2)} крапель/хв`;
         })
         .catch(err => {
-            showCriError(`❌ Помилка розрахунку: ${err.message}`);
+            console.warn("Помилка CRI API, перехід на офлайн-режим:", err);
+            runLocal();
         });
     }
 
@@ -1412,7 +1695,7 @@
         document.getElementById('math-drip-rate').textContent = "Розрахунок припинено.";
     }
 
-    // 2. Автоматичний розрахунок BSA
+    // 2. Розрахунок BSA
     function runBsaCalculation() {
         const species = document.getElementById('bsa-species').value;
         const weight = parseFloat(document.getElementById('bsa-weight').value) || 0;
@@ -1428,11 +1711,24 @@
 
         errorBanner.style.display = 'none';
 
+        const runLocal = () => {
+            const data = calculateBsaLocal(weight, species, dose);
+            document.getElementById('bsa-res-m2').innerHTML = `${data.bsa_m2.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">м²</span>`;
+            document.getElementById('bsa-res-dose').innerHTML = `${data.absolute_dosage.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг</span>`;
+
+            document.getElementById('math-bsa-weight-g').textContent = `W_g = ${weight} кг * 1000 = ${data.weight_g.toFixed(0)} г`;
+            document.getElementById('math-bsa-calc').innerHTML = `BSA = (${data.k_factor} * (${data.weight_g.toFixed(0)} ** 2/3)) / 10000 = ${data.bsa_m2.toFixed(2)} м² <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-bsa-dose').textContent = `Доза = ${data.bsa_m2.toFixed(2)} м² * ${dose} мг/м² = ${data.absolute_dosage.toFixed(2)} мг`;
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
         fetch('/api/calculate-bsa/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 weight_kg: weight,
                 species: species,
@@ -1440,24 +1736,20 @@
             })
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
-            }
+            if (!response.ok) throw new Error("Невідома помилка");
             return response.json();
         })
         .then(data => {
             document.getElementById('bsa-res-m2').innerHTML = `${data.bsa_m2.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">м²</span>`;
             document.getElementById('bsa-res-dose').innerHTML = `${data.absolute_dosage.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг</span>`;
 
-            // Покрокова математика
             document.getElementById('math-bsa-weight-g').textContent = `W_g = ${weight} кг * 1000 = ${data.weight_g.toFixed(0)} г`;
             document.getElementById('math-bsa-calc').textContent = `BSA = (${data.k_factor} * (${data.weight_g.toFixed(0)} ** 2/3)) / 10000 = ${data.bsa_m2.toFixed(2)} м²`;
             document.getElementById('math-bsa-dose').textContent = `Доза = ${data.bsa_m2.toFixed(2)} м² * ${dose} мг/м² = ${data.absolute_dosage.toFixed(2)} мг`;
         })
         .catch(err => {
-            errorBanner.textContent = `❌ Помилка: ${err.message}`;
-            errorBanner.style.display = 'block';
-            resetBsaResults();
+            console.warn("Помилка BSA API, перехід на офлайн-режим:", err);
+            runLocal();
         });
     }
 
@@ -1469,7 +1761,7 @@
         document.getElementById('math-bsa-dose').textContent = "Розрахунок скасовано.";
     }
 
-    // 3. Автоматичний аудит сумісності ліків
+    // 3. Аудит сумісності ліків
     function triggerAudit() {
         const checkedBoxes = document.querySelectorAll('input[name="audit-drugs"]:checked');
         const selectedDrugs = Array.from(checkedBoxes).map(cb => cb.value);
@@ -1485,14 +1777,53 @@
             return;
         }
 
+        const runLocal = () => {
+            const incompatibilities = [];
+            for (let i = 0; i < selectedDrugs.length; i++) {
+                for (let j = i + 1; j < selectedDrugs.length; j++) {
+                    const d1 = selectedDrugs[i];
+                    const d2 = selectedDrugs[j];
+                    const audit = (LOCAL_COMPATIBILITY_MATRIX[d1] || {})[d2] || {};
+                    if (audit && audit.status === "Несумісний") {
+                        incompatibilities.push({
+                            drug1: d1,
+                            drug2: d2,
+                            reason: audit.reason || "Невідома несумісність."
+                        });
+                    }
+                }
+            }
+
+            if (incompatibilities.length > 0) {
+                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark);">🚨 Виявлені загрози несумісності <span class="offline-notice">[🔌 Автономно]</span>:</h3>';
+                incompatibilities.forEach(inc => {
+                    html += `
+                        <div class="danger-card">
+                            <div class="danger-title">❌ КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</div>
+                            <div class="danger-text"><strong>Клінічне обґрунтування несумісності:</strong> ${inc.reason}</div>
+                        </div>
+                    `;
+                });
+                resultContainer.innerHTML = html;
+            } else {
+                resultContainer.innerHTML = `
+                    <div class="success-card">
+                        <div class="success-title">✅ Безпечна комбінація підтверджена <span class="offline-notice">[🔌 Автономно]</span></div>
+                        <div class="success-text">Суміш препаратів (${selectedDrugs.join(', ')}) є хімічно та фізично сумісною за базовою матрицею.</div>
+                    </div>
+                `;
+            }
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
         fetch('/api/audit-compatibility/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                selected_drugs: selectedDrugs
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ selected_drugs: selectedDrugs })
         })
         .then(response => response.json())
         .then(data => {
@@ -1517,23 +1848,18 @@
             }
         })
         .catch(err => {
-            resultContainer.innerHTML = `
-                <div class="danger-card">
-                    <div class="danger-title">Помилка аудиту</div>
-                    <div class="danger-text">${err.message}</div>
-                </div>
-            `;
+            console.warn("Помилка сумісності API, перехід на офлайн-режим:", err);
+            runLocal();
         });
     }
 
-    // 3. Автоматичний розрахунок інфузійної терапії (Гідратація)
+    // 4. Розрахунок інфузійної терапії (Гідратація)
     function runFluidCalculation() {
         const weight = parseFloat(document.getElementById('fluid-weight').value) || 0;
         const dehydration = parseFloat(document.getElementById('fluid-dehydration').value) || 0;
         const maintenance = parseFloat(document.getElementById('fluid-maintenance').value) || 0;
         const losses = parseFloat(document.getElementById('fluid-losses').value) || 0;
         const dripFactor = parseInt(document.getElementById('fluid-drip-factor').value) || 20;
-
         const errorBanner = document.getElementById('fluid-error-banner');
 
         if (weight <= 0) {
@@ -1547,11 +1873,29 @@
 
         errorBanner.style.display = 'none';
 
+        const runLocal = () => {
+            const data = calculateFluidLocal(weight, dehydration, maintenance, losses, dripFactor);
+            document.getElementById('fluid-res-deficit').innerHTML = `${data.dehydration_deficit_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+            document.getElementById('fluid-res-maintenance').innerHTML = `${data.maintenance_ml_day.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
+            document.getElementById('fluid-res-total').innerHTML = `${data.total_fluid_required_ml_day.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
+            document.getElementById('fluid-res-rate').innerHTML = `${data.hourly_fluid_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
+            document.getElementById('fluid-res-drip').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
+
+            document.getElementById('math-fluid-deficit').innerHTML = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${data.dehydration_deficit_ml.toFixed(2)} мл рідини <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-fluid-maintenance').textContent = `Maintenance = ${weight} кг * ${maintenance} мл/кг/добу = ${data.maintenance_ml_day.toFixed(2)} мл/добу`;
+            document.getElementById('math-fluid-total').textContent = `Total = ${data.dehydration_deficit_ml.toFixed(2)} мл (дефіцит) + ${data.maintenance_ml_day.toFixed(2)} мл (потреба) + ${losses} мл (втрати) = ${data.total_fluid_required_ml_day.toFixed(2)} мл/добу`;
+            document.getElementById('math-fluid-rate-drip').innerHTML = `Потік = ${data.total_fluid_required_ml_day.toFixed(2)} мл / 24 год = <strong>${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год</strong><br>` +
+                `Краплі = (${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = <strong>${data.drops_per_minute.toFixed(2)} крапель/хв</strong>`;
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
         fetch('/api/calculate-fluid-therapy/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 weight_kg: weight,
                 dehydration_percent: dehydration,
@@ -1561,27 +1905,29 @@
             })
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
-            }
+            if (!response.ok) throw new Error("Невідома помилка");
             return response.json();
         })
         .then(data => {
-            document.getElementById('fluid-res-deficit').innerHTML = `${data.dehydration_deficit_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+            const deficit = data.dehydration_deficit_ml !== undefined ? data.dehydration_deficit_ml : data.fluid_deficit_ml;
+            const total = data.total_fluid_required_ml_day !== undefined ? data.total_fluid_required_ml_day : data.total_volume_ml_day;
+            const rate = data.hourly_fluid_rate_ml_hr !== undefined ? data.hourly_fluid_rate_ml_hr : data.infusion_rate_ml_hr;
+
+            document.getElementById('fluid-res-deficit').innerHTML = `${deficit.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
             document.getElementById('fluid-res-maintenance').innerHTML = `${data.maintenance_ml_day.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
-            document.getElementById('fluid-res-total').innerHTML = `${data.total_fluid_required_ml_day.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
-            document.getElementById('fluid-res-rate').innerHTML = `${data.hourly_fluid_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
+            document.getElementById('fluid-res-total').innerHTML = `${total.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/добу</span>`;
+            document.getElementById('fluid-res-rate').innerHTML = `${rate.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
             document.getElementById('fluid-res-drip').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
 
-            // Покроковий аудит
-            document.getElementById('math-fluid-deficit').textContent = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${data.dehydration_deficit_ml.toFixed(2)} мл рідини`;
+            document.getElementById('math-fluid-deficit').textContent = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${deficit.toFixed(2)} мл рідини`;
             document.getElementById('math-fluid-maintenance').textContent = `Maintenance = ${weight} кг * ${maintenance} мл/кг/добу = ${data.maintenance_ml_day.toFixed(2)} мл/добу`;
-            document.getElementById('math-fluid-total').textContent = `Total = ${data.dehydration_deficit_ml.toFixed(2)} мл (дефіцит) + ${data.maintenance_ml_day.toFixed(2)} мл (потреба) + ${losses} мл (втрати) = ${data.total_fluid_required_ml_day.toFixed(2)} мл/добу`;
-            document.getElementById('math-fluid-rate-drip').innerHTML = `Потік = ${data.total_fluid_required_ml_day.toFixed(2)} мл / 24 год = <strong>${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год</strong><br>` +
-                `Краплі = (${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = <strong>${data.drops_per_minute.toFixed(2)} крапель/хв</strong>`;
+            document.getElementById('math-fluid-total').textContent = `Total = ${deficit.toFixed(2)} мл (дефіцит) + ${data.maintenance_ml_day.toFixed(2)} мл (потреба) + ${losses} мл (втрати) = ${total.toFixed(2)} мл/добу`;
+            document.getElementById('math-fluid-rate-drip').innerHTML = `Потік = ${total.toFixed(2)} мл / 24 год = <strong>${rate.toFixed(2)} мл/год</strong><br>` +
+                `Краплі = (${rate.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = <strong>${data.drops_per_minute.toFixed(2)} крапель/хв</strong>`;
         })
         .catch(err => {
-            showFluidError(`❌ Помилка: ${err.message}`);
+            console.warn("Помилка рідини API, перехід на офлайн-режим:", err);
+            runLocal();
         });
     }
 
@@ -1604,7 +1950,7 @@
         document.getElementById('math-fluid-rate-drip').textContent = "Розрахунок скасовано.";
     }
 
-    // 4. Автоматичний розрахунок безпеки калію (K-max)
+    // 5. Розрахунок безпеки калію (K-max)
     function runPotassiumCalculation() {
         const weight = parseFloat(document.getElementById('k-weight').value) || 0;
         const bagVolume = parseFloat(document.getElementById('k-bag-volume').value) || 0;
@@ -1630,11 +1976,45 @@
 
         errorBanner.style.display = 'none';
 
+        const runLocal = () => {
+            const data = calculatePotassiumLocal(weight, bagVolume, infusionRate, targetDose, ampouleConc);
+            document.getElementById('k-res-hourly-dose').innerHTML = `${data.hourly_k_delivered_meq_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/год</span>`;
+            document.getElementById('k-res-conc-in-fluid').innerHTML = `${data.required_k_concentration_meq_ml.toFixed(4)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/мл</span>`;
+            document.getElementById('k-res-total-needed').innerHTML = `${data.total_k_needed_for_bag_meq.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
+            document.getElementById('k-res-volume-added').innerHTML = `${data.kcl_volume_to_add_ml.toFixed(2)} <span style="font-size: 1.1rem; color: var(--gray-text);">мл</span>`;
+
+            if (data.is_safe) {
+                safetyAlert.className = "success-card";
+                safetyAlert.style.borderLeft = "4px solid var(--success)";
+                safetyAlert.innerHTML = `
+                    <div class="success-title">✅ Показники безпеки в межах норми <span class="offline-notice">[🔌 Автономно]</span></div>
+                    <div class="success-text">Введена швидкість калію (${targetDose.toFixed(2)} мЕкв/кг/год) не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
+                `;
+            } else {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
+                safetyAlert.innerHTML = `
+                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;">🚨 КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ! <span class="offline-notice">[🔌 Автономно]</span></div>
+                    <div class="danger-text" style="color: var(--danger-dark); font-weight: 500;">
+                        Розраховане введення калію становить <strong>${targetDose.toFixed(2)} мЕкв/кг/год</strong>, що ПЕРЕВИЩУЄ кардіологічний ліміт безпеки <strong>0.5 мЕкв/кг/год</strong>!<br>
+                        Негайне введення цієї суміші може спровокувати смертельну аритмію або зупинку серця! Будь ласка, зменшіть цільову дозу або швидкість інфузії!
+                    </div>
+                `;
+            }
+
+            document.getElementById('math-k-hourly').innerHTML = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-k-conc').textContent = `C_K = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл`;
+            document.getElementById('math-k-volume').textContent = `V_KCl = (${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${data.kcl_volume_to_add_ml.toFixed(2)} мл`;
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
         fetch('/api/calculate-potassium/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 weight_kg: weight,
                 bag_volume_ml: bagVolume,
@@ -1644,18 +2024,20 @@
             })
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
-            }
+            if (!response.ok) throw new Error("Невідома помилка");
             return response.json();
         })
         .then(data => {
-            document.getElementById('k-res-hourly-dose').innerHTML = `${data.hourly_k_delivered_meq_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/год</span>`;
-            document.getElementById('k-res-conc-in-fluid').innerHTML = `${data.required_k_concentration_meq_ml.toFixed(4)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/мл</span>`;
-            document.getElementById('k-res-total-needed').innerHTML = `${data.total_k_needed_for_bag_meq.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
-            document.getElementById('k-res-volume-added').innerHTML = `${data.kcl_volume_to_add_ml.toFixed(2)} <span style="font-size: 1.1rem; color: var(--gray-text);">мл</span>`;
+            const hourlyK = data.hourly_k_delivered_meq_hr !== undefined ? data.hourly_k_delivered_meq_hr : data.hourly_k_meq_hr;
+            const concK = data.required_k_concentration_meq_ml !== undefined ? data.required_k_concentration_meq_ml : data.k_concentration_meq_ml;
+            const totalK = data.total_k_needed_for_bag_meq !== undefined ? data.total_k_needed_for_bag_meq : data.total_k_needed_meq;
+            const volK = data.kcl_volume_to_add_ml !== undefined ? data.kcl_volume_to_add_ml : data.k_volume_added_ml;
 
-            // Реактивне оновлення банера безпеки
+            document.getElementById('k-res-hourly-dose').innerHTML = `${hourlyK.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/год</span>`;
+            document.getElementById('k-res-conc-in-fluid').innerHTML = `${concK.toFixed(4)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв/мл</span>`;
+            document.getElementById('k-res-total-needed').innerHTML = `${totalK.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
+            document.getElementById('k-res-volume-added').innerHTML = `${volK.toFixed(2)} <span style="font-size: 1.1rem; color: var(--gray-text);">мл</span>`;
+
             if (data.is_safe) {
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
@@ -1675,13 +2057,13 @@
                 `;
             }
 
-            // Покроковий аудит
-            document.getElementById('math-k-hourly').textContent = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год`;
-            document.getElementById('math-k-conc').textContent = `C_K = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл`;
-            document.getElementById('math-k-volume').textContent = `V_KCl = (${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${data.kcl_volume_to_add_ml.toFixed(2)} мл`;
+            document.getElementById('math-k-hourly').textContent = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${hourlyK.toFixed(2)} мЕкв/год`;
+            document.getElementById('math-k-conc').textContent = `C_K = ${hourlyK.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${concK.toFixed(4)} мЕкв/мл`;
+            document.getElementById('math-k-volume').textContent = `V_KCl = (${concK.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${volK.toFixed(2)} мл`;
         })
         .catch(err => {
-            showPotassiumError(`❌ Помилка: ${err.message}`);
+            console.warn("Помилка калію API, перехід на офлайн-режим:", err);
+            runLocal();
         });
     }
 
@@ -1709,7 +2091,7 @@
         `;
     }
 
-    // 5. Автоматичний розрахунок реанімаційних доз CPR (Emergency)
+    // 6. Розрахунок CPR (Emergency)
     function runEmergencyCalculation() {
         const weight = parseFloat(document.getElementById('emergency-weight').value) || 0;
         const errorBanner = document.getElementById('emergency-error-banner');
@@ -1723,70 +2105,114 @@
 
         errorBanner.style.display = 'none';
 
-        fetch('/api/calculate-emergency/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                weight_kg: weight
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error || "Невідома помилка"); });
-            }
-            return response.json();
-        })
-        .then(data => {
-            const drugs = data.emergency_drugs;
+        const runLocal = () => {
+            const drugs = calculateEmergencyLocal(weight);
             
-            // Адреналін низька доза
             const adrLow = drugs.adrenaline_low;
             document.getElementById('em-adr-low-mg').textContent = `${adrLow.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-adr-low-ml').textContent = `${adrLow.volume_ml.toFixed(3)} мл`;
-            document.getElementById('em-adr-low-info').textContent = adrLow.safety_notes;
+            document.getElementById('em-adr-low-info').innerHTML = `${adrLow.safety_notes} <span class="offline-notice">[🔌 Автономно]</span>`;
 
-            // Адреналін висока доза
             const adrHigh = drugs.adrenaline_high;
             document.getElementById('em-adr-high-mg').textContent = `${adrHigh.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-adr-high-ml').textContent = `${adrHigh.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-adr-high-info').textContent = adrHigh.safety_notes;
 
-            // Атропін
             const atr = drugs.atropine;
             document.getElementById('em-atr-mg').textContent = `${atr.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-atr-ml').textContent = `${atr.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-atr-info').textContent = atr.safety_notes;
 
-            // Лідокаїн собаки
             const lidoDog = drugs.lidocaine_dog;
             document.getElementById('em-lido-dog-mg').textContent = `${lidoDog.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-lido-dog-ml').textContent = `${lidoDog.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-lido-dog-info').textContent = lidoDog.safety_notes;
 
-            // Лідокаїн коти
             const lidoCat = drugs.lidocaine_cat;
             document.getElementById('em-lido-cat-mg').textContent = `${lidoCat.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-lido-cat-ml').textContent = `${lidoCat.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-lido-cat-info').textContent = lidoCat.safety_notes;
 
-            // Налоксон
             const nal = drugs.naloxone;
             document.getElementById('em-nal-mg').textContent = `${nal.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-nal-ml').textContent = `${nal.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-nal-info').textContent = nal.safety_notes;
 
-            // Дексаметазон
             const dex = drugs.dexamethasone;
             document.getElementById('em-dex-mg').textContent = `${dex.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-dex-ml').textContent = `${dex.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-dex-info').textContent = dex.safety_notes;
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-emergency/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ weight_kg: weight })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Невідома помилка");
+            return response.json();
+        })
+        .then(data => {
+            const drugs = data.emergency_drugs || data;
+            
+            const adrLow = drugs.adrenaline_low;
+            const doseLow = adrLow.absolute_dose_mg !== undefined ? adrLow.absolute_dose_mg : adrLow.dose_mg;
+            const infoLow = adrLow.safety_notes !== undefined ? adrLow.safety_notes : adrLow.info;
+            document.getElementById('em-adr-low-mg').textContent = `${doseLow.toFixed(3)} мг`;
+            document.getElementById('em-adr-low-ml').textContent = `${adrLow.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-adr-low-info').textContent = infoLow;
+
+            const adrHigh = drugs.adrenaline_high;
+            const doseHigh = adrHigh.absolute_dose_mg !== undefined ? adrHigh.absolute_dose_mg : adrHigh.dose_mg;
+            const infoHigh = adrHigh.safety_notes !== undefined ? adrHigh.safety_notes : adrHigh.info;
+            document.getElementById('em-adr-high-mg').textContent = `${doseHigh.toFixed(3)} мг`;
+            document.getElementById('em-adr-high-ml').textContent = `${adrHigh.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-adr-high-info').textContent = infoHigh;
+
+            const atr = drugs.atropine;
+            const doseAtr = atr.absolute_dose_mg !== undefined ? atr.absolute_dose_mg : atr.dose_mg;
+            const infoAtr = atr.safety_notes !== undefined ? atr.safety_notes : atr.info;
+            document.getElementById('em-atr-mg').textContent = `${doseAtr.toFixed(3)} мг`;
+            document.getElementById('em-atr-ml').textContent = `${atr.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-atr-info').textContent = infoAtr;
+
+            const lidoDog = drugs.lidocaine_dog;
+            const doseLidoDog = lidoDog.absolute_dose_mg !== undefined ? lidoDog.absolute_dose_mg : lidoDog.dose_mg;
+            const infoLidoDog = lidoDog.safety_notes !== undefined ? lidoDog.safety_notes : lidoDog.info;
+            document.getElementById('em-lido-dog-mg').textContent = `${doseLidoDog.toFixed(3)} мг`;
+            document.getElementById('em-lido-dog-ml').textContent = `${lidoDog.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-lido-dog-info').textContent = infoLidoDog;
+
+            const lidoCat = drugs.lidocaine_cat;
+            const doseLidoCat = lidoCat.absolute_dose_mg !== undefined ? lidoCat.absolute_dose_mg : lidoCat.dose_mg;
+            const infoLidoCat = lidoCat.safety_notes !== undefined ? lidoCat.safety_notes : lidoCat.info;
+            document.getElementById('em-lido-cat-mg').textContent = `${doseLidoCat.toFixed(3)} мг`;
+            document.getElementById('em-lido-cat-ml').textContent = `${lidoCat.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-lido-cat-info').textContent = infoLidoCat;
+
+            const nal = drugs.naloxone;
+            const doseNal = nal.absolute_dose_mg !== undefined ? nal.absolute_dose_mg : nal.dose_mg;
+            const infoNal = nal.safety_notes !== undefined ? nal.safety_notes : nal.info;
+            document.getElementById('em-nal-mg').textContent = `${doseNal.toFixed(3)} мг`;
+            document.getElementById('em-nal-ml').textContent = `${nal.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-nal-info').textContent = infoNal;
+
+            const dex = drugs.dexamethasone;
+            const doseDex = dex.absolute_dose_mg !== undefined ? dex.absolute_dose_mg : dex.dose_mg;
+            const infoDex = dex.safety_notes !== undefined ? dex.safety_notes : dex.info;
+            document.getElementById('em-dex-mg').textContent = `${doseDex.toFixed(3)} мг`;
+            document.getElementById('em-dex-ml').textContent = `${dex.volume_ml.toFixed(3)} мл`;
+            document.getElementById('em-dex-info').textContent = infoDex;
         })
         .catch(err => {
-            errorBanner.textContent = `❌ Помилка: ${err.message}`;
-            errorBanner.style.display = 'block';
-            resetEmergencyResults();
+            console.warn("Помилка реанімації API, перехід на офлайн-режим:", err);
+            runLocal();
         });
     }
 
@@ -1814,35 +2240,30 @@
     }
 
     // Слухачі подій для реактивних авто-розрахунків при введенні
-    // 1. Для CRI
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
     criInputIds.forEach(id => {
         document.getElementById(id).addEventListener('input', runCriCalculation);
         document.getElementById(id).addEventListener('change', runCriCalculation);
     });
 
-    // 2. Для BSA
     const bsaInputIds = ['bsa-species', 'bsa-weight', 'bsa-dose'];
     bsaInputIds.forEach(id => {
         document.getElementById(id).addEventListener('input', runBsaCalculation);
         document.getElementById(id).addEventListener('change', runBsaCalculation);
     });
 
-    // 3. Для Fluid Therapy (Гідратація)
     const fluidInputIds = ['fluid-weight', 'fluid-dehydration', 'fluid-maintenance', 'fluid-losses', 'fluid-drip-factor'];
     fluidInputIds.forEach(id => {
         document.getElementById(id).addEventListener('input', runFluidCalculation);
         document.getElementById(id).addEventListener('change', runFluidCalculation);
     });
 
-    // 4. Для Potassium (Безпека калію)
     const potassiumInputIds = ['k-weight', 'k-bag-volume', 'k-infusion-rate', 'k-target-dose', 'k-ampoule-conc'];
     potassiumInputIds.forEach(id => {
         document.getElementById(id).addEventListener('input', runPotassiumCalculation);
         document.getElementById(id).addEventListener('change', runPotassiumCalculation);
     });
 
-    // Зв'язування слайдера і текстового поля калію
     const kDoseInput = document.getElementById('k-target-dose');
     const kDoseRange = document.getElementById('k-target-dose-range');
 
@@ -1856,14 +2277,13 @@
         runPotassiumCalculation();
     });
 
-    // 5. Для Emergency CPR (Реанімація)
     const emergencyInputIds = ['emergency-weight'];
     emergencyInputIds.forEach(id => {
         document.getElementById(id).addEventListener('input', runEmergencyCalculation);
         document.getElementById(id).addEventListener('change', runEmergencyCalculation);
     });
 
-    // 6. Логіка Юридичної Угоди (Disclaimer & Terms of Use)
+    // ---------------- ЮРИДИЧНА УГОДА ----------------
     function checkLegalConsent() {
         const consent = localStorage.getItem('vet_disclaimer_accepted');
         if (!consent) {
@@ -1881,15 +2301,48 @@
         modal.classList.add('active');
     }
 
-    // Первинний запуск при завантаженні для ініціалізації
-    document.addEventListener('DOMContentLoaded', () => {
+    // ---------------- ОНЛАЙН/ОФЛАЙН МОНІТОРИНГ ----------------
+    function updateNetworkStatus() {
+        const badge = document.getElementById('network-status');
+        if (navigator.onLine) {
+            badge.className = 'network-badge network-online';
+            badge.innerHTML = '🟢 Онлайн';
+        } else {
+            badge.className = 'network-badge network-offline';
+            badge.innerHTML = '🔌 Автономно (Офлайн)';
+        }
+        
+        // Перераховуємо поточну вкладку при зміні стану мережі для візуальної синхронізації
         runCriCalculation();
         runBsaCalculation();
         runFluidCalculation();
         runPotassiumCalculation();
         runEmergencyCalculation();
-        
-        // Перевірка згоди користувача з юридичною угодою
+        triggerAudit();
+    }
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // ---------------- РЕЄСТРАЦІЯ PWA SERVICE WORKER ----------------
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('PWA Service Worker зареєстровано з областю дії:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.error('Помилка реєстрації Service Worker:', err);
+                    });
+            });
+        }
+    }
+
+    // Первинний запуск при завантаженні для ініціалізації
+    document.addEventListener('DOMContentLoaded', () => {
+        updateNetworkStatus();
+        registerServiceWorker();
         checkLegalConsent();
     });
 </script>

@@ -1,0 +1,18 @@
+{
+  "name": "VetCalc - Ветеринарний Аудитор Дозування та Інфузій",
+  "short_name": "VetCalc",
+  "description": "Автоматизована експертна система розрахунків з повним контролем безпеки для ветеринарних лікарів.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#17b978",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vet_logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

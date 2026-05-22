@@ -163,7 +163,19 @@ def api_calculate_fluid_therapy(request):
             ongoing_losses_ml_day=ongoing_losses_ml_day,
             drip_factor=drip_factor
         )
-        return JsonResponse(results)
+        
+        # Забезпечуємо підтримку обох варіантів ключів (для повної сумісності)
+        mapped = {
+            "fluid_deficit_ml": results["fluid_deficit_ml"],
+            "dehydration_deficit_ml": results["fluid_deficit_ml"],
+            "maintenance_ml_day": results["maintenance_ml_day"],
+            "total_volume_ml_day": results["total_volume_ml_day"],
+            "total_fluid_required_ml_day": results["total_volume_ml_day"],
+            "infusion_rate_ml_hr": results["infusion_rate_ml_hr"],
+            "hourly_fluid_rate_ml_hr": results["infusion_rate_ml_hr"],
+            "drops_per_minute": results["drops_per_minute"]
+        }
+        return JsonResponse(mapped)
         
     except ValueError as e:
         return JsonResponse({"error": str(e)}, status=400)
@@ -193,7 +205,20 @@ def api_calculate_potassium(request):
             target_k_dose_meq_kg_hr=target_k_dose_meq_kg_hr,
             k_ampoule_conc_meq_ml=k_ampoule_conc_meq_ml
         )
-        return JsonResponse(results)
+        
+        # Забезпечуємо підтримку обох варіантів ключів (для повної сумісності)
+        mapped = {
+            "hourly_k_meq_hr": results["hourly_k_meq_hr"],
+            "hourly_k_delivered_meq_hr": results["hourly_k_meq_hr"],
+            "k_concentration_meq_ml": results["k_concentration_meq_ml"],
+            "required_k_concentration_meq_ml": results["k_concentration_meq_ml"],
+            "total_k_needed_meq": results["total_k_needed_meq"],
+            "total_k_needed_for_bag_meq": results["total_k_needed_meq"],
+            "k_volume_added_ml": results["k_volume_added_ml"],
+            "kcl_volume_to_add_ml": results["k_volume_added_ml"],
+            "is_safe": results["is_safe"]
+        }
+        return JsonResponse(mapped)
         
     except ValueError as e:
         return JsonResponse({"error": str(e)}, status=400)
@@ -213,9 +238,39 @@ def api_calculate_emergency(request):
         weight_kg = float(data.get("weight_kg", 0))
         
         results = calculate_emergency_doses(weight_kg=weight_kg)
-        return JsonResponse(results)
+        
+        # Перетворюємо підтримувану структуру для фронтенду, щоб уникнути помилок key mismatch
+        mapped_drugs = {}
+        for drug_key, drug_data in results.items():
+            mapped_drugs[drug_key] = {
+                "dose_mg": drug_data["dose_mg"],
+                "absolute_dose_mg": drug_data["dose_mg"],
+                "volume_ml": drug_data["volume_ml"],
+                "info": drug_data["info"],
+                "safety_notes": drug_data["info"]
+            }
+            
+        return JsonResponse({"emergency_drugs": mapped_drugs})
         
     except ValueError as e:
         return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
         return JsonResponse({"error": f"Помилка при розрахунку екстрених доз: {str(e)}"}, status=500)
+
+def pwa_manifest(request):
+    """
+    Повертає PWA manifest.json для встановлення застосунку.
+    """
+    return render(request, "calculator/manifest.json", content_type="application/json")
+
+def pwa_service_worker(request):
+    """
+    Повертає Service Worker JS файл.
+    """
+    return render(request, "calculator/service-worker.js", content_type="application/javascript")
+
+def pwa_logo(request):
+    """
+    Повертає SVG логотип для PWA.
+    """
+    return render(request, "calculator/vet_logo.svg", content_type="image/svg+xml")
