@@ -242,22 +242,118 @@
             border-left-color: hsl(40, 95%, 48%);
         }
 
-        /* Вкладки */
+        /* Вкладки та прокрутка */
+        .tabs-wrapper {
+            position: relative;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
         .tabs {
             display: flex;
             background: var(--bg-tabs);
             padding: 6px;
             border-radius: 16px;
-            margin-bottom: 30px;
             gap: 6px;
             overflow-x: auto;
             scrollbar-width: none;
             border: 1px solid var(--border);
             transition: background-color 0.3s ease, border-color 0.3s ease;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+
+        /* Стан при перетягуванні мишкою */
+        .tabs.active-drag {
+            cursor: grabbing !important;
+            user-select: none;
         }
 
         .tabs::-webkit-scrollbar {
             display: none;
+        }
+
+        /* Елегантні скляні стрілки прокрутки */
+        .tabs-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: var(--bg-modal);
+            border: 1.5px solid var(--border);
+            color: var(--dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: var(--transition);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .tabs-arrow:hover {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(23, 185, 120, 0.25);
+            transform: translateY(-50%) scale(1.08);
+        }
+
+        .tabs-arrow.left {
+            left: -18px;
+        }
+
+        .tabs-arrow.right {
+            right: -18px;
+        }
+
+        .tabs-arrow.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Градієнтні маски для натяку на продовження контенту */
+        .tabs-wrapper::before, .tabs-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            bottom: 1px;
+            width: 40px;
+            z-index: 5;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .tabs-wrapper::before {
+            left: 1px;
+            background: linear-gradient(to right, var(--bg-app) 0%, transparent 100%);
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
+        }
+
+        .tabs-wrapper::after {
+            right: 1px;
+            background: linear-gradient(to left, var(--bg-app) 0%, transparent 100%);
+            border-top-right-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+
+        .tabs-wrapper.can-scroll-left::before {
+            opacity: 0.85;
+        }
+
+        .tabs-wrapper.can-scroll-right::after {
+            opacity: 0.85;
         }
 
         .tab-btn {
@@ -1133,17 +1229,25 @@
         </div>
     </div>
 
-    <!-- Вкладки навігації -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('cri-tab', this)"><i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Постійна Інфузія (CRI)</span></button>
-        <button class="tab-btn" onclick="switchTab('bsa-tab', this)"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px;"></i> <span>Розрахунок площі тіла (BSA)</span></button>
-        <button class="tab-btn" onclick="switchTab('fluid-tab', this)"><i data-lucide="droplet" style="width: 18px; height: 18px;"></i> <span>Інфузійна терапія (Гідратація)</span></button>
-        <button class="tab-btn" onclick="switchTab('potassium-tab', this)"><i data-lucide="flask-conical" style="width: 18px; height: 18px;"></i> <span>Безпека калію (K-max)</span></button>
-        <button class="tab-btn" onclick="switchTab('emergency-tab', this)"><i data-lucide="heart-pulse" style="width: 18px; height: 18px;"></i> <span>Реанімація (CPR)</span></button>
-        <button class="tab-btn" onclick="switchTab('compat-tab', this)"><i data-lucide="clipboard-check" style="width: 18px; height: 18px;"></i> <span>Аудитор сумісності ліків</span></button>
-        <button class="tab-btn" onclick="switchTab('bicarbonate-tab', this)"><i data-lucide="activity" style="width: 18px; height: 18px;"></i> <span>Дефіцит бікарбонату</span></button>
-        <button class="tab-btn" onclick="switchTab('calcium-tab', this)"><i data-lucide="layers" style="width: 18px; height: 18px;"></i> <span>Коригований кальцій</span></button>
-        <button class="tab-btn" onclick="switchTab('osmolality-tab', this)"><i data-lucide="compass" style="width: 18px; height: 18px;"></i> <span>Осмолярність плазми</span></button>
+    <!-- Вкладки навігації з прокруткою -->
+    <div class="tabs-wrapper" id="tabs-wrapper">
+        <button class="tabs-arrow left" id="tabs-arrow-left" onclick="scrollTabs('left')" title="Прокрутити ліворуч">
+            <i data-lucide="chevron-left"></i>
+        </button>
+        <div class="tabs" id="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('cri-tab', this)"><i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Постійна Інфузія (CRI)</span></button>
+            <button class="tab-btn" onclick="switchTab('bsa-tab', this)"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px;"></i> <span>Розрахунок площі тіла (BSA)</span></button>
+            <button class="tab-btn" onclick="switchTab('fluid-tab', this)"><i data-lucide="droplet" style="width: 18px; height: 18px;"></i> <span>Інфузійна терапія (Гідратація)</span></button>
+            <button class="tab-btn" onclick="switchTab('potassium-tab', this)"><i data-lucide="flask-conical" style="width: 18px; height: 18px;"></i> <span>Безпека калію (K-max)</span></button>
+            <button class="tab-btn" onclick="switchTab('emergency-tab', this)"><i data-lucide="heart-pulse" style="width: 18px; height: 18px;"></i> <span>Реанімація (CPR)</span></button>
+            <button class="tab-btn" onclick="switchTab('compat-tab', this)"><i data-lucide="clipboard-check" style="width: 18px; height: 18px;"></i> <span>Аудитор сумісності ліків</span></button>
+            <button class="tab-btn" onclick="switchTab('bicarbonate-tab', this)"><i data-lucide="activity" style="width: 18px; height: 18px;"></i> <span>Дефіцит бікарбонату</span></button>
+            <button class="tab-btn" onclick="switchTab('calcium-tab', this)"><i data-lucide="layers" style="width: 18px; height: 18px;"></i> <span>Коригований кальцій</span></button>
+            <button class="tab-btn" onclick="switchTab('osmolality-tab', this)"><i data-lucide="compass" style="width: 18px; height: 18px;"></i> <span>Осмолярність плазми</span></button>
+        </div>
+        <button class="tabs-arrow right" id="tabs-arrow-right" onclick="scrollTabs('right')" title="Прокрутити праворуч">
+            <i data-lucide="chevron-right"></i>
+        </button>
     </div>
 
     <!-- ---------------- ТАБ А: ПОСТІЙНА ІНФУЗІЯ (CRI) ---------------- -->
@@ -1931,6 +2035,7 @@
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(tabId).classList.add('active');
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         if (window.lucide) lucide.createIcons();
     }
 
@@ -3117,6 +3222,95 @@
         registerServiceWorker();
         checkLegalConsent();
     });
+
+    // ---------------- ІНТЕРАКТИВНЕ КЕРУВАННЯ ПРОКРУТКОЮ ВКЛАДОК ----------------
+    const tabsContainer = document.getElementById('tabs-container');
+    const tabsWrapper = document.getElementById('tabs-wrapper');
+    const arrowLeft = document.getElementById('tabs-arrow-left');
+    const arrowRight = document.getElementById('tabs-arrow-right');
+
+    if (tabsContainer && tabsWrapper && arrowLeft && arrowRight) {
+        // 1. Перетягування мишкою (Drag-to-Scroll) на десктопі
+        let isDown = false;
+        let startX;
+        let scrollLeftVal;
+
+        tabsContainer.addEventListener('mousedown', (e) => {
+            isDown = true;
+            tabsContainer.classList.add('active-drag');
+            startX = e.pageX - tabsContainer.offsetLeft;
+            scrollLeftVal = tabsContainer.scrollLeft;
+        });
+
+        tabsContainer.addEventListener('mouseleave', () => {
+            isDown = false;
+            tabsContainer.classList.remove('active-drag');
+        });
+
+        tabsContainer.addEventListener('mouseup', () => {
+            isDown = false;
+            tabsContainer.classList.remove('active-drag');
+        });
+
+        tabsContainer.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - tabsContainer.offsetLeft;
+            const walk = (x - startX) * 1.5; // швидкість прокрутки
+            tabsContainer.scrollLeft = scrollLeftVal - walk;
+            updateTabScrollState();
+        });
+
+        // 2. Перетворення вертикальної прокрутки коліщатка миші на горизонтальну
+        tabsContainer.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                tabsContainer.scrollLeft += e.deltaY * 0.8;
+                updateTabScrollState();
+            }
+        }, { passive: false });
+
+        // 3. Плавне клікання по стрілкам
+        window.scrollTabs = function(direction) {
+            const scrollAmt = 240;
+            if (direction === 'left') {
+                tabsContainer.scrollBy({ left: -scrollAmt, behavior: 'smooth' });
+            } else {
+                tabsContainer.scrollBy({ left: scrollAmt, behavior: 'smooth' });
+            }
+            setTimeout(updateTabScrollState, 300);
+        };
+
+        // 4. Оновлення стану стрілок та градієнтних масок
+        function updateTabScrollState() {
+            const maxScroll = tabsContainer.scrollWidth - tabsContainer.clientWidth;
+            const currentScroll = tabsContainer.scrollLeft;
+
+            // Стрілка ліворуч
+            if (currentScroll > 4) {
+                arrowLeft.classList.add('visible');
+                tabsWrapper.classList.add('can-scroll-left');
+            } else {
+                arrowLeft.classList.remove('visible');
+                tabsWrapper.classList.remove('can-scroll-left');
+            }
+
+            // Стрілка праворуч
+            if (currentScroll < maxScroll - 4) {
+                arrowRight.classList.add('visible');
+                tabsWrapper.classList.add('can-scroll-right');
+            } else {
+                arrowRight.classList.remove('visible');
+                tabsWrapper.classList.remove('can-scroll-right');
+            }
+        }
+
+        tabsContainer.addEventListener('scroll', updateTabScrollState);
+        window.addEventListener('resize', updateTabScrollState);
+
+        // Ініціалізація стану при завантаженні сторінки
+        setTimeout(updateTabScrollState, 400);
+    }
 </script>
 
 </body>
