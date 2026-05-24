@@ -2029,6 +2029,28 @@
 <script>
     {% include "calculator/calculators_offline.js" %}
 
+    // Дебаунс функція для усунення затримок інтерфейсу при швидкому введенні даних
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
+    // Дебаунс перемальовування іконок для запобігання лагам інтерфейсу
+    if (window.lucide) {
+        const originalCreateIcons = window.lucide.createIcons;
+        let lucideTimeout = null;
+        window.lucide.createIcons = function(options) {
+            clearTimeout(lucideTimeout);
+            lucideTimeout = setTimeout(() => {
+                originalCreateIcons(options);
+            }, 60);
+        };
+    }
+
     // Зміна вкладок
     function switchTab(tabId, btn) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -3063,28 +3085,38 @@
         document.getElementById('osmolality-safety-text').textContent = "Введіть показники електролітів плазми для розрахунку.";
     }
 
+    // Дебаунс-копії функцій для запобігання перевантаженню процесора при введенні даних
+    const debouncedRunCri = debounce(runCriCalculation, 200);
+    const debouncedRunBsa = debounce(runBsaCalculation, 200);
+    const debouncedRunFluid = debounce(runFluidCalculation, 200);
+    const debouncedRunPotassium = debounce(runPotassiumCalculation, 200);
+    const debouncedRunEmergency = debounce(runEmergencyCalculation, 200);
+    const debouncedRunBicarbonate = debounce(runBicarbonateCalculation, 200);
+    const debouncedRunCalcium = debounce(runCalciumCalculation, 200);
+    const debouncedRunOsmolality = debounce(runOsmolalityCalculation, 200);
+
     // Слухачі подій для реактивних авто-розрахунків при введенні
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
     criInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runCriCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunCri);
         document.getElementById(id).addEventListener('change', runCriCalculation);
     });
 
     const bsaInputIds = ['bsa-species', 'bsa-weight', 'bsa-dose'];
     bsaInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runBsaCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunBsa);
         document.getElementById(id).addEventListener('change', runBsaCalculation);
     });
 
     const fluidInputIds = ['fluid-weight', 'fluid-dehydration', 'fluid-maintenance', 'fluid-losses', 'fluid-drip-factor'];
     fluidInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runFluidCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunFluid);
         document.getElementById(id).addEventListener('change', runFluidCalculation);
     });
 
     const potassiumInputIds = ['k-weight', 'k-bag-volume', 'k-infusion-rate', 'k-target-dose', 'k-ampoule-conc'];
     potassiumInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runPotassiumCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunPotassium);
         document.getElementById(id).addEventListener('change', runPotassiumCalculation);
     });
 
@@ -3093,35 +3125,35 @@
 
     kDoseInput.addEventListener('input', function() {
         kDoseRange.value = this.value;
-        runPotassiumCalculation();
+        debouncedRunPotassium();
     });
 
     kDoseRange.addEventListener('input', function() {
         kDoseInput.value = this.value;
-        runPotassiumCalculation();
+        debouncedRunPotassium();
     });
 
     const emergencyInputIds = ['emergency-weight'];
     emergencyInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runEmergencyCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunEmergency);
         document.getElementById(id).addEventListener('change', runEmergencyCalculation);
     });
 
     const bicarbonateInputIds = ['bicarbonate-weight', 'bicarbonate-input-type', 'bicarbonate-value'];
     bicarbonateInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runBicarbonateCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunBicarbonate);
         document.getElementById(id).addEventListener('change', runBicarbonateCalculation);
     });
 
     const calciumInputIds = ['calcium-species', 'calcium-total-ca', 'calcium-albumin'];
     calciumInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runCalciumCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunCalcium);
         document.getElementById(id).addEventListener('change', runCalciumCalculation);
     });
 
     const osmolalityInputIds = ['osmolality-sodium', 'osmolality-glucose', 'osmolality-glucose-unit', 'osmolality-bun', 'osmolality-bun-unit'];
     osmolalityInputIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', runOsmolalityCalculation);
+        document.getElementById(id).addEventListener('input', debouncedRunOsmolality);
         document.getElementById(id).addEventListener('change', runOsmolalityCalculation);
     });
 
