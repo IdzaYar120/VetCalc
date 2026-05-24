@@ -20,7 +20,10 @@ class PythonToJSTranspiler(ast.NodeVisitor):
             'calculate_bsa': 'calculateBsaLocal',
             'calculate_fluid_therapy': 'calculateFluidLocal',
             'calculate_potassium': 'calculatePotassiumLocal',
-            'calculate_emergency_doses': '_calculateEmergencyLocal'
+            'calculate_emergency_doses': '_calculateEmergencyLocal',
+            'calculate_bicarbonate': 'calculateBicarbonateLocal',
+            'calculate_adjusted_calcium': 'calculateAdjustedCalciumLocal',
+            'calculate_plasma_osmolality': 'calculatePlasmaOsmolalityLocal'
         }
         js_name = name_map.get(node.name, node.name)
         

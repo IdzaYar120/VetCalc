@@ -320,3 +320,143 @@ def calculate_emergency_doses(weight_kg: float) -> Dict[str, Any]:
             "info": "Глюкокортикоїд при гострому анафілактичному шоці. Концентрація 4 мг/мл."
         }
     }
+
+def calculate_bicarbonate(
+    weight_kg: float,
+    input_type: str,
+    input_value: float
+) -> Dict[str, Any]:
+    """
+    Розраховує дефіцит бікарбонату (NaHCO3) та необхідний об'єм 8.4% розчину NaHCO3 (1 мЕкв/мл).
+    
+    Формули:
+      1. За типом 'base_deficit': Дефіцит (мЕкв) = 0.3 * Вага (кг) * Base Deficit (мЕкв/л)
+      2. За типом 'hco3': Дефіцит (мЕкв) = 0.3 * Вага (кг) * (24 - Виміряний HCO3 (мЕкв/л))
+      3. Об'єм 8.4% NaHCO3 (мл) = Дефіцит (мЕкв) * 1.0 (оскільки 8.4% розчин містить 1 мЕкв/мл)
+    """
+    if weight_kg <= 0:
+        raise ValueError("Вага пацієнта повинна бути строго більше 0 кг.")
+    if input_value < 0:
+        raise ValueError("Введене клінічне значення не може бути менше 0.")
+
+    w = Decimal(str(weight_kg))
+    val = Decimal(str(input_value))
+
+    if input_type == "base_deficit":
+        deficit = Decimal('0.3') * w * val
+    elif input_type == "hco3":
+        deficit_factor = Decimal('24') - val
+        if deficit_factor < 0:
+            deficit_factor = Decimal('0')
+        deficit = Decimal('0.3') * w * deficit_factor
+    else:
+        raise ValueError("Невідомий тип вхідних даних для бікарбонату.")
+
+    volume_ml = deficit * Decimal('1.0')
+    half_dose_ml = volume_ml / Decimal('2.0')
+    safety_notes = f"Корекцію ацидозу слід проводити повільно. Рекомендовано ввести першу половину дози ({precise_round(half_dose_ml, 2)} мл) протягом 20-30 хвилин повільно IV, а решту — протягом 24 годин з інфузією."
+
+    return {
+        "bicarbonate_deficit_meq": float(precise_round(deficit)),
+        "bicarbonate_volume_ml": float(precise_round(volume_ml)),
+        "half_dose_volume_ml": float(precise_round(half_dose_ml)),
+        "safety_notes": safety_notes
+    }
+
+def calculate_adjusted_calcium(
+    species: str,
+    total_calcium: float,
+    albumin: float
+) -> Dict[str, Any]:
+    """
+    Розраховує коригований кальцій за рівнем альбуміну для собак та котів.
+    
+    Формули:
+      1. Собаки: Коригований Ca (мг/дл) = Total Ca (мг/дл) - Albumin (г/дл) + 3.5
+      2. Коти: Коригований Ca (мг/дл) = Total Ca (мг/дл) - (0.63 * Albumin (г/дл)) + 2.1
+    """
+    if total_calcium <= 0 or albumin <= 0:
+        raise ValueError("Показники кальцію та альбуміну мають бути строго більше 0.")
+
+    ca = Decimal(str(total_calcium))
+    alb = Decimal(str(albumin))
+
+    if species == "Кіт":
+        adj_ca = ca - (Decimal('0.63') * alb) + Decimal('2.1')
+        low_limit = Decimal('8.0')
+        high_limit = Decimal('10.5')
+    else:
+        adj_ca = ca - alb + Decimal('3.5')
+        low_limit = Decimal('8.5')
+        high_limit = Decimal('11.5')
+
+    if adj_ca < low_limit:
+        status = "Гіпокальціємія"
+        notes = "Виражена гіпокальціємія! Загроза м'язового тремору, судом та зниження скоротливості серця. Рекомендовано контроль ЕКГ та повільне введення 10% кальцію глюконату IV."
+    elif adj_ca > high_limit:
+        status = "Гіперкальціємія"
+        notes = "Виражена гіперкальціємія! Ризик аритмії та гострого ураження нирок. Рекомендовано форсований діурез (0.9% NaCl + фуросемід) та пошук першопричини (онкологія, ХНН, гіперпаратиреоз)."
+    else:
+        status = "Нормокальціємія"
+        notes = "Показники коригованого кальцію знаходяться в межах фізіологічної норми для вибраного виду тварин."
+
+    adj_ca_mmol = adj_ca / Decimal('4.01')
+
+    return {
+        "adjusted_calcium_mg_dl": float(precise_round(adj_ca)),
+        "adjusted_calcium_mmol_l": float(precise_round(adj_ca_mmol)),
+        "status": status,
+        "notes": notes
+    }
+
+def calculate_plasma_osmolality(
+    sodium: float,
+    glucose: float,
+    glucose_unit: str,
+    bun: float,
+    bun_unit: str
+) -> Dict[str, Any]:
+    """
+    Розраховує розрахункову осмолярність плазми крові тварин.
+    
+    Формула:
+      Osmolality = 2 * Na (мЕкв/л) + Glucose (ммоль/л) + BUN (ммоль/л)
+      1. Glucose (ммоль/л) = Glucose (мг/дл) / 18.0
+      2. BUN (ммоль/л) = BUN (мг/дл) / 2.8
+    """
+    if sodium <= 0 or glucose < 0 or bun < 0:
+        raise ValueError("Показники натрію мають бути строго більше 0, глюкози та азоту сечі - не менше 0.")
+
+    na = Decimal(str(sodium))
+    glu = Decimal(str(glucose))
+    urea = Decimal(str(bun))
+
+    if glucose_unit in ["mg/dl", "мг/дл"]:
+        glu_mmol = glu / Decimal('18.0')
+    else:
+        glu_mmol = glu
+
+    if bun_unit in ["mg/dl", "мг/дл"]:
+        bun_mmol = urea / Decimal('2.8')
+    else:
+        bun_mmol = urea
+
+    osmolality = (Decimal('2.0') * na) + glu_mmol + bun_mmol
+
+    if osmolality < Decimal('290'):
+        status = "Гіпоосмолярність"
+        notes = "Гіпоосмолярний стан (осмолярність < 290 мОсм/кг). Ризик набряку клітин головного мозку. Рекомендовано обережне введення ізотонічних або слабко гіпертонічних розчинів під контролем натрію."
+    elif osmolality > Decimal('320'):
+        status = "Гіперосмолярність"
+        notes = "Виражена гіперосмолярність (> 320 мОсм/кг). Тяжка дегідратація та внутрішньоклітинний ексикоз. Потрібна плавна регідратація ізотонічними кристалоїдами для уникнення неврологічних ускладнень."
+    else:
+        status = "Нормоосмолярність"
+        notes = "Осмолярність плазми в межах норми (290 - 310 мОсм/кг). Електролітний та водний баланс збалансований."
+
+    return {
+        "glucose_mmol_l": float(precise_round(glu_mmol)),
+        "bun_mmol_l": float(precise_round(bun_mmol)),
+        "osmolality_mosm_kg": float(precise_round(osmolality)),
+        "status": status,
+        "notes": notes
+    }

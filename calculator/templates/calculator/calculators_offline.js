@@ -247,6 +247,114 @@ function _calculateEmergencyLocal(weight_kg) {
   };
 }
 
+function calculateBicarbonateLocal(weight_kg, input_type, input_value) {
+  let deficit, deficit_factor, half_dose_ml, safety_notes, val, volume_ml, w;
+
+  if ((weight_kg <= 0)) {
+    throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
+  }
+  if ((input_value < 0)) {
+    throw new Error("Введене клінічне значення не може бути менше 0.");
+  }
+  w = Number(String(weight_kg));
+  val = Number(String(input_value));
+  if ((input_type === "base_deficit")) {
+    deficit = ((Number("0.3") * w) * val);
+  } else if ((input_type === "hco3")) {
+      deficit_factor = (Number("24") - val);
+      if ((deficit_factor < 0)) {
+        deficit_factor = Number("0");
+      }
+      deficit = ((Number("0.3") * w) * deficit_factor);
+    } else {
+      throw new Error("Невідомий тип вхідних даних для бікарбонату.");
+    }
+  volume_ml = (deficit * Number("1.0"));
+  half_dose_ml = (volume_ml / Number("2.0"));
+  safety_notes = `Корекцію ацидозу слід проводити повільно. Рекомендовано ввести першу половину дози (${preciseRound(half_dose_ml, 2)} мл) протягом 20-30 хвилин повільно IV, а решту — протягом 24 годин з інфузією.`;
+  return {
+    bicarbonate_deficit_meq: Number(preciseRound(deficit)),
+    bicarbonate_volume_ml: Number(preciseRound(volume_ml)),
+    half_dose_volume_ml: Number(preciseRound(half_dose_ml)),
+    safety_notes: safety_notes
+  };
+}
+
+function calculateAdjustedCalciumLocal(species, total_calcium, albumin) {
+  let adj_ca, adj_ca_mmol, alb, ca, high_limit, low_limit, notes, status;
+
+  if (((total_calcium <= 0) || (albumin <= 0))) {
+    throw new Error("Показники кальцію та альбуміну мають бути строго більше 0.");
+  }
+  ca = Number(String(total_calcium));
+  alb = Number(String(albumin));
+  if ((species === "Кіт")) {
+    adj_ca = ((ca - (Number("0.63") * alb)) + Number("2.1"));
+    low_limit = Number("8.0");
+    high_limit = Number("10.5");
+  } else {
+    adj_ca = ((ca - alb) + Number("3.5"));
+    low_limit = Number("8.5");
+    high_limit = Number("11.5");
+  }
+  if ((adj_ca < low_limit)) {
+    status = "Гіпокальціємія";
+    notes = "Виражена гіпокальціємія! Загроза м'язового тремору, судом та зниження скоротливості серця. Рекомендовано контроль ЕКГ та повільне введення 10% кальцію глюконату IV.";
+  } else if ((adj_ca > high_limit)) {
+      status = "Гіперкальціємія";
+      notes = "Виражена гіперкальціємія! Ризик аритмії та гострого ураження нирок. Рекомендовано форсований діурез (0.9% NaCl + фуросемід) та пошук першопричини (онкологія, ХНН, гіперпаратиреоз).";
+    } else {
+      status = "Нормокальціємія";
+      notes = "Показники коригованого кальцію знаходяться в межах фізіологічної норми для вибраного виду тварин.";
+    }
+  adj_ca_mmol = (adj_ca / Number("4.01"));
+  return {
+    adjusted_calcium_mg_dl: Number(preciseRound(adj_ca)),
+    adjusted_calcium_mmol_l: Number(preciseRound(adj_ca_mmol)),
+    status: status,
+    notes: notes
+  };
+}
+
+function calculatePlasmaOsmolalityLocal(sodium, glucose, glucose_unit, bun, bun_unit) {
+  let bun_mmol, glu, glu_mmol, na, notes, osmolality, status, urea;
+
+  if (((sodium <= 0) || (glucose < 0) || (bun < 0))) {
+    throw new Error("Показники натрію мають бути строго більше 0, глюкози та азоту сечі - не менше 0.");
+  }
+  na = Number(String(sodium));
+  glu = Number(String(glucose));
+  urea = Number(String(bun));
+  if (["mg/dl", "мг/дл"].includes(glucose_unit)) {
+    glu_mmol = (glu / Number("18.0"));
+  } else {
+    glu_mmol = glu;
+  }
+  if (["mg/dl", "мг/дл"].includes(bun_unit)) {
+    bun_mmol = (urea / Number("2.8"));
+  } else {
+    bun_mmol = urea;
+  }
+  osmolality = (((Number("2.0") * na) + glu_mmol) + bun_mmol);
+  if ((osmolality < Number("290"))) {
+    status = "Гіпоосмолярність";
+    notes = "Гіпоосмолярний стан (осмолярність < 290 мОсм/кг). Ризик набряку клітин головного мозку. Рекомендовано обережне введення ізотонічних або слабко гіпертонічних розчинів під контролем натрію.";
+  } else if ((osmolality > Number("320"))) {
+      status = "Гіперосмолярність";
+      notes = "Виражена гіперосмолярність (> 320 мОсм/кг). Тяжка дегідратація та внутрішньоклітинний ексикоз. Потрібна плавна регідратація ізотонічними кристалоїдами для уникнення неврологічних ускладнень.";
+    } else {
+      status = "Нормоосмолярність";
+      notes = "Осмолярність плазми в межах норми (290 - 310 мОсм/кг). Електролітний та водний баланс збалансований.";
+    }
+  return {
+    glucose_mmol_l: Number(preciseRound(glu_mmol)),
+    bun_mmol_l: Number(preciseRound(bun_mmol)),
+    osmolality_mosm_kg: Number(preciseRound(osmolality)),
+    status: status,
+    notes: notes
+  };
+}
+
 // Сумісність для розрахунку екстрених реанімаційних доз CPR
 function calculateEmergencyLocal(weight_kg) {
     const orig = _calculateEmergencyLocal(weight_kg);

@@ -1141,6 +1141,9 @@
         <button class="tab-btn" onclick="switchTab('potassium-tab', this)"><i data-lucide="flask-conical" style="width: 18px; height: 18px;"></i> <span>Безпека калію (K-max)</span></button>
         <button class="tab-btn" onclick="switchTab('emergency-tab', this)"><i data-lucide="heart-pulse" style="width: 18px; height: 18px;"></i> <span>Реанімація (CPR)</span></button>
         <button class="tab-btn" onclick="switchTab('compat-tab', this)"><i data-lucide="clipboard-check" style="width: 18px; height: 18px;"></i> <span>Аудитор сумісності ліків</span></button>
+        <button class="tab-btn" onclick="switchTab('bicarbonate-tab', this)"><i data-lucide="activity" style="width: 18px; height: 18px;"></i> <span>Дефіцит бікарбонату</span></button>
+        <button class="tab-btn" onclick="switchTab('calcium-tab', this)"><i data-lucide="layers" style="width: 18px; height: 18px;"></i> <span>Коригований кальцій</span></button>
+        <button class="tab-btn" onclick="switchTab('osmolality-tab', this)"><i data-lucide="compass" style="width: 18px; height: 18px;"></i> <span>Осмолярність плазми</span></button>
     </div>
 
     <!-- ---------------- ТАБ А: ПОСТІЙНА ІНФУЗІЯ (CRI) ---------------- -->
@@ -1671,6 +1674,198 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ---------------- ТАБ Є: ДЕФІЦИТ БІКАРБОНАТУ (NaHCO3) ---------------- -->
+    <div id="bicarbonate-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри дефіциту бікарбонату</span></div>
+                
+                <div id="bicarbonate-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="bicarbonate-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="bicarbonate-weight" value="10.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bicarbonate-input-type">Тип вхідного показника</label>
+                    <div class="input-group">
+                        <select id="bicarbonate-input-type">
+                            <option value="base_deficit">Дефіцит основ (Base Deficit) [мЕкв/л]</option>
+                            <option value="hco3">Виміряний HCO3 [мЕкв/л]</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bicarbonate-value" id="bicarbonate-value-label">Значення дефіциту основ (мЕкв/л)</label>
+                    <div class="input-group">
+                        <input type="number" id="bicarbonate-value" value="5.0" step="0.1" min="0">
+                        <span class="unit-addon">мЕкв/л</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Розраховані дози та протокол введення</span></div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="bicarbonate-res-deficit">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span></div>
+                        <div class="metric-label">Загальний дефіцит NaHCO₃</div>
+                    </div>
+                    <div class="metric-card" style="background: var(--bg-metric-hover);">
+                        <div class="metric-value" id="bicarbonate-res-volume" style="color: var(--primary);">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span></div>
+                        <div class="metric-label">Об'єм 8.4% розчину NaHCO₃ (1 мЕкв/мл)</div>
+                    </div>
+                </div>
+
+                <div id="bicarbonate-safety-alert" class="success-card" style="margin-top: 20px; border-left: 4px solid var(--primary);">
+                    <div class="success-title"><i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px;"></i> <span>Клінічні рекомендації NaHCO₃</span></div>
+                    <div class="success-text" id="bicarbonate-safety-text">Введіть параметри пацієнта для формування протоколу корекції ацидозу.</div>
+                </div>
+
+                <div class="math-box" style="margin-top: 20px;">
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий математичний аудит:</span></h4>
+                    <div class="math-formula" id="math-bicarbonate-formula">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ Ж: КОРИГОВАНИЙ КАЛЬЦІЙ ---------------- -->
+    <div id="calcium-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри кальцію та альбуміну</span></div>
+                
+                <div id="calcium-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="calcium-species">Вид тварини</label>
+                    <div class="input-group">
+                        <select id="calcium-species">
+                            <option value="Собака">Собака</option>
+                            <option value="Кіт">Кіт</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="calcium-total-ca">Виміряний загальний кальцій (мг/дл)</label>
+                    <div class="input-group">
+                        <input type="number" id="calcium-total-ca" value="8.5" step="0.1" min="0.01">
+                        <span class="unit-addon">мг/дл</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="calcium-albumin">Виміряний альбумін (г/дл)</label>
+                    <div class="input-group">
+                        <input type="number" id="calcium-albumin" value="2.0" step="0.1" min="0.01">
+                        <span class="unit-addon">г/дл</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Коригований клінічний рівень Ca</span></div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="calcium-res-mg">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мг/дл</span></div>
+                        <div class="metric-label">Коригований кальцій (Ca_adj)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="calcium-res-mmol">0.00 <span style="font-size: 1rem; color: var(--gray-text);">ммоль/л</span></div>
+                        <div class="metric-label">Коригований кальцій у ммоль/л</div>
+                    </div>
+                </div>
+
+                <div id="calcium-safety-alert" class="success-card" style="margin-top: 20px;">
+                    <div class="success-title"><i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px;"></i> <span>Статус кальцієвого балансу</span></div>
+                    <div class="success-text" id="calcium-safety-text">Введіть показники загального кальцію та альбуміну тварини.</div>
+                </div>
+
+                <div class="math-box" style="margin-top: 20px;">
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий аудит кальцифікації:</span></h4>
+                    <div class="math-formula" id="math-calcium-formula">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ З: ОСМОЛЯРНІСТЬ ПЛАЗМИ ---------------- -->
+    <div id="osmolality-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Показники плазми крові</span></div>
+                
+                <div id="osmolality-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="osmolality-sodium">Рівень натрію (Na+) [мЕкв/л або ммоль/л]</label>
+                    <div class="input-group">
+                        <input type="number" id="osmolality-sodium" value="145.0" step="0.5" min="1">
+                        <span class="unit-addon">ммоль/л</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="osmolality-glucose">Рівень глюкози</label>
+                    <div class="input-group">
+                        <input type="number" id="osmolality-glucose" value="90.0" step="1" min="0">
+                        <select id="osmolality-glucose-unit" style="max-width: 130px;">
+                            <option value="мг/дл">мг/дл</option>
+                            <option value="ммоль/л">ммоль/л</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="osmolality-bun">Рівень сечовини (BUN)</label>
+                    <div class="input-group">
+                        <input type="number" id="osmolality-bun" value="15.0" step="1" min="0">
+                        <select id="osmolality-bun-unit" style="max-width: 130px;">
+                            <option value="мг/дл">мг/дл</option>
+                            <option value="ммоль/л">ммоль/л</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Розрахований осмотичний статус</span></div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card" style="background: var(--bg-metric-hover);">
+                        <div class="metric-value" id="osmolality-res" style="color: var(--primary);">0.00 <span style="font-size: 1.1rem; color: var(--gray-text);">мОсм/кг</span></div>
+                        <div class="metric-label">Розрахункова осмолярність плазми</div>
+                    </div>
+                </div>
+
+                <div id="osmolality-safety-alert" class="success-card" style="margin-top: 20px;">
+                    <div class="success-title"><i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px;"></i> <span>Клінічний осмотичний стан</span></div>
+                    <div class="success-text" id="osmolality-safety-text">Введіть показники електролітів плазми для розрахунку.</div>
+                </div>
+
+                <div class="math-box" style="margin-top: 20px;">
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий осмолярний аудит:</span></h4>
+                    <div class="math-formula" id="math-osmolality-formula">Розрахунок...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -2444,6 +2639,325 @@
         });
     }
 
+    // 7. Розрахунок дефіциту бікарбонату NaHCO3
+    function runBicarbonateCalculation() {
+        const weight = parseFloat(document.getElementById('bicarbonate-weight').value) || 0;
+        const inputType = document.getElementById('bicarbonate-input-type').value;
+        const value = parseFloat(document.getElementById('bicarbonate-value').value) || 0;
+        const errorBanner = document.getElementById('bicarbonate-error-banner');
+        const safetyAlert = document.getElementById('bicarbonate-safety-alert');
+        const safetyText = document.getElementById('bicarbonate-safety-text');
+        
+        // Оновлюємо текст лебеля відповідно до типу вхідного показника
+        const valueLabel = document.getElementById('bicarbonate-value-label');
+        if (inputType === 'base_deficit') {
+            valueLabel.textContent = "Значення дефіциту основ (мЕкв/л)";
+        } else {
+            valueLabel.textContent = "Виміряний рівень HCO3 (мЕкв/л)";
+        }
+
+        if (weight <= 0) {
+            showBicarbonateError("❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.");
+            return;
+        }
+        if (value < 0) {
+            showBicarbonateError("❌ Помилка валідації: Введене клінічне значення не може бути меншим за 0.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const runLocal = () => {
+            const data = calculateBicarbonateLocal(weight, inputType, value);
+            document.getElementById('bicarbonate-res-deficit').innerHTML = `${data.bicarbonate_deficit_meq.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
+            document.getElementById('bicarbonate-res-volume').innerHTML = `${data.bicarbonate_volume_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+            
+            safetyAlert.className = "success-card";
+            safetyAlert.style.borderLeft = "4px solid var(--primary)";
+            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>Протокол корекції:</strong> ${data.safety_notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></span>`;
+
+            let formulaText = "";
+            if (inputType === "base_deficit") {
+                formulaText = `Deficit = 0.3 * ${weight} кг * ${value} мЕкв/л = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв <span class="offline-notice">[🔌 Автономно]</span><br>` +
+                              `Об'єм (8.4% NaHCO₃) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв * 1.0 = ${data.bicarbonate_volume_ml.toFixed(2)} мл`;
+            } else {
+                formulaText = `Deficit = 0.3 * ${weight} кг * (24 - ${value} мЕкв/л) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв <span class="offline-notice">[🔌 Автономно]</span><br>` +
+                              `Об'єм (8.4% NaHCO₃) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв * 1.0 = ${data.bicarbonate_volume_ml.toFixed(2)} мл`;
+            }
+            document.getElementById('math-bicarbonate-formula').innerHTML = formulaText;
+            if (window.lucide) lucide.createIcons();
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-bicarbonate/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                weight_kg: weight,
+                input_type: inputType,
+                input_value: value
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Невідома помилка");
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('bicarbonate-res-deficit').innerHTML = `${data.bicarbonate_deficit_meq.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
+            document.getElementById('bicarbonate-res-volume').innerHTML = `${data.bicarbonate_volume_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+            
+            safetyAlert.className = "success-card";
+            safetyAlert.style.borderLeft = "4px solid var(--primary)";
+            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>Протокол корекції:</strong> ${data.safety_notes}</span>`;
+
+            let formulaText = "";
+            if (inputType === "base_deficit") {
+                formulaText = `Deficit = 0.3 * ${weight} кг * ${value} мЕкв/л = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв<br>` +
+                              `Об'єм (8.4% NaHCO₃) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв * 1.0 = ${data.bicarbonate_volume_ml.toFixed(2)} мл`;
+            } else {
+                formulaText = `Deficit = 0.3 * ${weight} кг * (24 - ${value} мЕкв/л) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв<br>` +
+                              `Об'єм (8.4% NaHCO₃) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв * 1.0 = ${data.bicarbonate_volume_ml.toFixed(2)} мл`;
+            }
+            document.getElementById('math-bicarbonate-formula').innerHTML = formulaText;
+            if (window.lucide) lucide.createIcons();
+        })
+        .catch(err => {
+            console.warn("Помилка бікарбонату API, перехід на офлайн-режим:", err);
+            runLocal();
+        });
+    }
+
+    function showBicarbonateError(msg) {
+        const errorBanner = document.getElementById('bicarbonate-error-banner');
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetBicarbonateResults();
+    }
+
+    function resetBicarbonateResults() {
+        document.getElementById('bicarbonate-res-deficit').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мЕкв</span>`;
+        document.getElementById('bicarbonate-res-volume').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+        document.getElementById('math-bicarbonate-formula').textContent = "Розрахунок припинено.";
+        document.getElementById('bicarbonate-safety-text').textContent = "Введіть параметри пацієнта для формування протоколу.";
+    }
+
+    // 8. Розрахунок коригованого кальцію за альбуміном
+    function runCalciumCalculation() {
+        const species = document.getElementById('calcium-species').value;
+        const totalCa = parseFloat(document.getElementById('calcium-total-ca').value) || 0;
+        const albumin = parseFloat(document.getElementById('calcium-albumin').value) || 0;
+        const errorBanner = document.getElementById('calcium-error-banner');
+        const safetyAlert = document.getElementById('calcium-safety-alert');
+        const safetyText = document.getElementById('calcium-safety-text');
+
+        if (totalCa <= 0 || albumin <= 0) {
+            showCalciumError("❌ Помилка валідації: Показники загального кальцію та альбуміну мають бути строго більше 0.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const runLocal = () => {
+            const data = calculateAdjustedCalciumLocal(species, totalCa, albumin);
+            document.getElementById('calcium-res-mg').innerHTML = `${data.adjusted_calcium_mg_dl.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг/дл</span>`;
+            document.getElementById('calcium-res-mmol').innerHTML = `${data.adjusted_calcium_mmol_l.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">ммоль/л</span>`;
+            
+            if (data.status === "Гіпокальціємія") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger)";
+            } else if (data.status === "Гіперкальціємія") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
+            } else {
+                safetyAlert.className = "success-card";
+                safetyAlert.style.borderLeft = "4px solid var(--success)";
+            }
+            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></span>`;
+
+            let formulaText = "";
+            if (species === "Кіт") {
+                formulaText = `Ca_adj = ${totalCa} мг/дл - (0.63 * ${albumin} г/дл) + 2.1 = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл <span class="offline-notice">[🔌 Автономно]</span><br>` +
+                              `Ca_adj_mmol = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл / 4.01 = ${data.adjusted_calcium_mmol_l.toFixed(2)} ммоль/л`;
+            } else {
+                formulaText = `Ca_adj = ${totalCa} мг/дл - ${albumin} г/дл + 3.5 = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл <span class="offline-notice">[🔌 Автономно]</span><br>` +
+                              `Ca_adj_mmol = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл / 4.01 = ${data.adjusted_calcium_mmol_l.toFixed(2)} ммоль/л`;
+            }
+            document.getElementById('math-calcium-formula').innerHTML = formulaText;
+            if (window.lucide) lucide.createIcons();
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-adjusted-calcium/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                species: species,
+                total_calcium: totalCa,
+                albumin: albumin
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Невідома помилка");
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('calcium-res-mg').innerHTML = `${data.adjusted_calcium_mg_dl.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг/дл</span>`;
+            document.getElementById('calcium-res-mmol').innerHTML = `${data.adjusted_calcium_mmol_l.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">ммоль/л</span>`;
+            
+            if (data.status === "Гіпокальціємія") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger)";
+            } else if (data.status === "Гіперкальціємія") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
+            } else {
+                safetyAlert.className = "success-card";
+                safetyAlert.style.borderLeft = "4px solid var(--success)";
+            }
+            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes}</span>`;
+
+            let formulaText = "";
+            if (species === "Кіт") {
+                formulaText = `Ca_adj = ${totalCa} мг/дл - (0.63 * ${albumin} г/дл) + 2.1 = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл<br>` +
+                              `Ca_adj_mmol = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл / 4.01 = ${data.adjusted_calcium_mmol_l.toFixed(2)} ммоль/л`;
+            } else {
+                formulaText = `Ca_adj = ${totalCa} мг/дл - ${albumin} г/дл + 3.5 = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл<br>` +
+                              `Ca_adj_mmol = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл / 4.01 = ${data.adjusted_calcium_mmol_l.toFixed(2)} ммоль/л`;
+            }
+            document.getElementById('math-calcium-formula').innerHTML = formulaText;
+            if (window.lucide) lucide.createIcons();
+        })
+        .catch(err => {
+            console.warn("Помилка кальцію API, перехід на офлайн-режим:", err);
+            runLocal();
+        });
+    }
+
+    function showCalciumError(msg) {
+        const errorBanner = document.getElementById('calcium-error-banner');
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetCalciumResults();
+    }
+
+    function resetCalciumResults() {
+        document.getElementById('calcium-res-mg').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мг/дл</span>`;
+        document.getElementById('calcium-res-mmol').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">ммоль/л</span>`;
+        document.getElementById('math-calcium-formula').textContent = "Розрахунок припинено.";
+        document.getElementById('calcium-safety-text').textContent = "Введіть показники кальцію та альбуміну тварини.";
+    }
+
+    // 9. Розрахунок осмолярності плазми
+    function runOsmolalityCalculation() {
+        const sodium = parseFloat(document.getElementById('osmolality-sodium').value) || 0;
+        const glucose = parseFloat(document.getElementById('osmolality-glucose').value) || 0;
+        const glucoseUnit = document.getElementById('osmolality-glucose-unit').value;
+        const bun = parseFloat(document.getElementById('osmolality-bun').value) || 0;
+        const bunUnit = document.getElementById('osmolality-bun-unit').value;
+        const errorBanner = document.getElementById('osmolality-error-banner');
+        const safetyAlert = document.getElementById('osmolality-safety-alert');
+        const safetyText = document.getElementById('osmolality-safety-text');
+
+        if (sodium <= 0 || glucose < 0 || bun < 0) {
+            showOsmolalityError("❌ Помилка валідації: Показники натрію мають бути більше 0, глюкоза та сечовина не можуть бути меншими за 0.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const runLocal = () => {
+            const data = calculatePlasmaOsmolalityLocal(sodium, glucose, glucoseUnit, bun, bunUnit);
+            document.getElementById('osmolality-res').innerHTML = `${data.osmolality_mosm_kg.toFixed(2)} <span style="font-size: 1.1rem; color: var(--gray-text);">мОсм/кг</span>`;
+            
+            if (data.status === "Гіпоосмолярність") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger)";
+            } else if (data.status === "Гіперосмолярність") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
+            } else {
+                safetyAlert.className = "success-card";
+                safetyAlert.style.borderLeft = "4px solid var(--success)";
+            }
+            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></span>`;
+
+            let formulaText = `Na_part = 2 * ${sodium} = ${(2 * sodium).toFixed(1)} мЕкв/л<br>` +
+                              `Glucose_part = ${glucose} ${glucoseUnit} = ${data.glucose_mmol_l.toFixed(2)} ммоль/л<br>` +
+                              `BUN_part = ${bun} ${bunUnit} = ${data.bun_mmol_l.toFixed(2)} ммоль/л<br>` +
+                              `Osmolality = 2*Na + Glucose + BUN = ${data.osmolality_mosm_kg.toFixed(2)} мОсм/кг <span class="offline-notice">[🔌 Автономно]</span>`;
+            document.getElementById('math-osmolality-formula').innerHTML = formulaText;
+            if (window.lucide) lucide.createIcons();
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-plasma-osmolality/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sodium: sodium,
+                glucose: glucose,
+                glucose_unit: glucoseUnit,
+                bun: bun,
+                bun_unit: bunUnit
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Невідома помилка");
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('osmolality-res').innerHTML = `${data.osmolality_mosm_kg.toFixed(2)} <span style="font-size: 1.1rem; color: var(--gray-text);">мОсм/кг</span>`;
+            
+            if (data.status === "Гіпоосмолярність") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger)";
+            } else if (data.status === "Гіперосмолярність") {
+                safetyAlert.className = "danger-card";
+                safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
+            } else {
+                safetyAlert.className = "success-card";
+                safetyAlert.style.borderLeft = "4px solid var(--success)";
+            }
+            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes}</span>`;
+
+            let formulaText = `Na_part = 2 * ${sodium} = ${(2 * sodium).toFixed(1)} мЕкв/л<br>` +
+                              `Glucose_part = ${glucose} ${glucoseUnit} = ${data.glucose_mmol_l.toFixed(2)} ммоль/л<br>` +
+                              `BUN_part = ${bun} ${bunUnit} = ${data.bun_mmol_l.toFixed(2)} ммоль/л<br>` +
+                              `Osmolality = 2*Na + Glucose + BUN = ${data.osmolality_mosm_kg.toFixed(2)} мОсм/кг`;
+            document.getElementById('math-osmolality-formula').innerHTML = formulaText;
+            if (window.lucide) lucide.createIcons();
+        })
+        .catch(err => {
+            console.warn("Помилка осмолярності API, перехід на офлайн-режим:", err);
+            runLocal();
+        });
+    }
+
+    function showOsmolalityError(msg) {
+        const errorBanner = document.getElementById('osmolality-error-banner');
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetOsmolalityResults();
+    }
+
+    function resetOsmolalityResults() {
+        document.getElementById('osmolality-res').innerHTML = `0.00 <span style="font-size: 1.1rem; color: var(--gray-text);">мОсм/кг</span>`;
+        document.getElementById('math-osmolality-formula').textContent = "Розрахунок припинено.";
+        document.getElementById('osmolality-safety-text').textContent = "Введіть показники електролітів плазми для розрахунку.";
+    }
+
     // Слухачі подій для реактивних авто-розрахунків при введенні
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
     criInputIds.forEach(id => {
@@ -2486,6 +3000,24 @@
     emergencyInputIds.forEach(id => {
         document.getElementById(id).addEventListener('input', runEmergencyCalculation);
         document.getElementById(id).addEventListener('change', runEmergencyCalculation);
+    });
+
+    const bicarbonateInputIds = ['bicarbonate-weight', 'bicarbonate-input-type', 'bicarbonate-value'];
+    bicarbonateInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runBicarbonateCalculation);
+        document.getElementById(id).addEventListener('change', runBicarbonateCalculation);
+    });
+
+    const calciumInputIds = ['calcium-species', 'calcium-total-ca', 'calcium-albumin'];
+    calciumInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runCalciumCalculation);
+        document.getElementById(id).addEventListener('change', runCalciumCalculation);
+    });
+
+    const osmolalityInputIds = ['osmolality-sodium', 'osmolality-glucose', 'osmolality-glucose-unit', 'osmolality-bun', 'osmolality-bun-unit'];
+    osmolalityInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', runOsmolalityCalculation);
+        document.getElementById(id).addEventListener('change', runOsmolalityCalculation);
     });
 
     // ---------------- КЕРУВАННЯ ТЕМОЮ (LIGHT/DARK) ----------------
@@ -2552,6 +3084,9 @@
         runFluidCalculation();
         runPotassiumCalculation();
         runEmergencyCalculation();
+        runBicarbonateCalculation();
+        runCalciumCalculation();
+        runOsmolalityCalculation();
         triggerAudit();
     }
 

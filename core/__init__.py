@@ -8,7 +8,10 @@ from core.calculators import (
     precise_round,
     calculate_fluid_therapy,
     calculate_potassium,
-    calculate_emergency_doses
+    calculate_emergency_doses,
+    calculate_bicarbonate,
+    calculate_adjusted_calcium,
+    calculate_plasma_osmolality
 )
 from core.database import SPECIES_K_FACTORS, SUPPORTED_DRUGS, COMPATIBILITY_MATRIX
 
@@ -19,6 +22,9 @@ __all__ = [
     "calculate_fluid_therapy",
     "calculate_potassium",
     "calculate_emergency_doses",
+    "calculate_bicarbonate",
+    "calculate_adjusted_calcium",
+    "calculate_plasma_osmolality",
     "SPECIES_K_FACTORS",
     "SUPPORTED_DRUGS",
     "COMPATIBILITY_MATRIX"

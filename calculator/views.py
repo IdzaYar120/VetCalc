@@ -8,6 +8,9 @@ from core import (
     calculate_fluid_therapy,
     calculate_potassium,
     calculate_emergency_doses,
+    calculate_bicarbonate,
+    calculate_adjusted_calcium,
+    calculate_plasma_osmolality,
     SPECIES_K_FACTORS, 
     SUPPORTED_DRUGS, 
     COMPATIBILITY_MATRIX
@@ -274,3 +277,79 @@ def pwa_logo(request):
     Повертає SVG логотип для PWA.
     """
     return render(request, "calculator/vet_logo.svg", content_type="image/svg+xml")
+
+@csrf_exempt
+def api_calculate_bicarbonate(request):
+    """
+    JSON API для розрахунку дефіциту бікарбонату NaHCO3.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Дозволено лише запити POST."}, status=405)
+    try:
+        data = json.loads(request.body)
+        weight_kg = float(data.get("weight_kg", 0))
+        input_type = data.get("input_type", "base_deficit")
+        input_value = float(data.get("input_value", 0))
+        
+        results = calculate_bicarbonate(
+            weight_kg=weight_kg,
+            input_type=input_type,
+            input_value=input_value
+        )
+        return JsonResponse(results)
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Помилка при розрахунку дефіциту бікарбонату: {str(e)}"}, status=500)
+
+@csrf_exempt
+def api_calculate_adjusted_calcium(request):
+    """
+    JSON API для розрахунку коригованого кальцію за альбуміном.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Дозволено лише запити POST."}, status=405)
+    try:
+        data = json.loads(request.body)
+        species = data.get("species", "Собака")
+        total_calcium = float(data.get("total_calcium", 0))
+        albumin = float(data.get("albumin", 0))
+        
+        results = calculate_adjusted_calcium(
+            species=species,
+            total_calcium=total_calcium,
+            albumin=albumin
+        )
+        return JsonResponse(results)
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Помилка при розрахунку коригованого кальцію: {str(e)}"}, status=500)
+
+@csrf_exempt
+def api_calculate_plasma_osmolality(request):
+    """
+    JSON API для розрахунку розрахункової осмолярності плазми.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Дозволено лише запити POST."}, status=405)
+    try:
+        data = json.loads(request.body)
+        sodium = float(data.get("sodium", 0))
+        glucose = float(data.get("glucose", 0))
+        glucose_unit = data.get("glucose_unit", "ммоль/л")
+        bun = float(data.get("bun", 0))
+        bun_unit = data.get("bun_unit", "ммоль/л")
+        
+        results = calculate_plasma_osmolality(
+            sodium=sodium,
+            glucose=glucose,
+            glucose_unit=glucose_unit,
+            bun=bun,
+            bun_unit=bun_unit
+        )
+        return JsonResponse(results)
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Помилка при розрахунку осмолярності плазми: {str(e)}"}, status=500)
