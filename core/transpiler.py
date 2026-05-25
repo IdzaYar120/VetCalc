@@ -319,7 +319,7 @@ def transpile_python_to_js():
     """
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     py_path = os.path.join(base_dir, 'core', 'calculators.py')
-    js_path = os.path.join(base_dir, 'calculator', 'templates', 'calculator', 'calculators_offline.js')
+    js_path = os.path.join(base_dir, 'calculator', 'static', 'calculator', 'js', 'calculators_offline.js')
 
     if not os.path.exists(py_path):
         print(f"Помилка: Файл {py_path} не знайдено.")
@@ -384,6 +384,21 @@ function calculateEmergencyLocal(weight_kg) {
     
     js_code += "\n// Клінічна матриця сумісності препаратів (для офлайн аудиту)\n"
     js_code += f"const LOCAL_COMPATIBILITY_MATRIX = {json.dumps(COMPATIBILITY_MATRIX, ensure_ascii=False, indent=2)};\n"
+    js_code += """
+export {
+    preciseRound,
+    SPECIES_K_FACTORS,
+    calculateCriLocal,
+    calculateBsaLocal,
+    calculateFluidLocal,
+    calculatePotassiumLocal,
+    calculateEmergencyLocal,
+    calculateBicarbonateLocal,
+    calculateAdjustedCalciumLocal,
+    calculatePlasmaOsmolalityLocal,
+    LOCAL_COMPATIBILITY_MATRIX
+};
+"""
 
     # Запис у цільовий файл
     os.makedirs(os.path.dirname(js_path), exist_ok=True)
