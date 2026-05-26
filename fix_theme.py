@@ -1,4 +1,4 @@
-
+﻿js = '''
 // ---------------- THEME TOGGLE ----------------
 const themeToggleBtn = document.getElementById('theme-toggle');
 
@@ -31,7 +31,9 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
         applyTheme(e.matches ? 'dark' : 'light');
     }
 });
+'''
 
-// Apply initial theme to set correct icon
-const savedTheme = localStorage.getItem('vetcalc_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-applyTheme(savedTheme);
+with open('calculator/static/calculator/js/modules/theme.js', 'w', encoding='utf-8') as f:
+    f.write(js)
+
+print("Updated theme.js")

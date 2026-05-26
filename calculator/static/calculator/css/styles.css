@@ -108,30 +108,22 @@
         body {
             font-family: 'Outfit', sans-serif;
             background-color: var(--bg-app);
-            background-image: 
-                radial-gradient(at 0% 0%, var(--glow-1) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, var(--glow-2) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, var(--glow-3) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, var(--glow-4) 0px, transparent 50%);
-            background-attachment: fixed;
             color: var(--dark);
             line-height: 1.6;
             padding: 30px 20px;
             min-height: 100vh;
-            transition: background-color 0.5s ease, color 0.3s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         /* Ambient Background Glow Circles */
         .ambient-glow {
             position: fixed;
             border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.45;
+            filter: blur(60px);
+            opacity: 0.25;
             z-index: -1;
             pointer-events: none;
             transform: translateZ(0);
-            will-change: transform, opacity;
-            transition: opacity 0.8s ease-in-out;
         }
         .glow-1 {
             top: -10%;

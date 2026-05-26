@@ -15,3 +15,4 @@
         const modal = document.getElementById('legal-modal');
         modal.classList.add('active');
     }
+window.acceptLegalTerms = acceptLegalTerms;

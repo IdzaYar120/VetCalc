@@ -3,7 +3,20 @@ import './modules/legal.js';
 import './modules/pwa.js';
 import './modules/tabs_scroll.js';
 
-{% include "calculator/calculators_offline.js" %}
+import {
+    preciseRound,
+    SPECIES_K_FACTORS,
+    calculateCriLocal,
+    calculateBsaLocal,
+    calculateFluidLocal,
+    calculatePotassiumLocal,
+    calculateEmergencyLocal,
+    calculateBicarbonateLocal,
+    calculateAdjustedCalciumLocal,
+    calculatePlasmaOsmolalityLocal,
+    LOCAL_COMPATIBILITY_MATRIX
+} from './calculators_offline.js';
+
 
     // Дебаунс функція для усунення затримок інтерфейсу при швидкому введенні даних
     function debounce(func, wait) {
@@ -28,7 +41,7 @@ import './modules/tabs_scroll.js';
     }
 
     // Зміна вкладок
-    function switchTab(tabId, btn) {
+    window.switchTab = function(tabId, btn) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
@@ -1333,3 +1346,4 @@ import './modules/tabs_scroll.js';
         // Ініціалізація стану при завантаженні сторінки
         setTimeout(updateTabScrollState, 400);
     }
+if (window.lucide) { lucide.createIcons(); }

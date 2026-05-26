@@ -100,3 +100,5 @@
         // Ініціалізація стану при завантаженні сторінки
         setTimeout(updateTabScrollState, 400);
     }
+window.scrollTabs = scrollTabs;
+

@@ -1,2 +1,6 @@
 django>=4.2
 pandas>=2.0.0
+
+django-ninja==1.1.0
+sentry-sdk==2.0.0
+django-ratelimit==4.1.0

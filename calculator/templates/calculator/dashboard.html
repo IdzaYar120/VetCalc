@@ -19,10 +19,6 @@
     <link rel="stylesheet" href="{% static 'calculator/css/styles.css' %}">
 </head>
 <body>
-<!-- Ambient Background Glow Circles -->
-<div class="ambient-glow glow-1"></div>
-<div class="ambient-glow glow-2"></div>
-
 <script>
     // Попереднє застосування теми для уникнення мерехтіння
     (function() {
@@ -43,17 +39,9 @@
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
                 <button id="theme-toggle" class="theme-toggle-btn" title="Перемикнути тему">
-                    <i id="theme-toggle-icon" data-lucide="sun"></i>
+                    <i id="theme-icon-sun" data-lucide="sun"></i>
+                    <i id="theme-icon-moon" data-lucide="moon" style="display: none;"></i>
                 </button>
-                <script>
-                    (function() {
-                        const savedTheme = localStorage.getItem('vetcalc_theme') || 
-                            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-                        if (savedTheme === 'dark') {
-                            document.getElementById('theme-toggle-icon').setAttribute('data-lucide', 'moon');
-                        }
-                    })();
-                </script>
                 <div id="network-status" class="network-badge network-online">
                     <i data-lucide="wifi"></i>
                     <span>Онлайн</span>
