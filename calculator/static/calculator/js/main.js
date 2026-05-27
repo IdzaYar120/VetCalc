@@ -677,6 +677,16 @@ const SVG_ICONS = {
             document.getElementById('em-dex-mg').textContent = `${dex.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-dex-ml').textContent = `${dex.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-dex-info').textContent = dex.safety_notes;
+
+            const nor = drugs.noradrenaline;
+            document.getElementById('em-nor-mg').textContent = `${nor.absolute_dose_mg.toFixed(3)} мг/год`;
+            document.getElementById('em-nor-ml').textContent = `${nor.volume_ml.toFixed(3)} мл/год`;
+            document.getElementById('em-nor-info').innerHTML = `${nor.safety_notes} <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span>`;
+
+            const dop = drugs.dopamine;
+            document.getElementById('em-dop-mg').textContent = `${dop.absolute_dose_mg.toFixed(3)} мг/год`;
+            document.getElementById('em-dop-ml').textContent = `${dop.volume_ml.toFixed(3)} мл/год`;
+            document.getElementById('em-dop-info').textContent = dop.safety_notes;
         };
 
         if (!navigator.onLine) {
@@ -744,6 +754,20 @@ const SVG_ICONS = {
             document.getElementById('em-dex-mg').textContent = `${doseDex.toFixed(3)} мг`;
             document.getElementById('em-dex-ml').textContent = `${dex.volume_ml.toFixed(3)} мл`;
             document.getElementById('em-dex-info').textContent = infoDex;
+
+            const nor = drugs.noradrenaline;
+            const doseNor = nor.absolute_dose_mg !== undefined ? nor.absolute_dose_mg : nor.dose_mg;
+            const infoNor = nor.safety_notes !== undefined ? nor.safety_notes : nor.info;
+            document.getElementById('em-nor-mg').textContent = `${doseNor.toFixed(3)} мг/год`;
+            document.getElementById('em-nor-ml').textContent = `${nor.volume_ml.toFixed(3)} мл/год`;
+            document.getElementById('em-nor-info').textContent = infoNor;
+
+            const dop = drugs.dopamine;
+            const doseDop = dop.absolute_dose_mg !== undefined ? dop.absolute_dose_mg : dop.dose_mg;
+            const infoDop = dop.safety_notes !== undefined ? dop.safety_notes : dop.info;
+            document.getElementById('em-dop-mg').textContent = `${doseDop.toFixed(3)} мг/год`;
+            document.getElementById('em-dop-ml').textContent = `${dop.volume_ml.toFixed(3)} мл/год`;
+            document.getElementById('em-dop-info').textContent = infoDop;
         })
         .catch(err => {
             console.warn("Помилка реанімації API, перехід на офлайн-режим:", err);
@@ -759,15 +783,22 @@ const SVG_ICONS = {
             'em-lido-dog-mg', 'em-lido-dog-ml',
             'em-lido-cat-mg', 'em-lido-cat-ml',
             'em-nal-mg', 'em-nal-ml',
-            'em-dex-mg', 'em-dex-ml'
+            'em-dex-mg', 'em-dex-ml',
+            'em-nor-mg', 'em-nor-ml',
+            'em-dop-mg', 'em-dop-ml'
         ];
         ids.forEach(id => {
-            document.getElementById(id).textContent = id.endsWith('mg') ? "0.00 мг" : "0.00 мл";
+            if (id.includes('nor') || id.includes('dop')) {
+                document.getElementById(id).textContent = id.endsWith('mg') ? "0.00 мг/год" : "0.00 мл/год";
+            } else {
+                document.getElementById(id).textContent = id.endsWith('mg') ? "0.00 мг" : "0.00 мл";
+            }
         });
         
         const infoIds = [
             'em-adr-low-info', 'em-adr-high-info', 'em-atr-info',
-            'em-lido-dog-info', 'em-lido-cat-info', 'em-nal-info', 'em-dex-info'
+            'em-lido-dog-info', 'em-lido-cat-info', 'em-nal-info', 'em-dex-info',
+            'em-nor-info', 'em-dop-info'
         ];
         infoIds.forEach(id => {
             document.getElementById(id).textContent = "Очікування...";

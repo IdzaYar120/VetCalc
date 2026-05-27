@@ -283,6 +283,14 @@ def calculate_emergency_doses(weight_kg: float) -> Dict[str, Any]:
     dexa_mg = w * Decimal('1.0')
     dexa_ml = dexa_mg / Decimal('4.0')
 
+    # Норадреналін 1 мг/мл (CRI)
+    nor_mg = w * Decimal('0.1') * Decimal('60') / Decimal('1000')
+    nor_ml = nor_mg / Decimal('1.0')
+
+    # Дофамін 40 мг/мл (CRI)
+    dop_mg = w * Decimal('5.0') * Decimal('60') / Decimal('1000')
+    dop_ml = dop_mg / Decimal('40.0')
+
     return {
         "adrenaline_low": {
             "dose_mg": float(precise_round(epi_low_mg, 4)),
@@ -318,6 +326,16 @@ def calculate_emergency_doses(weight_kg: float) -> Dict[str, Any]:
             "dose_mg": float(precise_round(dexa_mg, 4)),
             "volume_ml": float(precise_round(dexa_ml, 4)),
             "info": "Глюкокортикоїд при гострому анафілактичному шоці. Концентрація 4 мг/мл."
+        },
+        "noradrenaline": {
+            "dose_mg": float(precise_round(nor_mg, 4)),
+            "volume_ml": float(precise_round(nor_ml, 4)),
+            "info": "Вазопресор для лікування рефрактерної гіпотензії (CRI). Швидкість 0.1 мкг/кг/хв. Концентрація 1 мг/мл."
+        },
+        "dopamine": {
+            "dose_mg": float(precise_round(dop_mg, 4)),
+            "volume_ml": float(precise_round(dop_ml, 4)),
+            "info": "Інотропна підтримка при кардіогенному шоці (CRI). Швидкість 5 мкг/кг/хв. Концентрація 40 мг/мл."
         }
     }
 

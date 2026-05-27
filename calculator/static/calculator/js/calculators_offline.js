@@ -188,7 +188,7 @@ function calculatePotassiumLocal(weight_kg, bag_volume_ml, infusion_rate_ml_hr, 
 }
 
 function _calculateEmergencyLocal(weight_kg) {
-  let atropine_mg, atropine_ml, dexa_mg, dexa_ml, epi_high_mg, epi_high_ml, epi_low_mg, epi_low_ml, lido_cat_mg, lido_cat_ml, lido_dog_mg, lido_dog_ml, naloxone_mg, naloxone_ml, w;
+  let atropine_mg, atropine_ml, dexa_mg, dexa_ml, dop_mg, dop_ml, epi_high_mg, epi_high_ml, epi_low_mg, epi_low_ml, lido_cat_mg, lido_cat_ml, lido_dog_mg, lido_dog_ml, naloxone_mg, naloxone_ml, nor_mg, nor_ml, w;
 
   if ((weight_kg <= 0)) {
     throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
@@ -208,6 +208,10 @@ function _calculateEmergencyLocal(weight_kg) {
   naloxone_ml = (naloxone_mg / Number("0.4"));
   dexa_mg = (w * Number("1.0"));
   dexa_ml = (dexa_mg / Number("4.0"));
+  nor_mg = (((w * Number("0.1")) * Number("60")) / Number("1000"));
+  nor_ml = (nor_mg / Number("1.0"));
+  dop_mg = (((w * Number("5.0")) * Number("60")) / Number("1000"));
+  dop_ml = (dop_mg / Number("40.0"));
   return {
     adrenaline_low: {
     dose_mg: Number(preciseRound(epi_low_mg, 4)),
@@ -243,6 +247,16 @@ function _calculateEmergencyLocal(weight_kg) {
     dose_mg: Number(preciseRound(dexa_mg, 4)),
     volume_ml: Number(preciseRound(dexa_ml, 4)),
     info: "Глюкокортикоїд при гострому анафілактичному шоці. Концентрація 4 мг/мл."
+  },
+    noradrenaline: {
+    dose_mg: Number(preciseRound(nor_mg, 4)),
+    volume_ml: Number(preciseRound(nor_ml, 4)),
+    info: "Вазопресор для лікування рефрактерної гіпотензії (CRI). Швидкість 0.1 мкг/кг/хв. Концентрація 1 мг/мл."
+  },
+    dopamine: {
+    dose_mg: Number(preciseRound(dop_mg, 4)),
+    volume_ml: Number(preciseRound(dop_ml, 4)),
+    info: "Інотропна підтримка при кардіогенному шоці (CRI). Швидкість 5 мкг/кг/хв. Концентрація 40 мг/мл."
   }
   };
 }
