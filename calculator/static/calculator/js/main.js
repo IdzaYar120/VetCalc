@@ -17,6 +17,15 @@ import {
     LOCAL_COMPATIBILITY_MATRIX
 } from './calculators_offline.js';
 
+const SVG_ICONS = {
+    wifiOff: `<svg class="lucide-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5"></path><path d="M5 12.5a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.5 8"></path><path d="M1.5 8a15.93 15.93 0 0 1 7.27-2.58"></path><path d="M8.58 8.58A5 5 0 0 1 12 7.5a4.91 4.91 0 0 1 3.42 1.08"></path></svg>`,
+    wifi: `<svg class="lucide-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M5 12.5a10.87 10.87 0 0 1 14 0"></path><path d="M1.5 8a15.89 15.89 0 0 1 21 0"></path><path d="M8.5 17a4.86 4.86 0 0 1 7 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>`,
+    wifiOffLarge: `<svg class="lucide-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5"></path><path d="M5 12.5a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.5 8"></path><path d="M1.5 8a15.93 15.93 0 0 1 7.27-2.58"></path><path d="M8.58 8.58A5 5 0 0 1 12 7.5a4.91 4.91 0 0 1 3.42 1.08"></path></svg>`,
+    checkCircle: `<svg class="lucide-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+    xCircle: `<svg class="lucide-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+    alertTriangle: `<svg class="lucide-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+    info: `<svg class="lucide-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
+};
 
     // Дебаунс функція для усунення затримок інтерфейсу при швидкому введенні даних
     function debounce(func, wait) {
@@ -122,10 +131,9 @@ import {
                 hourlyDoseFormula = `D_hr = ${dose} мг/кг/год * ${weight} кг = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год`;
             }
             document.getElementById('math-hourly-dose').textContent = hourlyDoseFormula;
-            document.getElementById('math-bag-conc').innerHTML = `C_bag = (${addVol} мл * ${ampConc} мг/мл) / (${bagVolume} мл + ${addVol} мл) = ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
+            document.getElementById('math-bag-conc').innerHTML = `C_bag = (${addVol} мл * ${ampConc} мг/мл) / (${bagVolume} мл + ${addVol} мл) = ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span>`;
             document.getElementById('math-flow-rate').textContent = `Rate = ${data.hourly_dose_mg_hr.toFixed(2)} мг/год / ${data.bag_concentration_mg_ml.toFixed(2)} мг/мл = ${data.infusion_rate_ml_hr.toFixed(2)} мл/год`;
             document.getElementById('math-drip-rate').textContent = `Drops = (${data.infusion_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = ${data.drops_per_minute.toFixed(2)} крапель/хв`;
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -224,9 +232,8 @@ import {
             document.getElementById('bsa-res-dose').innerHTML = `${data.absolute_dosage.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мг</span>`;
 
             document.getElementById('math-bsa-weight-g').textContent = `W_g = ${weight} кг * 1000 = ${data.weight_g.toFixed(0)} г`;
-            document.getElementById('math-bsa-calc').innerHTML = `BSA = (${data.k_factor} * (${data.weight_g.toFixed(0)} ** 2/3)) / 10000 = ${data.bsa_m2.toFixed(2)} м² <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
+            document.getElementById('math-bsa-calc').innerHTML = `BSA = (${data.k_factor} * (${data.weight_g.toFixed(0)} ** 2/3)) / 10000 = ${data.bsa_m2.toFixed(2)} м² <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span>`;
             document.getElementById('math-bsa-dose').textContent = `Доза = ${data.bsa_m2.toFixed(2)} м² * ${dose} мг/м² = ${data.absolute_dosage.toFixed(2)} мг`;
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -278,11 +285,10 @@ import {
         if (selectedDrugs.length < 2) {
             resultContainer.innerHTML = `
                 <div class="success-card" style="background-color: var(--dark-light); border-left-color: var(--gray-text);">
-                    <div class="success-title" style="color: var(--dark); display: flex; align-items: center; gap: 8px;"><i data-lucide="info" style="color: var(--gray-text); width: 20px; height: 20px;"></i> <span>Очікування вибору</span></div>
+                    <div class="success-title" style="color: var(--dark); display: flex; align-items: center; gap: 8px;">${SVG_ICONS.info} <span>Очікування вибору</span></div>
                     <div class="success-text" style="color: var(--gray-text);">Виберіть щонайменше два препарати вище для запуску аудиту сумісності.</div>
                 </div>
             `;
-            if (window.lucide) lucide.createIcons();
             return;
         }
 
@@ -304,11 +310,11 @@ import {
             }
 
             if (incompatibilities.length > 0) {
-                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark); display: flex; align-items: center; gap: 8px;"><i data-lucide="alert-triangle" style="color: var(--danger);"></i> <span>Виявлені загрози несумісності</span> <span class="offline-notice">[🔌 Автономно]</span>:</h3>';
+                let html = `<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark); display: flex; align-items: center; gap: 8px;">${SVG_ICONS.alertTriangle} <span>Виявлені загрози несумісності</span> <span class="offline-notice">[🔌 Автономно]</span>:</h3>`;
                 incompatibilities.forEach(inc => {
                     html += `
                         <div class="danger-card">
-                            <div class="danger-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="x-circle" style="color: var(--danger); width: 20px; height: 20px;"></i> <span>КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</span></div>
+                            <div class="danger-title" style="display: flex; align-items: center; gap: 8px;">${SVG_ICONS.xCircle} <span>КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</span></div>
                             <div class="danger-text"><strong>Клінічне обґрунтування несумісності:</strong> ${inc.reason}</div>
                         </div>
                     `;
@@ -317,12 +323,11 @@ import {
             } else {
                 resultContainer.innerHTML = `
                     <div class="success-card">
-                        <div class="success-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px;"></i> <span>Безпечна комбінація підтверджена</span> <span class="offline-notice">[🔌 Автономно]</span></div>
+                        <div class="success-title" style="display: flex; align-items: center; gap: 8px;">${SVG_ICONS.checkCircle} <span>Безпечна комбінація підтверджена</span> <span class="offline-notice">[🔌 Автономно]</span></div>
                         <div class="success-text">Суміш препаратів (${selectedDrugs.join(', ')}) є хімічно та фізично сумісною за базовою матрицею.</div>
                     </div>
                 `;
             }
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -338,11 +343,11 @@ import {
         .then(response => response.json())
         .then(data => {
             if (data.status === "Incompatible") {
-                let html = '<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark); display: flex; align-items: center; gap: 8px;"><i data-lucide="alert-triangle" style="color: var(--danger);"></i> <span>Виявлені загрози несумісності:</span></h3>';
+                let html = `<h3 style="margin: 15px 0 10px 0; color: var(--danger-dark); display: flex; align-items: center; gap: 8px;">${SVG_ICONS.alertTriangle} <span>Виявлені загрози несумісності:</span></h3>`;
                 data.incompatibilities.forEach(inc => {
                     html += `
                         <div class="danger-card">
-                            <div class="danger-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="x-circle" style="color: var(--danger); width: 20px; height: 20px;"></i> <span>КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</span></div>
+                            <div class="danger-title" style="display: flex; align-items: center; gap: 8px;">${SVG_ICONS.xCircle} <span>КРИТИЧНИЙ КОНФЛІКТ: ${inc.drug1} + ${inc.drug2}</span></div>
                             <div class="danger-text"><strong>Клінічне обґрунтування несумісності:</strong> ${inc.reason}</div>
                         </div>
                     `;
@@ -351,12 +356,11 @@ import {
             } else {
                 resultContainer.innerHTML = `
                     <div class="success-card">
-                        <div class="success-title" style="display: flex; align-items: center; gap: 8px;"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px;"></i> <span>Безпечна комбінація підтверджена</span></div>
+                        <div class="success-title" style="display: flex; align-items: center; gap: 8px;">${SVG_ICONS.checkCircle} <span>Безпечна комбінація підтверджена</span></div>
                         <div class="success-text">${data.message}</div>
                     </div>
                 `;
             }
-            if (window.lucide) lucide.createIcons();
         })
         .catch(err => {
             console.warn("Помилка сумісності API, перехід на офлайн-режим:", err);
@@ -392,12 +396,11 @@ import {
             document.getElementById('fluid-res-rate').innerHTML = `${data.hourly_fluid_rate_ml_hr.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл/год</span>`;
             document.getElementById('fluid-res-drip').innerHTML = `${data.drops_per_minute.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">крапель/хв</span>`;
 
-            document.getElementById('math-fluid-deficit').innerHTML = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${data.dehydration_deficit_ml.toFixed(2)} мл рідини <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
+            document.getElementById('math-fluid-deficit').innerHTML = `Deficit = ${weight} кг * (${dehydration} / 100) * 1000 = ${data.dehydration_deficit_ml.toFixed(2)} мл рідини <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span>`;
             document.getElementById('math-fluid-maintenance').textContent = `Maintenance = ${weight} кг * ${maintenance} мл/кг/добу = ${data.maintenance_ml_day.toFixed(2)} мл/добу`;
             document.getElementById('math-fluid-total').textContent = `Total = ${data.dehydration_deficit_ml.toFixed(2)} мл (дефіцит) + ${data.maintenance_ml_day.toFixed(2)} мл (потреба) + ${losses} мл (втрати) = ${data.total_fluid_required_ml_day.toFixed(2)} мл/добу`;
             document.getElementById('math-fluid-rate-drip').innerHTML = `Потік = ${data.total_fluid_required_ml_day.toFixed(2)} мл / 24 год = <strong>${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год</strong><br>` +
                 `Краплі = (${data.hourly_fluid_rate_ml_hr.toFixed(2)} мл/год * ${dripFactor} кр/мл) / 60 = <strong>${data.drops_per_minute.toFixed(2)} крапель/хв</strong>`;
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -499,14 +502,14 @@ import {
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
                 safetyAlert.innerHTML = `
-                    <div class="success-title"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>Показники безпеки в межах норми</span> <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></div>
+                    <div class="success-title">${SVG_ICONS.checkCircle} <span>Показники безпеки в межах норми</span> <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span></div>
                     <div class="success-text">Введена швидкість калію (${targetDose.toFixed(2)} мЕкв/кг/год) не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
                 `;
             } else {
                 safetyAlert.className = "danger-card";
                 safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
                 safetyAlert.innerHTML = `
-                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;"><i data-lucide="alert-triangle" style="color: var(--danger); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</span> <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></div>
+                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;">${SVG_ICONS.alertTriangle} <span>КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</span> <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span></div>
                     <div class="danger-text" style="color: var(--danger-dark); font-weight: 500;">
                         Розраховане введення калію становить <strong>${targetDose.toFixed(2)} мЕкв/кг/год</strong>, що ПЕРЕВИЩУЄ кардіологічний ліміт безпеки <strong>0.5 мЕкв/кг/год</strong>!<br>
                         Негайне введення цієї суміші може спровокувати смертельну аритмію або зупинку серця! Будь ласка, зменшіть цільову дозу або швидкість інфузії!
@@ -514,10 +517,9 @@ import {
                 `;
             }
 
-            document.getElementById('math-k-hourly').innerHTML = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
+            document.getElementById('math-k-hourly').innerHTML = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span>`;
             document.getElementById('math-k-conc').textContent = `C_K = ${data.hourly_k_delivered_meq_hr.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл`;
             document.getElementById('math-k-volume').textContent = `V_KCl = (${data.required_k_concentration_meq_ml.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${data.kcl_volume_to_add_ml.toFixed(2)} мл`;
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -555,14 +557,14 @@ import {
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
                 safetyAlert.innerHTML = `
-                    <div class="success-title"><i data-lucide="check-circle" style="color: var(--success); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>Показники безпеки в межах норми</span></div>
+                    <div class="success-title">${SVG_ICONS.checkCircle} <span>Показники безпеки в межах норми</span></div>
                     <div class="success-text">Введена швидкість калію (${targetDose.toFixed(2)} мЕкв/кг/год) не перевищує ліміт K-max (0.5 мЕкв/кг/год). Серцевий ритм у безпеці.</div>
                 `;
             } else {
                 safetyAlert.className = "danger-card";
                 safetyAlert.style.borderLeft = "4px solid var(--danger-dark)";
                 safetyAlert.innerHTML = `
-                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;"><i data-lucide="alert-triangle" style="color: var(--danger); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</span></div>
+                    <div class="danger-title" style="color: var(--danger-dark); font-weight: bold;">${SVG_ICONS.alertTriangle} <span>КРИТИЧНЕ ПОПЕРЕДЖЕННЯ: ПЕРЕВИЩЕНО K-MAX ЛІМІТ!</span></div>
                     <div class="danger-text" style="color: var(--danger-dark); font-weight: 500;">
                         Розраховане введення калію становить <strong>${targetDose.toFixed(2)} мЕкв/кг/год</strong>, що ПЕРЕВИЩУЄ кардіологічний ліміт безпеки <strong>0.5 мЕкв/кг/год</strong>!<br>
                         Негайне введення цієї суміші може спровокувати смертельну аритмію або зупинку серця! Будь ласка, зменшіть цільову дозу або швидкість інфузії!
@@ -573,7 +575,6 @@ import {
             document.getElementById('math-k-hourly').textContent = `D_K = ${targetDose} мЕкв/кг/год * ${weight} кг = ${hourlyK.toFixed(2)} мЕкв/год`;
             document.getElementById('math-k-conc').textContent = `C_K = ${hourlyK.toFixed(2)} мЕкв/год / ${infusionRate} мл/год = ${concK.toFixed(4)} мЕкв/мл`;
             document.getElementById('math-k-volume').textContent = `V_KCl = (${concK.toFixed(4)} мЕкв/мл * ${bagVolume} мл) / ${ampouleConc} мЕкв/мл = ${volK.toFixed(2)} мл`;
-            if (window.lucide) lucide.createIcons();
         })
         .catch(err => {
             console.warn("Помилка калію API, перехід на офлайн-режим:", err);
@@ -600,10 +601,9 @@ import {
         const safetyAlert = document.getElementById('k-safety-alert');
         safetyAlert.className = "success-card";
         safetyAlert.innerHTML = `
-            <div class="success-title"><i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span>Очікування коректних даних</span></div>
+            <div class="success-title">${SVG_ICONS.info} <span>Очікування коректних даних</span></div>
             <div class="success-text">Введіть коректні параметри пацієнта для розрахунку калійної безпеки.</div>
         `;
-        if (window.lucide) lucide.createIcons();
     }
 
     // 6. Розрахунок CPR (Emergency)
@@ -626,8 +626,7 @@ import {
             const adrLow = drugs.adrenaline_low;
             document.getElementById('em-adr-low-mg').textContent = `${adrLow.absolute_dose_mg.toFixed(3)} мг`;
             document.getElementById('em-adr-low-ml').textContent = `${adrLow.volume_ml.toFixed(3)} мл`;
-            document.getElementById('em-adr-low-info').innerHTML = `${adrLow.safety_notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span>`;
-            if (window.lucide) lucide.createIcons();
+            document.getElementById('em-adr-low-info').innerHTML = `${adrLow.safety_notes} <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span>`;
 
             const adrHigh = drugs.adrenaline_high;
             document.getElementById('em-adr-high-mg').textContent = `${adrHigh.absolute_dose_mg.toFixed(3)} мг`;
@@ -790,7 +789,7 @@ import {
             
             safetyAlert.className = "success-card";
             safetyAlert.style.borderLeft = "4px solid var(--primary)";
-            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>Протокол корекції:</strong> ${data.safety_notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></span>`;
+            safetyText.innerHTML = `${SVG_ICONS.info} <span><strong>Протокол корекції:</strong> ${data.safety_notes} <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span></span>`;
 
             let formulaText = "";
             if (inputType === "base_deficit") {
@@ -801,7 +800,6 @@ import {
                               `Об'єм (8.4% NaHCO₃) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв * 1.0 = ${data.bicarbonate_volume_ml.toFixed(2)} мл`;
             }
             document.getElementById('math-bicarbonate-formula').innerHTML = formulaText;
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -828,7 +826,7 @@ import {
             
             safetyAlert.className = "success-card";
             safetyAlert.style.borderLeft = "4px solid var(--primary)";
-            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>Протокол корекції:</strong> ${data.safety_notes}</span>`;
+            safetyText.innerHTML = `${SVG_ICONS.info} <span><strong>Протокол корекції:</strong> ${data.safety_notes}</span>`;
 
             let formulaText = "";
             if (inputType === "base_deficit") {
@@ -839,7 +837,6 @@ import {
                               `Об'єм (8.4% NaHCO₃) = ${data.bicarbonate_deficit_meq.toFixed(2)} мЕкв * 1.0 = ${data.bicarbonate_volume_ml.toFixed(2)} мл`;
             }
             document.getElementById('math-bicarbonate-formula').innerHTML = formulaText;
-            if (window.lucide) lucide.createIcons();
         })
         .catch(err => {
             console.warn("Помилка бікарбонату API, перехід на офлайн-режим:", err);
@@ -892,7 +889,7 @@ import {
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
             }
-            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></span>`;
+            safetyText.innerHTML = `${SVG_ICONS.info} <span><strong>[${data.status}]</strong> ${data.notes} <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span></span>`;
 
             let formulaText = "";
             if (species === "Кіт") {
@@ -903,7 +900,6 @@ import {
                               `Ca_adj_mmol = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл / 4.01 = ${data.adjusted_calcium_mmol_l.toFixed(2)} ммоль/л`;
             }
             document.getElementById('math-calcium-formula').innerHTML = formulaText;
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -938,7 +934,7 @@ import {
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
             }
-            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes}</span>`;
+            safetyText.innerHTML = `${SVG_ICONS.info} <span><strong>[${data.status}]</strong> ${data.notes}</span>`;
 
             let formulaText = "";
             if (species === "Кіт") {
@@ -949,7 +945,6 @@ import {
                               `Ca_adj_mmol = ${data.adjusted_calcium_mg_dl.toFixed(2)} мг/дл / 4.01 = ${data.adjusted_calcium_mmol_l.toFixed(2)} ммоль/л`;
             }
             document.getElementById('math-calcium-formula').innerHTML = formulaText;
-            if (window.lucide) lucide.createIcons();
         })
         .catch(err => {
             console.warn("Помилка кальцію API, перехід на офлайн-режим:", err);
@@ -1003,14 +998,13 @@ import {
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
             }
-            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes} <span class="offline-notice">[<i data-lucide="wifi-off" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Автономно]</span></span>`;
+            safetyText.innerHTML = `${SVG_ICONS.info} <span><strong>[${data.status}]</strong> ${data.notes} <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span></span>`;
 
             let formulaText = `Na_part = 2 * ${sodium} = ${(2 * sodium).toFixed(1)} мЕкв/л<br>` +
                               `Glucose_part = ${glucose} ${glucoseUnit} = ${data.glucose_mmol_l.toFixed(2)} ммоль/л<br>` +
                               `BUN_part = ${bun} ${bunUnit} = ${data.bun_mmol_l.toFixed(2)} ммоль/л<br>` +
                               `Osmolality = 2*Na + Glucose + BUN = ${data.osmolality_mosm_kg.toFixed(2)} мОсм/кг <span class="offline-notice">[🔌 Автономно]</span>`;
             document.getElementById('math-osmolality-formula').innerHTML = formulaText;
-            if (window.lucide) lucide.createIcons();
         };
 
         if (!navigator.onLine) {
@@ -1046,14 +1040,13 @@ import {
                 safetyAlert.className = "success-card";
                 safetyAlert.style.borderLeft = "4px solid var(--success)";
             }
-            safetyText.innerHTML = `<i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px; display: inline-block; vertical-align: middle;"></i> <span><strong>[${data.status}]</strong> ${data.notes}</span>`;
+            safetyText.innerHTML = `${SVG_ICONS.info} <span><strong>[${data.status}]</strong> ${data.notes}</span>`;
 
             let formulaText = `Na_part = 2 * ${sodium} = ${(2 * sodium).toFixed(1)} мЕкв/л<br>` +
                               `Glucose_part = ${glucose} ${glucoseUnit} = ${data.glucose_mmol_l.toFixed(2)} ммоль/л<br>` +
                               `BUN_part = ${bun} ${bunUnit} = ${data.bun_mmol_l.toFixed(2)} ммоль/л<br>` +
                               `Osmolality = 2*Na + Glucose + BUN = ${data.osmolality_mosm_kg.toFixed(2)} мОсм/кг`;
             document.getElementById('math-osmolality-formula').innerHTML = formulaText;
-            if (window.lucide) lucide.createIcons();
         })
         .catch(err => {
             console.warn("Помилка осмолярності API, перехід на офлайн-режим:", err);
@@ -1146,33 +1139,7 @@ import {
         document.getElementById(id).addEventListener('change', runOsmolalityCalculation);
     });
 
-    // ---------------- КЕРУВАННЯ ТЕМОЮ (LIGHT/DARK) ----------------
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const themeToggleIcon = document.getElementById('theme-toggle-icon');
-    
-    function applyTheme(theme) {
-        if (theme === 'dark') {
-            document.body.classList.add('dark-theme');
-            themeToggleIcon.setAttribute('data-lucide', 'moon');
-        } else {
-            document.body.classList.remove('dark-theme');
-            themeToggleIcon.setAttribute('data-lucide', 'sun');
-        }
-        if (window.lucide) lucide.createIcons();
-    }
-    
-    themeToggleBtn.addEventListener('click', () => {
-        const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('vetcalc_theme', newTheme);
-        applyTheme(newTheme);
-    });
 
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        if (!localStorage.getItem('vetcalc_theme')) {
-            applyTheme(e.matches ? 'dark' : 'light');
-        }
-    });
 
     // ---------------- ЮРИДИЧНА УГОДА ----------------
     function checkLegalConsent() {
@@ -1197,12 +1164,11 @@ import {
         const badge = document.getElementById('network-status');
         if (navigator.onLine) {
             badge.className = 'network-badge network-online';
-            badge.innerHTML = '<i data-lucide="wifi" style="width: 16px; height: 16px;"></i> <span>Онлайн</span>';
+            badge.innerHTML = `${SVG_ICONS.wifi} <span>Онлайн</span>`;
         } else {
             badge.className = 'network-badge network-offline';
-            badge.innerHTML = '<i data-lucide="wifi-off" style="width: 16px; height: 16px;"></i> <span>Автономно (Офлайн)</span>';
+            badge.innerHTML = `${SVG_ICONS.wifiOffLarge} <span>Автономно (Офлайн)</span>`;
         }
-        if (window.lucide) lucide.createIcons();
         
         // Перераховуємо поточну вкладку при зміні стану мережі для візуальної синхронізації
         runCriCalculation();
