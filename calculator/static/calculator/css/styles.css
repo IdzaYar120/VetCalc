@@ -218,146 +218,165 @@
             border-left-color: hsl(40, 95%, 48%);
         }
 
-        /* Вкладки та прокрутка */
-        .tabs-wrapper {
-            position: relative;
-            margin-bottom: 30px;
+        /* Дворівнева навігація категорій */
+        .category-nav-wrapper {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .category-btn {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            text-align: left;
             display: flex;
             align-items: center;
-            width: 100%;
-        }
-
-        .tabs {
-            display: flex;
-            background: var(--bg-tabs);
-            padding: 6px;
-            border-radius: 16px;
-            gap: 6px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            border: 1px solid var(--border);
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            width: 100%;
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-        }
-
-        /* Стан при перетягуванні мишкою */
-        .tabs.active-drag {
-            cursor: grabbing !important;
+            gap: 14px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
             user-select: none;
+            position: relative;
+            overflow: hidden;
         }
 
-        .tabs::-webkit-scrollbar {
-            display: none;
-        }
+        /* Індивідуальні кольорові палітри для медичних категорій */
+        .category-btn[data-category="emergency"] { --cat-accent: hsl(354, 70%, 53%); --cat-bg-light: hsla(354, 70%, 53%, 0.08); }
+        .category-btn[data-category="fluids"] { --cat-accent: hsl(195, 75%, 45%); --cat-bg-light: hsla(195, 75%, 45%, 0.08); }
+        .category-btn[data-category="audits"] { --cat-accent: hsl(265, 65%, 55%); --cat-bg-light: hsla(265, 65%, 55%, 0.08); }
+        .category-btn[data-category="dosing"] { --cat-accent: hsl(142, 60%, 42%); --cat-bg-light: hsla(142, 60%, 42%, 0.08); }
 
-        /* Елегантні скляні стрілки прокрутки */
-        .tabs-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 36px;
-            height: 36px;
-            background: var(--bg-modal);
-            border: 1.5px solid var(--border);
-            color: var(--dark);
-            border-radius: 50%;
+        .category-btn .category-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--bg-addon);
+            color: var(--cat-accent);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            z-index: 10;
-            box-shadow: var(--shadow-md);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            flex-shrink: 0;
             transition: var(--transition);
-            opacity: 0;
-            pointer-events: none;
         }
 
-        .tabs-arrow:hover {
-            background: var(--primary);
+        .category-btn .category-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-btn .category-title {
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--dark);
+            transition: var(--transition);
+        }
+
+        .category-btn .category-desc {
+            font-size: 0.78rem;
+            color: var(--gray-text);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .category-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--cat-accent);
+            box-shadow: var(--shadow-md), 0 4px 15px var(--cat-bg-light);
+        }
+
+        .category-btn:hover .category-icon {
+            background: var(--cat-bg-light);
+            transform: scale(1.05);
+        }
+
+        /* Активний стан категорії */
+        .category-btn.active {
+            border-color: var(--cat-accent);
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--cat-bg-light) 100%);
+            box-shadow: var(--shadow-md), inset 0 0 0 1px var(--cat-accent);
+        }
+
+        .category-btn.active .category-icon {
+            background: var(--cat-accent);
             color: #ffffff;
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(23, 185, 120, 0.25);
-            transform: translateY(-50%) scale(1.08);
+            box-shadow: 0 4px 12px var(--cat-bg-light);
         }
 
-        .tabs-arrow.left {
-            left: -18px;
+        .category-btn.active .category-title {
+            color: var(--cat-accent);
         }
 
-        .tabs-arrow.right {
-            right: -18px;
+        /* Другий рівень: Контейнер суб-чіпів розрахунків */
+        .sub-chips-wrapper {
+            background: var(--bg-tabs);
+            padding: 8px 12px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: none;
+            width: 100%;
+            transition: var(--transition);
         }
 
-        .tabs-arrow.visible {
-            opacity: 1;
-            pointer-events: auto;
+        .sub-chips-wrapper.active {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Градієнтні маски для натяку на продовження контенту */
-        .tabs-wrapper::before, .tabs-wrapper::after {
-            content: '';
-            position: absolute;
-            top: 1px;
-            bottom: 1px;
-            width: 40px;
-            z-index: 5;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            opacity: 0;
-        }
-
-        .tabs-wrapper::before {
-            left: 1px;
-            background: linear-gradient(to right, var(--bg-app) 0%, transparent 100%);
-            border-top-left-radius: 16px;
-            border-bottom-left-radius: 16px;
-        }
-
-        .tabs-wrapper::after {
-            right: 1px;
-            background: linear-gradient(to left, var(--bg-app) 0%, transparent 100%);
-            border-top-right-radius: 16px;
-            border-bottom-right-radius: 16px;
-        }
-
-        .tabs-wrapper.can-scroll-left::before {
-            opacity: 0.85;
-        }
-
-        .tabs-wrapper.can-scroll-right::after {
-            opacity: 0.85;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 12px 20px;
+        .sub-chip-btn {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 18px;
             font-family: 'Outfit', sans-serif;
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             font-weight: 600;
             color: var(--gray-text);
             cursor: pointer;
-            border-radius: 12px;
             transition: var(--transition);
-            white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            user-select: none;
         }
 
-        .tab-btn:hover {
+        .sub-chip-btn:hover {
             color: var(--dark);
+            border-color: var(--primary);
             background: var(--bg-tab-hover);
         }
 
-        .tab-btn.active {
+        .sub-chip-btn.active {
             color: #ffffff !important;
             background: var(--primary);
-            box-shadow: 0 4px 14px rgba(23, 185, 120, 0.35);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(23, 185, 120, 0.25);
             transform: translateY(-1px);
         }
 

@@ -71,29 +71,102 @@
         </div>
     </div>
 
-    <!-- Вкладки навігації з прокруткою -->
-    <div class="tabs-wrapper" id="tabs-wrapper">
-        <button class="tabs-arrow left" id="tabs-arrow-left" onclick="scrollTabs('left')" title="Прокрутити ліворуч">
-            <i data-lucide="chevron-left"></i>
-        </button>
-        <div class="tabs" id="tabs-container">
-            <button class="tab-btn active" onclick="switchTab('cri-tab', this)"><i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Постійна Інфузія (CRI)</span></button>
-            <button class="tab-btn" onclick="switchTab('bsa-tab', this)"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px;"></i> <span>Розрахунок площі тіла (BSA)</span></button>
-            <button class="tab-btn" onclick="switchTab('fluid-tab', this)"><i data-lucide="droplet" style="width: 18px; height: 18px;"></i> <span>Інфузійна терапія (Гідратація)</span></button>
-            <button class="tab-btn" onclick="switchTab('potassium-tab', this)"><i data-lucide="flask-conical" style="width: 18px; height: 18px;"></i> <span>Безпека калію (K-max)</span></button>
-            <button class="tab-btn" onclick="switchTab('emergency-tab', this)"><i data-lucide="heart-pulse" style="width: 18px; height: 18px;"></i> <span>Реанімація (CPR)</span></button>
-            <button class="tab-btn" onclick="switchTab('compat-tab', this)"><i data-lucide="clipboard-check" style="width: 18px; height: 18px;"></i> <span>Аудитор сумісності ліків</span></button>
-            <button class="tab-btn" onclick="switchTab('bicarbonate-tab', this)"><i data-lucide="activity" style="width: 18px; height: 18px;"></i> <span>Дефіцит бікарбонату</span></button>
-            <button class="tab-btn" onclick="switchTab('calcium-tab', this)"><i data-lucide="layers" style="width: 18px; height: 18px;"></i> <span>Коригований кальцій</span></button>
-            <button class="tab-btn" onclick="switchTab('osmolality-tab', this)"><i data-lucide="compass" style="width: 18px; height: 18px;"></i> <span>Осмолярність плазми</span></button>
+    <!-- Дворівнева навігація категорій -->
+    <div class="category-nav-wrapper">
+        <div class="category-grid">
+            <button class="category-btn active" data-category="emergency" onclick="switchCategory('emergency', this)">
+                <div class="category-icon">
+                    <i data-lucide="heart-pulse"></i>
+                </div>
+                <div class="category-info">
+                    <span class="category-title">Екстрена допомога</span>
+                    <span class="category-desc">Реанімація, CRI інфузія</span>
+                </div>
+            </button>
+            
+            <button class="category-btn" data-category="fluids" onclick="switchCategory('fluids', this)">
+                <div class="category-icon">
+                    <i data-lucide="droplet"></i>
+                </div>
+                <div class="category-info">
+                    <span class="category-title">Інфузійна терапія</span>
+                    <span class="category-desc">Гідратація, Калій, Бікарбонат</span>
+                </div>
+            </button>
+            
+            <button class="category-btn" data-category="audits" onclick="switchCategory('audits', this)">
+                <div class="category-icon">
+                    <i data-lucide="clipboard-check"></i>
+                </div>
+                <div class="category-info">
+                    <span class="category-title">Клінічний аудит</span>
+                    <span class="category-desc">Сумісність, Кальцій, Осмолярність</span>
+                </div>
+            </button>
+            
+            <button class="category-btn" data-category="dosing" onclick="switchCategory('dosing', this)">
+                <div class="category-icon">
+                    <i data-lucide="bar-chart-2"></i>
+                </div>
+                <div class="category-info">
+                    <span class="category-title">Дозування ліків</span>
+                    <span class="category-desc">Площа поверхні тіла (BSA)</span>
+                </div>
+            </button>
         </div>
-        <button class="tabs-arrow right" id="tabs-arrow-right" onclick="scrollTabs('right')" title="Прокрутити праворуч">
-            <i data-lucide="chevron-right"></i>
-        </button>
+
+        <!-- Другий рівень: суб-чіпи для кожної категорії -->
+        <div class="sub-chips-wrapper active" id="chips-emergency">
+            <button class="sub-chip-btn active" id="chip-emergency-tab" onclick="switchTab('emergency-tab', this)">
+                <i data-lucide="heart-pulse" style="width: 16px; height: 16px;"></i>
+                <span>Реанімація (CPR)</span>
+            </button>
+            <button class="sub-chip-btn" id="chip-cri-tab" onclick="switchTab('cri-tab', this)">
+                <i data-lucide="zap" style="width: 16px; height: 16px;"></i>
+                <span>Постійна Інфузія (CRI)</span>
+            </button>
+        </div>
+
+        <div class="sub-chips-wrapper" id="chips-fluids">
+            <button class="sub-chip-btn" id="chip-fluid-tab" onclick="switchTab('fluid-tab', this)">
+                <i data-lucide="droplet" style="width: 16px; height: 16px;"></i>
+                <span>Гідратація пацієнта</span>
+            </button>
+            <button class="sub-chip-btn" id="chip-potassium-tab" onclick="switchTab('potassium-tab', this)">
+                <i data-lucide="flask-conical" style="width: 16px; height: 16px;"></i>
+                <span>Безпека калію (K-max)</span>
+            </button>
+            <button class="sub-chip-btn" id="chip-bicarbonate-tab" onclick="switchTab('bicarbonate-tab', this)">
+                <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
+                <span>Дефіцит бікарбонату</span>
+            </button>
+        </div>
+
+        <div class="sub-chips-wrapper" id="chips-audits">
+            <button class="sub-chip-btn" id="chip-compat-tab" onclick="switchTab('compat-tab', this)">
+                <i data-lucide="clipboard-check" style="width: 16px; height: 16px;"></i>
+                <span>Аудитор сумісності ліків</span>
+            </button>
+            <button class="sub-chip-btn" id="chip-calcium-tab" onclick="switchTab('calcium-tab', this)">
+                <i data-lucide="layers" style="width: 16px; height: 16px;"></i>
+                <span>Коригований кальцій</span>
+            </button>
+            <button class="sub-chip-btn" id="chip-osmolality-tab" onclick="switchTab('osmolality-tab', this)">
+                <i data-lucide="compass" style="width: 16px; height: 16px;"></i>
+                <span>Осмолярність плазми</span>
+            </button>
+        </div>
+
+        <div class="sub-chips-wrapper" id="chips-dosing">
+            <button class="sub-chip-btn" id="chip-bsa-tab" onclick="switchTab('bsa-tab', this)">
+                <i data-lucide="bar-chart-2" style="width: 16px; height: 16px;"></i>
+                <span>Розрахунок площі тіла (BSA)</span>
+            </button>
+        </div>
     </div>
 
     <!-- ---------------- ТАБ А: ПОСТІЙНА ІНФУЗІЯ (CRI) ---------------- -->
-    <div id="cri-tab" class="tab-content active">
+    <div id="cri-tab" class="tab-content">
         <div class="grid-layout">
             <!-- Вхідні дані CRI -->
             <div class="card">
@@ -459,7 +532,7 @@
     </div>
 
     <!-- ---------------- ТАБ Д: РЕАНІМАЦІЙНІ ДОЗИ (CPR) ---------------- -->
-    <div id="emergency-tab" class="tab-content">
+    <div id="emergency-tab" class="tab-content active">
         <div class="card">
             <div class="card-title"><i data-lucide="heart-pulse" style="color: var(--danger);"></i> <span>Реанімаційний калькулятор першої лінії (CPR Emergency List)</span></div>
             <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.95rem;">
