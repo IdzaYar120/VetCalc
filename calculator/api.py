@@ -11,6 +11,7 @@ from core import (
     calculate_bicarbonate,
     calculate_adjusted_calcium,
     calculate_plasma_osmolality,
+    calculate_anesthesia_doses,
     COMPATIBILITY_MATRIX
 )
 from pydantic import Field
@@ -73,6 +74,11 @@ class OsmolalityInput(Schema):
     glucose_unit: str = "ммоль/л"
     bun: float = Field(..., ge=0)
     bun_unit: str = "ммоль/л"
+
+class AnesthesiaInput(Schema):
+    weight_kg: float = Field(..., gt=0)
+    species: str = "Собака"
+    premedicated: bool = False
 
 # --------- ENDPOINTS ---------
 
@@ -212,5 +218,15 @@ def api_calculate_plasma_osmolality(request, data: OsmolalityInput):
         glucose_unit=data.glucose_unit,
         bun=data.bun,
         bun_unit=data.bun_unit
+    )
+    return results
+
+@api.post("/calculate-anesthesia/")
+@ratelimit(key='ip', rate='60/m', block=True)
+def api_calculate_anesthesia(request, data: AnesthesiaInput):
+    results = calculate_anesthesia_doses(
+        weight_kg=data.weight_kg,
+        species=data.species,
+        premedicated=data.premedicated
     )
     return results

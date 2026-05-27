@@ -478,3 +478,82 @@ def calculate_plasma_osmolality(
         "status": status,
         "notes": notes
     }
+
+def calculate_anesthesia_doses(
+    weight_kg: float,
+    species: str,
+    premedicated: bool
+) -> Dict[str, Any]:
+    """
+    Калькулятор розрахунку доз препаратів для анестезії (наркозу та премедикації).
+    """
+    if weight_kg <= 0:
+        raise ValueError("Вага пацієнта повинна бути строго більше 0 кг.")
+
+    w = Decimal(str(weight_kg))
+    is_dog = species == "Собака"
+
+    # 1. Пропофол 1% (10 мг/мл)
+    if is_dog:
+        prop_dose_mg_kg = Decimal('2.0') if premedicated else Decimal('4.0')
+    else:
+        prop_dose_mg_kg = Decimal('3.0') if premedicated else Decimal('6.0')
+    prop_mg = w * prop_dose_mg_kg
+    prop_ml = prop_mg / Decimal('10.0')
+
+    # 2. Альфаксалон (10 мг/мл)
+    if is_dog:
+        alfax_dose_mg_kg = Decimal('1.0') if premedicated else Decimal('2.0')
+    else:
+        alfax_dose_mg_kg = Decimal('2.0') if premedicated else Decimal('5.0')
+    alfax_mg = w * alfax_dose_mg_kg
+    alfax_ml = alfax_mg / Decimal('10.0')
+
+    # 3. Кетамін (50 мг/мл)
+    ket_dose_mg_kg = Decimal('2.5') if premedicated else Decimal('5.0')
+    ket_mg = w * ket_dose_mg_kg
+    ket_ml = ket_mg / Decimal('50.0')
+
+    # 4. Дексмедетомідин (0.5 мг/мл = 500 мкг/мл)
+    # Собака: 5 мкг/кг (0.005 мг/кг). Кіт: 10 мкг/кг (0.010 мг/кг)
+    dex_dose_mcg_kg = Decimal('5.0') if is_dog else Decimal('10.0')
+    dex_mg = w * (dex_dose_mcg_kg / Decimal('1000.0'))
+    dex_ml = dex_mg / Decimal('0.5')
+
+    # 5. Буторфанол (10 мг/мл)
+    but_dose_mg_kg = Decimal('0.2')
+    but_mg = w * but_dose_mg_kg
+    but_ml = but_mg / Decimal('10.0')
+
+    return {
+        "propofol": {
+            "dose_mg": float(precise_round(prop_mg, 4)),
+            "volume_ml": float(precise_round(prop_ml, 4)),
+            "dose_mg_kg": float(prop_dose_mg_kg),
+            "info": "Вводити IV повільно (протягом 30-60 с) до ефекту. Концентрація 1% (10 мг/мл)."
+        },
+        "alfaxalone": {
+            "dose_mg": float(precise_round(alfax_mg, 4)),
+            "volume_ml": float(precise_round(alfax_ml, 4)),
+            "dose_mg_kg": float(alfax_dose_mg_kg),
+            "info": "Вводити IV повільно до ефекту. Прекрасна альтернатива пропофолу. Концентрація 10 мг/мл."
+        },
+        "ketamine": {
+            "dose_mg": float(precise_round(ket_mg, 4)),
+            "volume_ml": float(precise_round(ket_ml, 4)),
+            "dose_mg_kg": float(ket_dose_mg_kg),
+            "info": "Дисоціативний анестетик. Застосовується для індукції або анальгезії. Концентрація 50 мг/мл."
+        },
+        "dexmedetomidine": {
+            "dose_mg": float(precise_round(dex_mg * Decimal('1000.0'), 4)),
+            "volume_ml": float(precise_round(dex_ml, 4)),
+            "dose_mg_kg": float(dex_dose_mcg_kg),
+            "info": "Альфа-2 агоніст для премедикації та седації. Концентрація 0.5 мг/мл (500 мкг/мл)."
+        },
+        "butorphanol": {
+            "dose_mg": float(precise_round(but_mg, 4)),
+            "volume_ml": float(precise_round(but_ml, 4)),
+            "dose_mg_kg": float(but_dose_mg_kg),
+            "info": "Опіоїдний анальгетик для премедикації в комбінації з дексмедетомідином. Концентрація 10 мг/мл."
+        }
+    }

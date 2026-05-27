@@ -125,6 +125,10 @@
                 <i data-lucide="zap" style="width: 16px; height: 16px;"></i>
                 <span>Постійна Інфузія (CRI)</span>
             </button>
+            <button class="sub-chip-btn" id="chip-anesthesia-tab" onclick="switchTab('anesthesia-tab', this)">
+                <i data-lucide="scissors" style="width: 16px; height: 16px;"></i>
+                <span>Розрахунок наркозу</span>
+            </button>
         </div>
 
         <div class="sub-chips-wrapper" id="chips-fluids">
@@ -648,6 +652,105 @@
             
             <div style="margin-top: 15px; background-color: var(--dark-light); border-radius: 8px; padding: 15px; font-size: 0.9rem; color: var(--gray-text); border: 1px solid var(--border);">
                 <i data-lucide="info" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> <strong>Клінічна примітка RECOVER:</strong> Дозування розраховані для негайного внутрішньовенного (IV) або внутрішньокісткового (IO) введення. У разі відсутності IV/IO доступу, деякі препарати (Адреналін, Атропін, Налоксон) можуть бути введені ендотрахеально (IT) у подвоєному дозуванні, розведені фізрозчином.
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ наркозу (ANESTHESIA) ---------------- -->
+    <div id="anesthesia-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри пацієнта для анестезії</span></div>
+                
+                <div id="anesthesia-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="anesthesia-species">Вид тварини</label>
+                    <select id="anesthesia-species">
+                        <option value="Собака">Собака</option>
+                        <option value="Кіт">Кіт</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="anesthesia-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="anesthesia-weight" value="10.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="anesthesia-premedicated" style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-weight: 500;">
+                        <input type="checkbox" id="anesthesia-premedicated" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>Проведено премедикацію (заспокоєння / седацію)</span>
+                    </label>
+                    <p style="font-size: 0.85rem; color: var(--gray-text); margin-top: 4px; padding-left: 26px;">
+                        При проведеній премедикації необхідна індукційна доза анестетиків (пропофолу, альфаксалону тощо) зменшується приблизно вдвічі.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Результати розрахунку наркозу -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="award" style="color: var(--primary);"></i> <span>Розраховані дози для анестезії</span></div>
+                
+                <div class="matrix-container">
+                    <table class="compatibility-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width: 25%;">Препарат</th>
+                                <th style="width: 15%;">Цільова доза</th>
+                                <th style="width: 20%;">Абсолютна доза</th>
+                                <th style="width: 20%; text-align: center; background-color: var(--primary-light); color: var(--primary-dark); font-weight: bold;">ОБ'ЄМ (мл)</th>
+                                <th style="width: 20%;">Примітки безпеки</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Пропофол 1%</strong><br><span style="font-size: 0.82rem; color: var(--gray-text);">10 мг/мл</span></td>
+                                <td id="anes-prop-dose-kg">0.0 мг/кг</td>
+                                <td id="anes-prop-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                                <td id="anes-prop-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.3rem; font-weight: 700; text-align: center; color: var(--success); background-color: var(--success-light);">0.00 мл</td>
+                                <td id="anes-prop-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Альфаксалон</strong><br><span style="font-size: 0.82rem; color: var(--gray-text);">10 мг/мл</span></td>
+                                <td id="anes-alfax-dose-kg">0.0 мг/кг</td>
+                                <td id="anes-alfax-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                                <td id="anes-alfax-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.3rem; font-weight: 700; text-align: center; color: var(--dark);">0.00 мл</td>
+                                <td id="anes-alfax-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Кетамін</strong><br><span style="font-size: 0.82rem; color: var(--gray-text);">50 мг/мл</span></td>
+                                <td id="anes-ket-dose-kg">0.0 мг/кг</td>
+                                <td id="anes-ket-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                                <td id="anes-ket-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.3rem; font-weight: 700; text-align: center; color: var(--dark);">0.00 мл</td>
+                                <td id="anes-ket-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Дексмедетомідин</strong><br><span style="font-size: 0.82rem; color: var(--gray-text);">0.5 мг/мл</span></td>
+                                <td id="anes-dex-dose-kg">0.0 мкг/кг</td>
+                                <td id="anes-dex-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мкг</td>
+                                <td id="anes-dex-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.3rem; font-weight: 700; text-align: center; color: var(--danger-dark); background-color: var(--danger-light);">0.00 мл</td>
+                                <td id="anes-dex-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Буторфанол</strong><br><span style="font-size: 0.82rem; color: var(--gray-text);">10 мг/мл</span></td>
+                                <td id="anes-but-dose-kg">0.2 мг/кг</td>
+                                <td id="anes-but-mg" style="font-family: 'Roboto Mono', monospace;">0.00 мг</td>
+                                <td id="anes-but-ml" style="font-family: 'Roboto Mono', monospace; font-size: 1.3rem; font-weight: 700; text-align: center; color: var(--dark);">0.00 мл</td>
+                                <td id="anes-but-info" style="font-size: 0.85rem; color: var(--gray-text);">Завантаження...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 15px; background-color: var(--dark-light); border-radius: 8px; padding: 12px; font-size: 0.88rem; color: var(--gray-text); border: 1px solid var(--border);">
+                    <i data-lucide="info" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+                    <strong>Клінічна нота:</strong> Премедикація дексмедетомідином у поєднанні з буторфанолом забезпечує глибокий седативний та знеболювальний ефект, суттєво полегшуючи індукцію та знижуючи стрес пацієнта перед операцією.
+                </div>
             </div>
         </div>
     </div>

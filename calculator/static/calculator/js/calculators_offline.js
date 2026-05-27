@@ -369,6 +369,71 @@ function calculatePlasmaOsmolalityLocal(sodium, glucose, glucose_unit, bun, bun_
   };
 }
 
+function calculateAnesthesiaLocal(weight_kg, species, premedicated) {
+  let alfax_dose_mg_kg, alfax_mg, alfax_ml, but_dose_mg_kg, but_mg, but_ml, dex_dose_mcg_kg, dex_mg, dex_ml, is_dog, ket_dose_mg_kg, ket_mg, ket_ml, prop_dose_mg_kg, prop_mg, prop_ml, w;
+
+  if ((weight_kg <= 0)) {
+    throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
+  }
+  w = Number(String(weight_kg));
+  is_dog = (species === "Собака");
+  if (is_dog) {
+    prop_dose_mg_kg = (premedicated ? Number("2.0") : Number("4.0"));
+  } else {
+    prop_dose_mg_kg = (premedicated ? Number("3.0") : Number("6.0"));
+  }
+  prop_mg = (w * prop_dose_mg_kg);
+  prop_ml = (prop_mg / Number("10.0"));
+  if (is_dog) {
+    alfax_dose_mg_kg = (premedicated ? Number("1.0") : Number("2.0"));
+  } else {
+    alfax_dose_mg_kg = (premedicated ? Number("2.0") : Number("5.0"));
+  }
+  alfax_mg = (w * alfax_dose_mg_kg);
+  alfax_ml = (alfax_mg / Number("10.0"));
+  ket_dose_mg_kg = (premedicated ? Number("2.5") : Number("5.0"));
+  ket_mg = (w * ket_dose_mg_kg);
+  ket_ml = (ket_mg / Number("50.0"));
+  dex_dose_mcg_kg = (is_dog ? Number("5.0") : Number("10.0"));
+  dex_mg = (w * (dex_dose_mcg_kg / Number("1000.0")));
+  dex_ml = (dex_mg / Number("0.5"));
+  but_dose_mg_kg = Number("0.2");
+  but_mg = (w * but_dose_mg_kg);
+  but_ml = (but_mg / Number("10.0"));
+  return {
+    propofol: {
+    dose_mg: Number(preciseRound(prop_mg, 4)),
+    volume_ml: Number(preciseRound(prop_ml, 4)),
+    dose_mg_kg: Number(prop_dose_mg_kg),
+    info: "Вводити IV повільно (протягом 30-60 с) до ефекту. Концентрація 1% (10 мг/мл)."
+  },
+    alfaxalone: {
+    dose_mg: Number(preciseRound(alfax_mg, 4)),
+    volume_ml: Number(preciseRound(alfax_ml, 4)),
+    dose_mg_kg: Number(alfax_dose_mg_kg),
+    info: "Вводити IV повільно до ефекту. Прекрасна альтернатива пропофолу. Концентрація 10 мг/мл."
+  },
+    ketamine: {
+    dose_mg: Number(preciseRound(ket_mg, 4)),
+    volume_ml: Number(preciseRound(ket_ml, 4)),
+    dose_mg_kg: Number(ket_dose_mg_kg),
+    info: "Дисоціативний анестетик. Застосовується для індукції або анальгезії. Концентрація 50 мг/мл."
+  },
+    dexmedetomidine: {
+    dose_mg: Number(preciseRound((dex_mg * Number("1000.0")), 4)),
+    volume_ml: Number(preciseRound(dex_ml, 4)),
+    dose_mg_kg: Number(dex_dose_mcg_kg),
+    info: "Альфа-2 агоніст для премедикації та седації. Концентрація 0.5 мг/мл (500 мкг/мл)."
+  },
+    butorphanol: {
+    dose_mg: Number(preciseRound(but_mg, 4)),
+    volume_ml: Number(preciseRound(but_ml, 4)),
+    dose_mg_kg: Number(but_dose_mg_kg),
+    info: "Опіоїдний анальгетик для премедикації в комбінації з дексмедетомідином. Концентрація 10 мг/мл."
+  }
+  };
+}
+
 // Сумісність для розрахунку екстрених реанімаційних доз CPR
 function calculateEmergencyLocal(weight_kg) {
     const orig = _calculateEmergencyLocal(weight_kg);
@@ -508,5 +573,6 @@ export {
     calculateBicarbonateLocal,
     calculateAdjustedCalciumLocal,
     calculatePlasmaOsmolalityLocal,
+    calculateAnesthesiaLocal,
     LOCAL_COMPATIBILITY_MATRIX
 };

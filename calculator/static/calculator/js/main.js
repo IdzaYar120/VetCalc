@@ -13,6 +13,7 @@ import {
     calculateBicarbonateLocal,
     calculateAdjustedCalciumLocal,
     calculatePlasmaOsmolalityLocal,
+    calculateAnesthesiaLocal,
     LOCAL_COMPATIBILITY_MATRIX
 } from './calculators_offline.js';
 
@@ -805,6 +806,131 @@ const SVG_ICONS = {
         });
     }
 
+    // 10. Розрахунок наркозу (Anesthesia)
+    function runAnesthesiaCalculation() {
+        const weight = parseFloat(document.getElementById('anesthesia-weight').value) || 0;
+        const species = document.getElementById('anesthesia-species').value;
+        const premedicated = document.getElementById('anesthesia-premedicated').checked;
+        const errorBanner = document.getElementById('anesthesia-error-banner');
+
+        if (weight <= 0) {
+            errorBanner.textContent = "❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.";
+            errorBanner.style.display = 'block';
+            resetAnesthesiaResults();
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const runLocal = () => {
+            const drugs = calculateAnesthesiaLocal(weight, species, premedicated);
+            
+            const prop = drugs.propofol;
+            document.getElementById('anes-prop-dose-kg').textContent = `${prop.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-prop-mg').textContent = `${prop.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-prop-ml').textContent = `${prop.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-prop-info').innerHTML = `${prop.info} <span class="offline-notice">[${SVG_ICONS.wifiOff} Автономно]</span>`;
+
+            const alfax = drugs.alfaxalone;
+            document.getElementById('anes-alfax-dose-kg').textContent = `${alfax.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-alfax-mg').textContent = `${alfax.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-alfax-ml').textContent = `${alfax.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-alfax-info').textContent = alfax.info;
+
+            const ket = drugs.ketamine;
+            document.getElementById('anes-ket-dose-kg').textContent = `${ket.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-ket-mg').textContent = `${ket.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-ket-ml').textContent = `${ket.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-ket-info').textContent = ket.info;
+
+            const dex = drugs.dexmedetomidine;
+            document.getElementById('anes-dex-dose-kg').textContent = `${dex.dose_mg_kg.toFixed(1)} мкг/кг`;
+            document.getElementById('anes-dex-mg').textContent = `${dex.dose_mg.toFixed(2)} мкг`;
+            document.getElementById('anes-dex-ml').textContent = `${dex.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-dex-info').textContent = dex.info;
+
+            const but = drugs.butorphanol;
+            document.getElementById('anes-but-dose-kg').textContent = `${but.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-but-mg').textContent = `${but.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-but-ml').textContent = `${but.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-but-info').textContent = but.info;
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-anesthesia/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                weight_kg: weight,
+                species: species,
+                premedicated: premedicated
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Невідома помилка");
+            return response.json();
+        })
+        .then(drugs => {
+            const prop = drugs.propofol;
+            document.getElementById('anes-prop-dose-kg').textContent = `${prop.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-prop-mg').textContent = `${prop.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-prop-ml').textContent = `${prop.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-prop-info').textContent = prop.info;
+
+            const alfax = drugs.alfaxalone;
+            document.getElementById('anes-alfax-dose-kg').textContent = `${alfax.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-alfax-mg').textContent = `${alfax.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-alfax-ml').textContent = `${alfax.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-alfax-info').textContent = alfax.info;
+
+            const ket = drugs.ketamine;
+            document.getElementById('anes-ket-dose-kg').textContent = `${ket.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-ket-mg').textContent = `${ket.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-ket-ml').textContent = `${ket.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-ket-info').textContent = ket.info;
+
+            const dex = drugs.dexmedetomidine;
+            document.getElementById('anes-dex-dose-kg').textContent = `${dex.dose_mg_kg.toFixed(1)} мкг/кг`;
+            document.getElementById('anes-dex-mg').textContent = `${dex.dose_mg.toFixed(2)} мкг`;
+            document.getElementById('anes-dex-ml').textContent = `${dex.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-dex-info').textContent = dex.info;
+
+            const but = drugs.butorphanol;
+            document.getElementById('anes-but-dose-kg').textContent = `${but.dose_mg_kg.toFixed(1)} мг/кг`;
+            document.getElementById('anes-but-mg').textContent = `${but.dose_mg.toFixed(2)} мг`;
+            document.getElementById('anes-but-ml').textContent = `${but.volume_ml.toFixed(2)} мл`;
+            document.getElementById('anes-but-info').textContent = but.info;
+        })
+        .catch(err => {
+            console.warn("Помилка наркозу API, перехід на офлайн-режим:", err);
+            runLocal();
+        });
+    }
+
+    function resetAnesthesiaResults() {
+        const ids = [
+            'anes-prop-mg', 'anes-prop-ml',
+            'anes-alfax-mg', 'anes-alfax-ml',
+            'anes-ket-mg', 'anes-ket-ml',
+            'anes-dex-mg', 'anes-dex-ml',
+            'anes-but-mg', 'anes-but-ml'
+        ];
+        ids.forEach(id => {
+            document.getElementById(id).textContent = id.includes('dex-mg') ? "0.00 мкг" : (id.endsWith('mg') ? "0.00 мг" : "0.00 мл");
+        });
+
+        const infoIds = [
+            'anes-prop-info', 'anes-alfax-info', 'anes-ket-info', 'anes-dex-info', 'anes-but-info'
+        ];
+        infoIds.forEach(id => {
+            document.getElementById(id).textContent = "Очікування...";
+        });
+    }
+
     // 7. Розрахунок дефіциту бікарбонату NaHCO3
     function runBicarbonateCalculation() {
         const weight = parseFloat(document.getElementById('bicarbonate-weight').value) || 0;
@@ -1127,6 +1253,7 @@ const SVG_ICONS = {
     const debouncedRunBicarbonate = debounce(runBicarbonateCalculation, 200);
     const debouncedRunCalcium = debounce(runCalciumCalculation, 200);
     const debouncedRunOsmolality = debounce(runOsmolalityCalculation, 200);
+    const debouncedRunAnesthesia = debounce(runAnesthesiaCalculation, 200);
 
     // Слухачі подій для реактивних авто-розрахунків при введенні
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
@@ -1190,6 +1317,11 @@ const SVG_ICONS = {
         document.getElementById(id).addEventListener('change', runOsmolalityCalculation);
     });
 
+    document.getElementById('anesthesia-weight').addEventListener('input', debouncedRunAnesthesia);
+    document.getElementById('anesthesia-weight').addEventListener('change', runAnesthesiaCalculation);
+    document.getElementById('anesthesia-species').addEventListener('change', runAnesthesiaCalculation);
+    document.getElementById('anesthesia-premedicated').addEventListener('change', runAnesthesiaCalculation);
+
 
 
     // ---------------- ЮРИДИЧНА УГОДА ----------------
@@ -1230,6 +1362,7 @@ const SVG_ICONS = {
         runBicarbonateCalculation();
         runCalciumCalculation();
         runOsmolalityCalculation();
+        runAnesthesiaCalculation();
         triggerAudit();
     }
 
