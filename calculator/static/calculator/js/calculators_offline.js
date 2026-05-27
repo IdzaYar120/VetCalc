@@ -251,12 +251,12 @@ function _calculateEmergencyLocal(weight_kg) {
     noradrenaline: {
     dose_mg: Number(preciseRound(nor_mg, 4)),
     volume_ml: Number(preciseRound(nor_ml, 4)),
-    info: "Вазопресор для лікування рефрактерної гіпотензії (CRI). Швидкість 0.1 мкг/кг/хв. Концентрація 1 мг/мл."
+    info: "⚠️ СТРОГО CRI! Вводити виключно як постійну інфузію. Болюс смертельно небезпечний! Швидкість 0.1 мкг/кг/хв. Концентрація 1 мг/мл."
   },
     dopamine: {
     dose_mg: Number(preciseRound(dop_mg, 4)),
     volume_ml: Number(preciseRound(dop_ml, 4)),
-    info: "Інотропна підтримка при кардіогенному шоці (CRI). Швидкість 5 мкг/кг/хв. Концентрація 40 мг/мл."
+    info: "⚠️ СТРОГО CRI! Вводити виключно як постійну інфузію. Болюс смертельно небезпечний! Швидкість 5 мкг/кг/хв. Концентрація 40 мг/мл."
   }
   };
 }
