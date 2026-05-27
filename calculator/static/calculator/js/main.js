@@ -1394,4 +1394,632 @@ const SVG_ICONS = {
         checkLegalConsent();
     });
 
-if (window.lucide) { lucide.createIcons(); }
+    // ---------------- ДРУК ТА PDF ЕКСПОРТ (ЛИСТИ ПРИЗНАЧЕННЯ) ----------------
+    window.printTreatmentSheet = function(calculatorType) {
+        let title = "";
+        let patientDetails = "";
+        let contentHtml = "";
+        let auditHtml = "";
+        let disclaimerHtml = "";
+        const currentDateStr = new Date().toLocaleString('uk-UA', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+
+        if (calculatorType === 'cri') {
+            const weight = document.getElementById('cri-weight').value;
+            const bagVol = document.getElementById('cri-bag-volume').value;
+            const dose = document.getElementById('cri-dose').value;
+            const doseUnit = document.getElementById('cri-dose-unit').value;
+            const ampConc = document.getElementById('cri-amp-conc').value;
+            const addVol = document.getElementById('cri-add-vol').value;
+            const dripFactor = document.getElementById('cri-drip-factor').value;
+
+            const resBagConc = document.getElementById('cri-res-bag-conc').textContent;
+            const resInfusionRate = document.getElementById('cri-res-infusion-rate').textContent;
+            const resDripRate = document.getElementById('cri-res-drip-rate').textContent;
+
+            const mathHourly = document.getElementById('math-hourly-dose').innerHTML;
+            const mathBag = document.getElementById('math-bag-conc').innerHTML;
+            const mathFlow = document.getElementById('math-flow-rate').innerHTML;
+            const mathDrip = document.getElementById('math-drip-rate').innerHTML;
+
+            title = "Лист призначення: Постійна інфузія (CRI)";
+            
+            patientDetails = `
+                <div class="patient-field"><strong>Вид пацієнта:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Кличка / Власник:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Вага пацієнта:</strong> <span>${weight} кг</span></div>
+                <div class="patient-field"><strong>Об'єм флакону:</strong> <span>${bagVol} мл</span></div>
+                <div class="patient-field"><strong>Цільова доза:</strong> <span>${dose} ${doseUnit}</span></div>
+                <div class="patient-field"><strong>Концентрація препарату:</strong> <span>${ampConc} мг/мл</span></div>
+                <div class="patient-field"><strong>Об'єм препарату у флакон:</strong> <span>${addVol} мл</span></div>
+                <div class="patient-field"><strong>Фактор крапельниці:</strong> <span>${dripFactor} кр/мл</span></div>
+            `;
+
+            contentHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Показник</th>
+                            <th style="text-align: center;">Розраховане значення</th>
+                            <th>Опис</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Загальна концентрація препарату у флаконі</strong></td>
+                            <td class="volume-highlight">${resBagConc}</td>
+                            <td>Концентрація розведеного препарату в інфузійному розчині</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Швидкість потоку інфузії</strong></td>
+                            <td class="volume-highlight" style="color: #0284c7; background-color: #f0f9ff !important; border-color: #bae6fd !important;">${resInfusionRate}</td>
+                            <td>Швидкість для налаштування інфузійного насоса (шприцевого дозатора)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Швидкість введення крапельниці</strong></td>
+                            <td class="volume-highlight" style="color: #1e293b; background-color: #f1f5f9 !important; border-color: #e2e8f0 !important;">${resDripRate}</td>
+                            <td>Швидкість пасивного капельного введення</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            auditHtml = `
+                <div class="audit-box">
+                    <h4><strong style="color: #0284c7;">Покроковий математичний аудит розрахунку:</strong></h4>
+                    <p><strong>1. Годинне дозування пацієнта:</strong></p>
+                    <div class="audit-formula">${mathHourly}</div>
+                    <p><strong>2. Концентрація суміші у флаконі:</strong></p>
+                    <div class="audit-formula">${mathBag}</div>
+                    <p><strong>3. Розрахункова швидкість інфузомату:</strong></p>
+                    <div class="audit-formula">${mathFlow}</div>
+                    <p><strong>4. Розрахункова швидкість крапельниці:</strong></p>
+                    <div class="audit-formula">${mathDrip}</div>
+                </div>
+            `;
+            
+            disclaimerHtml = "Перед початком інфузії переконайтеся у сумісності препаратів та правильності заповнення системи інфузійного розчину.";
+
+        } else if (calculatorType === 'fluid') {
+            const weight = document.getElementById('fluid-weight').value;
+            const dehydration = document.getElementById('fluid-dehydration').value;
+            const maintenance = document.getElementById('fluid-maintenance').value;
+            const losses = document.getElementById('fluid-losses').value;
+            const dripFactor = document.getElementById('fluid-drip-factor').value;
+
+            const resDeficit = document.getElementById('fluid-res-deficit').textContent;
+            const resMaint = document.getElementById('fluid-res-maintenance').textContent;
+            const resTotal = document.getElementById('fluid-res-total').textContent;
+            const resRate = document.getElementById('fluid-res-rate').textContent;
+            const resDrip = document.getElementById('fluid-res-drip').textContent;
+
+            const mathDeficit = document.getElementById('math-fluid-deficit').innerHTML;
+            const mathMaint = document.getElementById('math-fluid-maintenance').innerHTML;
+            const mathTotal = document.getElementById('math-fluid-total').innerHTML;
+            const mathRate = document.getElementById('math-fluid-rate').innerHTML;
+            const mathDrip = document.getElementById('math-fluid-drip').innerHTML;
+
+            title = "Лист призначення: Інфузійна терапія (Fluid Therapy)";
+
+            patientDetails = `
+                <div class="patient-field"><strong>Вид пацієнта:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Кличка / Власник:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Вага пацієнта:</strong> <span>${weight} кг</span></div>
+                <div class="patient-field"><strong>Дегідратація:</strong> <span>${dehydration}%</span></div>
+                <div class="patient-field"><strong>Підтримуюча доза:</strong> <span>${maintenance} мл/кг/добу</span></div>
+                <div class="patient-field"><strong>Патологічні втрати:</strong> <span>${losses} мл/добу</span></div>
+                <div class="patient-field"><strong>Фактор крапельниці:</strong> <span>${dripFactor} кр/мл</span></div>
+                <div class="patient-field"><strong>Розрахунковий період:</strong> <span>24 години</span></div>
+            `;
+
+            contentHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Складова інфузії</th>
+                            <th style="text-align: center;">Розрахований об'єм / Швидкість</th>
+                            <th>Клінічний опис</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Дефіцит рідини (Rehydration)</strong></td>
+                            <td class="volume-highlight" style="color: #475569; background-color: #f8fafc !important; border-color: #cbd5e1 !important;">${resDeficit}</td>
+                            <td>Об'єм рідини, необхідний для відновлення дегідратації пацієнта</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Фізіологічна потреба (Maintenance)</strong></td>
+                            <td class="volume-highlight" style="color: #475569; background-color: #f8fafc !important; border-color: #cbd5e1 !important;">${resMaint}</td>
+                            <td>Добова фізіологічна потреба в рідині для підтримання життєдіяльності</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Загальний необхідний добовий об'єм</strong></td>
+                            <td class="volume-highlight">${resTotal}</td>
+                            <td>Загальний об'єм інфузії (дефіцит + підтримка + втрати) на добу</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Швидкість потоку інфузомату</strong></td>
+                            <td class="volume-highlight" style="color: #0284c7; background-color: #f0f9ff !important; border-color: #bae6fd !important;">${resRate}</td>
+                            <td>Швидкість для налаштування інфузомату</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Швидкість введення крапельниці</strong></td>
+                            <td class="volume-highlight" style="color: #1e293b; background-color: #f1f5f9 !important; border-color: #e2e8f0 !important;">${resDrip}</td>
+                            <td>Пасивне капельне введення розчину</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            auditHtml = `
+                <div class="audit-box">
+                    <h4><strong style="color: #0284c7;">Покроковий математичний аудит гідратації:</strong></h4>
+                    <p><strong>1. Дефіцит рідини (Rehydration volume):</strong></p>
+                    <div class="audit-formula">${mathDeficit}</div>
+                    <p><strong>2. Фізіологічна добова потреба (Maintenance volume):</strong></p>
+                    <div class="audit-formula">${mathMaint}</div>
+                    <p><strong>3. Загальний необхідний добовий об'єм (Total fluid volume):</strong></p>
+                    <div class="audit-formula">${mathTotal}</div>
+                    <p><strong>4. Розрахункова швидкість інфузомату (Infusion rate):</strong></p>
+                    <div class="audit-formula">${mathRate}</div>
+                    <p><strong>5. Розрахункова швидкість крапельниці (Drip rate):</strong></p>
+                    <div class="audit-formula">${mathDrip}</div>
+                </div>
+            `;
+
+            disclaimerHtml = "Необхідно регулярно моніторити клінічний стан пацієнта (ТСС, дихання, тургор шкіри, діурез) під час тривалої інфузійної терапії для запобігання гіпергідратації.";
+
+        } else if (calculatorType === 'cpr') {
+            const weight = document.getElementById('emergency-weight').value;
+
+            title = "Лист призначення: Реанімаційні дози (CPR Emergency List)";
+
+            patientDetails = `
+                <div class="patient-field"><strong>Вид пацієнта:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Кличка / Власник:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Вага пацієнта:</strong> <span>${weight} кг</span></div>
+                <div class="patient-field"><strong>Протокол реанімації:</strong> <span>RECOVER Initiative Guidelines</span></div>
+            `;
+
+            let rowsHtml = "";
+            const cprDrugs = [
+                { name: "Адреналін (Епінефрин) 1 мг/мл", target: "Зупинка серця (Низька доза)", dose: "0.01 мг/кг", mg: document.getElementById('em-adr-low-mg').textContent, ml: document.getElementById('em-adr-low-ml').textContent, info: document.getElementById('em-adr-low-info').textContent },
+                { name: "Адреналін (Епінефрин) 1 мг/мл", target: "Зупинка серця (Висока доза)", dose: "0.1 мг/кг", mg: document.getElementById('em-adr-high-mg').textContent, ml: document.getElementById('em-adr-high-ml').textContent, info: document.getElementById('em-adr-high-info').textContent },
+                { name: "Атропін сульфат 0.5 мг/мл", target: "Брадикардія, асистолія, CPR", dose: "0.04 мг/кг", mg: document.getElementById('em-atr-mg').textContent, ml: document.getElementById('em-atr-ml').textContent, info: document.getElementById('em-atr-info').textContent },
+                { name: "Лідокаїн 2% 20 мг/мл", target: "Шлуночкова аритмія (СОБАКИ)", dose: "2.0 мг/кг", mg: document.getElementById('em-lido-dog-mg').textContent, ml: document.getElementById('em-lido-dog-ml').textContent, info: document.getElementById('em-lido-dog-info').textContent },
+                { name: "Лідокаїн 2% 20 мг/мл", target: "Шлуночкова аритмія (КОТИ)", dose: "0.2 мг/кг", mg: document.getElementById('em-lido-cat-mg').textContent, ml: document.getElementById('em-lido-cat-ml').textContent, info: document.getElementById('em-lido-cat-info').textContent },
+                { name: "Налоксон 0.4 мг/мл", target: "Передозування опіоїдів, апное", dose: "0.04 мг/кг", mg: document.getElementById('em-nal-mg').textContent, ml: document.getElementById('em-nal-ml').textContent, info: document.getElementById('em-nal-info').textContent },
+                { name: "Дексаметазон 4 мг/мл", target: "Анафілактичний шок, криза", dose: "1.0 мг/кг", mg: document.getElementById('em-dex-mg').textContent, ml: document.getElementById('em-dex-ml').textContent, info: document.getElementById('em-dex-info').textContent },
+                { name: "Норадреналін (CRI) 1 мг/мл", target: "Вазодилатація, гіпотензія, ALS", dose: "0.1 мкг/кг/хв", mg: document.getElementById('em-nor-mg').textContent + " мг/год", ml: document.getElementById('em-nor-ml').textContent + " мл/год (CRI)", info: document.getElementById('em-nor-info').textContent },
+                { name: "Дофамін (CRI) 40 мг/мл", target: "Кардіогенний шок, гіпотензія, ALS", dose: "5.0 мкг/кг/хв", mg: document.getElementById('em-dop-mg').textContent + " мг/год", ml: document.getElementById('em-dop-ml').textContent + " мл/год (CRI)", info: document.getElementById('em-dop-info').textContent }
+            ];
+
+            cprDrugs.forEach(drug => {
+                const isHighRisk = drug.name.includes("Висока доза") || drug.name.includes("КОТИ") || drug.name.includes("Адреналін");
+                const highlightClass = isHighRisk ? "cpr-volume-highlight" : "volume-highlight";
+                const infoClean = drug.info.replace('[ Автономно]', '').replace('Автономно', '').replace('[ ]', '').replace('[]', '').trim();
+                
+                rowsHtml += `
+                    <tr>
+                        <td><strong>${drug.name}</strong></td>
+                        <td>${drug.target}</td>
+                        <td>${drug.dose}</td>
+                        <td style="font-family: monospace;">${drug.mg}</td>
+                        <td class="${highlightClass}">${drug.ml}</td>
+                        <td style="font-size: 0.82rem; color: #475569;">${infoClean}</td>
+                    </tr>
+                `;
+            });
+
+            contentHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">Препарат та конц.</th>
+                            <th style="width: 18%;">Показання</th>
+                            <th style="width: 10%;">Клін. доза</th>
+                            <th style="width: 12%;">Абс. доза</th>
+                            <th style="width: 16%; text-align: center;">ОБ'ЄМ ДЛЯ ВВЕДЕННЯ</th>
+                            <th style="width: 22%;">Примітки безпеки</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            `;
+
+            disclaimerHtml = "Дозування розраховані для негайного внутрішньовенного (IV) або внутрішньокісткового (IO) введення. У разі відсутності IV/IO доступу, Адреналін, Атропін та Налоксон можуть бути введені ендотрахеально (IT) у подвоєному дозуванні. Норадреналін та Дофамін призначені ВИКЛЮЧНО для постійної внутрішньовенної інфузії (CRI) та потребують інфузомату.";
+
+        } else if (calculatorType === 'anesthesia') {
+            const weight = document.getElementById('anesthesia-weight').value;
+            const species = document.getElementById('anesthesia-species').value === 'dog' ? 'Собака' : 'Кіт';
+            const premedicated = document.getElementById('anesthesia-premedicated').checked ? 'Так (зменшена потреба в анестетиках)' : 'Ні (повна доза індукції)';
+
+            title = "Лист призначення: Розрахунок наркозу та анестезії";
+
+            patientDetails = `
+                <div class="patient-field"><strong>Вид пацієнта:</strong> <span>${species}</span></div>
+                <div class="patient-field"><strong>Кличка / Власник:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Вага пацієнта:</strong> <span>${weight} кг</span></div>
+                <div class="patient-field"><strong>Премедикація:</strong> <span>${premedicated}</span></div>
+            `;
+
+            const propDose = document.getElementById('anes-prop-dose-kg').textContent;
+            const propMg = document.getElementById('anes-prop-mg').textContent;
+            const propMl = document.getElementById('anes-prop-ml').textContent;
+            const propInfo = document.getElementById('anes-prop-info').textContent.replace('[ Автономно]', '').replace('Автономно', '').replace('[ ]', '').replace('[]', '').trim();
+
+            const alfaxDose = document.getElementById('anes-alfax-dose-kg').textContent;
+            const alfaxMg = document.getElementById('anes-alfax-mg').textContent;
+            const alfaxMl = document.getElementById('anes-alfax-ml').textContent;
+            const alfaxInfo = document.getElementById('anes-alfax-info').textContent.replace('[ Автономно]', '').replace('Автономно', '').replace('[ ]', '').replace('[]', '').trim();
+
+            const ketDose = document.getElementById('anes-ket-dose-kg').textContent;
+            const ketMg = document.getElementById('anes-ket-mg').textContent;
+            const ketMl = document.getElementById('anes-ket-ml').textContent;
+            const ketInfo = document.getElementById('anes-ket-info').textContent.replace('[ Автономно]', '').replace('Автономно', '').replace('[ ]', '').replace('[]', '').trim();
+
+            const dexDose = document.getElementById('anes-dex-dose-kg').textContent;
+            const dexMg = document.getElementById('anes-dex-mg').textContent;
+            const dexMl = document.getElementById('anes-dex-ml').textContent;
+            const dexInfo = document.getElementById('anes-dex-info').textContent.replace('[ Автономно]', '').replace('Автономно', '').replace('[ ]', '').replace('[]', '').trim();
+
+            const butDose = document.getElementById('anes-but-dose-kg').textContent;
+            const butMg = document.getElementById('anes-but-mg').textContent;
+            const butMl = document.getElementById('anes-but-ml').textContent;
+            const butInfo = document.getElementById('anes-but-info').textContent.replace('[ Автономно]', '').replace('Автономно', '').replace('[ ]', '').replace('[]', '').trim();
+
+            contentHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Препарат</th>
+                            <th style="width: 15%;">Цільова доза</th>
+                            <th style="width: 20%;">Абсолютна доза</th>
+                            <th style="width: 20%; text-align: center;">ОБ'ЄМ ДЛЯ ВВЕДЕННЯ</th>
+                            <th style="width: 20%;">Примітки безпеки</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Пропофол 1%</strong><br><span style="font-size: 0.8rem; color: #475569;">10 мг/мл</span></td>
+                            <td>${propDose}</td>
+                            <td style="font-family: monospace;">${propMg}</td>
+                            <td class="volume-highlight" style="color: #16a34a; background-color: #f0fdf4 !important; border-color: #bbf7d0 !important;">${propMl}</td>
+                            <td style="font-size: 0.82rem; color: #475569;">${propInfo}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Альфаксалон</strong><br><span style="font-size: 0.8rem; color: #475569;">10 мг/мл</span></td>
+                            <td>${alfaxDose}</td>
+                            <td style="font-family: monospace;">${alfaxMg}</td>
+                            <td class="volume-highlight">${alfaxMl}</td>
+                            <td style="font-size: 0.82rem; color: #475569;">${alfaxInfo}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Кетамін</strong><br><span style="font-size: 0.8rem; color: #475569;">50 мг/мл</span></td>
+                            <td>${ketDose}</td>
+                            <td style="font-family: monospace;">${ketMg}</td>
+                            <td class="volume-highlight">${ketMl}</td>
+                            <td style="font-size: 0.82rem; color: #475569;">${ketInfo}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Дексмедетомідин</strong><br><span style="font-size: 0.8rem; color: #475569;">0.5 мг/мл</span></td>
+                            <td>${dexDose}</td>
+                            <td style="font-family: monospace;">${dexMg}</td>
+                            <td class="volume-highlight" style="color: #991b1b; background-color: #fef2f2 !important; border-color: #fecaca !important;">${dexMl}</td>
+                            <td style="font-size: 0.82rem; color: #475569;">${dexInfo}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Буторфанол</strong><br><span style="font-size: 0.8rem; color: #475569;">10 мг/мл</span></td>
+                            <td>${butDose}</td>
+                            <td style="font-family: monospace;">${butMg}</td>
+                            <td class="volume-highlight">${butMl}</td>
+                            <td style="font-size: 0.82rem; color: #475569;">${butInfo}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            disclaimerHtml = "Анестетики (пропофол, альфаксалон) вводити повільно внутрішньовенно «до ефекту». Проведення премедикації дексмедетомідином у поєднанні з буторфанолом знижує необхідні дози індукції приблизно вдвічі.";
+        }
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert("Помилка: Блокувальник спливаючих вікон завадив відкриттю листа призначення. Будь ласка, дозвольте спливаючі вікна для цього сайту.");
+            return;
+        }
+
+        printWindow.document.write(\`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>\${title}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            background-color: #fff;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        .no-print-bar {
+            background-color: #f1f5f9;
+            padding: 12px 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #cbd5e1;
+        }
+        .no-print-bar button {
+            background-color: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .no-print-bar button:hover {
+            background-color: #0369a1;
+        }
+        .medical-header {
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .medical-title h1 {
+            font-size: 1.5rem;
+            color: #0f172a;
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .medical-title p {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 0;
+        }
+        .clinic-cross {
+            font-size: 2.2rem;
+            color: #0284c7;
+            line-height: 1;
+            font-weight: bold;
+        }
+        .patient-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .patient-field {
+            font-size: 0.95rem;
+        }
+        .patient-field strong {
+            color: #475569;
+        }
+        .patient-field span {
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .manual-field {
+            border-bottom: 1px dashed #94a3b8;
+            display: inline-block;
+            width: 180px;
+            height: 18px;
+            vertical-align: bottom;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            color: #0f172a;
+            border-left: 4px solid #0284c7;
+            padding-left: 10px;
+            margin: 25px 0 12px 0;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .data-table th {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-weight: 700;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .volume-highlight {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #16a34a;
+            background-color: #f0fdf4 !important;
+            text-align: center;
+            border: 1px solid #bbf7d0 !important;
+        }
+        .cpr-volume-highlight {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #dc2626;
+            background-color: #fef2f2 !important;
+            text-align: center;
+            border: 1px solid #fecaca !important;
+        }
+        .audit-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+        .audit-box h4 {
+            margin: 0 0 10px 0;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+        .audit-formula {
+            font-family: monospace;
+            background-color: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 5px 0 12px 0;
+            word-break: break-all;
+            border-left: 3px solid #cbd5e1;
+            color: #0f172a;
+        }
+        .disclaimer-box {
+            border: 1px solid #f87171;
+            background-color: #fef2f2;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 0.88rem;
+            color: #991b1b;
+            margin-top: 25px;
+            line-height: 1.4;
+        }
+        .signature-section {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 60px;
+            padding-top: 20px;
+        }
+        .signature-line {
+            border-top: 1px solid #94a3b8;
+            text-align: center;
+            padding-top: 8px;
+            font-size: 0.88rem;
+            color: #475569;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                padding: 0;
+                color: #000;
+            }
+            .patient-card {
+                border: 1px solid #94a3b8;
+                background-color: #fff !important;
+            }
+            .data-table th {
+                background-color: #e2e8f0 !important;
+                color: #000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .volume-highlight {
+                background-color: #f0fdf4 !important;
+                color: #16a34a !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .cpr-volume-highlight {
+                background-color: #fef2f2 !important;
+                color: #dc2626 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .audit-box {
+                border: 1px solid #cbd5e1;
+                background-color: #fff !important;
+            }
+            .audit-formula {
+                border: 1px solid #e2e8f0;
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .disclaimer-box {
+                border: 1px solid #f87171;
+                background-color: #fef2f2 !important;
+                color: #991b1b !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print-bar no-print">
+        <span style="font-size: 0.9rem; color: #475569;">Перед вами лист призначення. Ви можете зберегти його як PDF або роздрукувати на принтері.</span>
+        <button onclick="window.print()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8" rx="1"></rect><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"></path></svg>
+            Друк / Зберегти в PDF
+        </button>
+    </div>
+
+    <div class="medical-header">
+        <div class="medical-title">
+            <h1>Лист призначення / Карта пацієнта</h1>
+            <p>VetCalc - Автоматизована клінічна система розрахунків дозувань</p>
+        </div>
+        <div class="clinic-cross">✚</div>
+    </div>
+
+    <div class="patient-card">
+        <div class="patient-field"><strong>Клініка:</strong> <span class="manual-field"></span></div>
+        <div class="patient-field"><strong>Лікуючий лікар:</strong> <span class="manual-field"></span></div>
+        <div class="patient-field"><strong>Дата та час розрахунку:</strong> <span>\${currentDateStr}</span></div>
+        <div class="patient-field"><strong>Палата / Бокс:</strong> <span class="manual-field"></span></div>
+        \${patientDetails}
+    </div>
+
+    <div class="section-title">Розрахункові показники та дози</div>
+    \${contentHtml}
+
+    \${auditHtml ? \`<div class="section-title">Покроковий аудит та формули</div>\${auditHtml}\` : ''}
+
+    <div class="disclaimer-box">
+        <strong>⚠️ Клінічне попередження та інструкція:</strong> \${disclaimerHtml}
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-line">Лікар, який розрахував (підпис, ПІБ)</div>
+        <div class="signature-line">Лікар, який перевірив (підпис, ПІБ)</div>
+    </div>
+
+    <script>
+        // Автоматично відкриваємо вікно друку після завантаження
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        });
+    </script>
+</body>
+</html>
+        \`);
+        printWindow.document.close();
+    };
+
+    if (window.lucide) { lucide.createIcons(); }

@@ -236,7 +236,13 @@
 
             <!-- Результати CRI -->
             <div class="card">
-                <div class="card-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку інфузії</span></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div class="card-title" style="margin: 0;"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку інфузії</span></div>
+                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('cri')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                        <span>Друк / PDF</span>
+                    </button>
+                </div>
                 
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -394,7 +400,13 @@
 
             <!-- Результати Fluid Therapy -->
             <div class="card">
-                <div class="card-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку гідратації</span></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div class="card-title" style="margin: 0;"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку гідратації</span></div>
+                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('fluid')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                        <span>Друк / PDF</span>
+                    </button>
+                </div>
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-value" id="fluid-res-deficit">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span></div>
@@ -538,7 +550,13 @@
     <!-- ---------------- ТАБ Д: РЕАНІМАЦІЙНІ ДОЗИ (CPR) ---------------- -->
     <div id="emergency-tab" class="tab-content active">
         <div class="card">
-            <div class="card-title"><i data-lucide="heart-pulse" style="color: var(--danger);"></i> <span>Реанімаційний калькулятор першої лінії (CPR Emergency List)</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div class="card-title" style="margin: 0;"><i data-lucide="heart-pulse" style="color: var(--danger);"></i> <span>Реанімаційний калькулятор першої лінії (CPR Emergency List)</span></div>
+                <button class="sub-chip-btn active" onclick="printTreatmentSheet('cpr')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                    <span>Друк / PDF</span>
+                </button>
+            </div>
             <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.95rem;">
                 Миттєве відображення точних клінічних об'ємів лікарських засобів для невідкладної ветеринарної допомоги на основі ваги пацієнта (за стандартами RECOVER Initiative).
             </p>
@@ -694,7 +712,13 @@
 
             <!-- Результати розрахунку наркозу -->
             <div class="card">
-                <div class="card-title"><i data-lucide="award" style="color: var(--primary);"></i> <span>Розраховані дози для анестезії</span></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div class="card-title" style="margin: 0;"><i data-lucide="award" style="color: var(--primary);"></i> <span>Розраховані дози для анестезії</span></div>
+                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('anesthesia')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                        <span>Друк / PDF</span>
+                    </button>
+                </div>
                 
                 <div class="matrix-container">
                     <table class="compatibility-table">
