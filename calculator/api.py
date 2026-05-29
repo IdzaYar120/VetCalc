@@ -12,6 +12,7 @@ from core import (
     calculate_adjusted_calcium,
     calculate_plasma_osmolality,
     calculate_anesthesia_doses,
+    calculate_transfusion,
     COMPATIBILITY_MATRIX
 )
 from pydantic import Field
@@ -79,6 +80,14 @@ class AnesthesiaInput(Schema):
     weight_kg: float = Field(..., gt=0)
     species: str = "Собака"
     premedicated: bool = False
+
+class TransfusionInput(Schema):
+    weight_kg: float = Field(..., gt=0)
+    species: str = "Собака"
+    patient_ht: float = Field(..., ge=0, lt=100)
+    target_ht: float = Field(..., ge=0, lt=100)
+    donor_ht: float = Field(..., gt=0, lt=100)
+    blood_volume_factor: float = Field(90.0, gt=0)
 
 # --------- ENDPOINTS ---------
 
@@ -230,3 +239,17 @@ def api_calculate_anesthesia(request, data: AnesthesiaInput):
         premedicated=data.premedicated
     )
     return results
+
+@api.post("/calculate-transfusion/")
+@ratelimit(key='ip', rate='60/m', block=True)
+def api_calculate_transfusion(request, data: TransfusionInput):
+    results = calculate_transfusion(
+        weight_kg=data.weight_kg,
+        species=data.species,
+        patient_ht=data.patient_ht,
+        target_ht=data.target_ht,
+        donor_ht=data.donor_ht,
+        blood_volume_factor=data.blood_volume_factor
+    )
+    return results
+

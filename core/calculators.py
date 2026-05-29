@@ -557,3 +557,44 @@ def calculate_anesthesia_doses(
             "info": "Опіоїдний анальгетик для премедикації в комбінації з дексмедетомідином. Концентрація 10 мг/мл."
         }
     }
+
+def calculate_transfusion(
+    weight_kg: float,
+    species: str,
+    patient_ht: float,
+    target_ht: float,
+    donor_ht: float,
+    blood_volume_factor: float
+) -> Dict[str, Any]:
+    """
+    Розраховує об'єм донорської крові або еритроцитарної маси для гемотрансфузії.
+    
+    Формула:
+      Об'єм (мл) = Вага (кг) * Factor (мл/кг) * ((Target Ht - Patient Ht) / Donor Ht)
+    """
+    if weight_kg <= 0:
+        raise ValueError("Вага пацієнта повинна бути строго більше 0 кг.")
+    if patient_ht < 0 or patient_ht >= 100:
+        raise ValueError("Гематокрит пацієнта має бути в межах від 0% до 99%.")
+    if target_ht <= patient_ht or target_ht >= 100:
+        raise ValueError("Цільова доза гематокриту має бути більше поточної та менше 100%.")
+    if donor_ht <= 0 or donor_ht >= 100:
+        raise ValueError("Гематокрит донорської крові має бути строго більше 0% та менше 100%.")
+    if blood_volume_factor <= 0:
+        raise ValueError("Коефіцієнт об'єму крові має бути строго більше 0 мл/кг.")
+
+    w = Decimal(str(weight_kg))
+    p_ht = Decimal(str(patient_ht))
+    t_ht = Decimal(str(target_ht))
+    d_ht = Decimal(str(donor_ht))
+    factor = Decimal(str(blood_volume_factor))
+
+    deficit = t_ht - p_ht
+    required_volume = w * factor * (deficit / d_ht)
+    
+    return {
+        "required_volume_ml": float(precise_round(required_volume)),
+        "hematocrit_deficit_pct": float(precise_round(deficit)),
+        "blood_volume_factor": float(precise_round(factor))
+    }
+

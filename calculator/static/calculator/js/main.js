@@ -931,6 +931,97 @@ const SVG_ICONS = {
         });
     }
 
+    // 11. Розрахунок гемотрансфузії (Blood Transfusion)
+    function runTransfusionCalculation() {
+        const weight = parseFloat(document.getElementById('transfusion-weight').value) || 0;
+        const species = document.getElementById('transfusion-species').value;
+        const patientHt = parseFloat(document.getElementById('transfusion-patient-ht').value) || 0;
+        const targetHt = parseFloat(document.getElementById('transfusion-target-ht').value) || 0;
+        const donorHt = parseFloat(document.getElementById('transfusion-donor-ht').value) || 0;
+        const factor = parseFloat(document.getElementById('transfusion-factor').value) || 0;
+        const errorBanner = document.getElementById('transfusion-error-banner');
+
+        if (weight <= 0) {
+            showTransfusionError("❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.");
+            return;
+        }
+        if (patientHt < 0 || patientHt >= 100) {
+            showTransfusionError("❌ Помилка валідації: Гематокрит пацієнта має бути в межах від 0% до 99%.");
+            return;
+        }
+        if (targetHt <= patientHt || targetHt >= 100) {
+            showTransfusionError("❌ Помилка валідації: Цільовий гематокрит має бути більше почного та менше 100%.");
+            return;
+        }
+        if (donorHt <= 0 || donorHt >= 100) {
+            showTransfusionError("❌ Помилка валідації: Гематокрит донорської крові має бути строго більше 0% та менше 100%.");
+            return;
+        }
+        if (factor <= 0) {
+            showTransfusionError("❌ Помилка валідації: Коефіцієнт об'єму крові має бути строго більше 0 мл/кг.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const runLocal = () => {
+            const data = calculateTransfusionLocal(weight, species, patientHt, targetHt, donorHt, factor);
+            document.getElementById('transfusion-res-volume').innerHTML = `${data.required_volume_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+            document.getElementById('transfusion-res-deficit-ratio').innerHTML = `${data.hematocrit_deficit_pct.toFixed(1)} <span style="font-size: 1rem; color: var(--gray-text);">%</span>`;
+
+            const formulaText = `Об'єм = ${weight} кг * ${factor} мл/кг * ((${targetHt}% - ${patientHt}%) / ${donorHt}%) <span class="offline-notice">[🔌 Автономно]</span><br>` +
+                                `Об'єм = ${weight} кг * ${factor} * (${data.hematocrit_deficit_pct.toFixed(1)} / ${donorHt}) = ${data.required_volume_ml.toFixed(2)} мл`;
+            document.getElementById('math-transfusion-formula').innerHTML = formulaText;
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-transfusion/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                weight_kg: weight,
+                species: species,
+                patient_ht: patientHt,
+                target_ht: targetHt,
+                donor_ht: donorHt,
+                blood_volume_factor: factor
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Невідома помилка");
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('transfusion-res-volume').innerHTML = `${data.required_volume_ml.toFixed(2)} <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+            document.getElementById('transfusion-res-deficit-ratio').innerHTML = `${data.hematocrit_deficit_pct.toFixed(1)} <span style="font-size: 1rem; color: var(--gray-text);">%</span>`;
+
+            const formulaText = `Об'єм = ${weight} кг * ${factor} мл/кг * ((${targetHt}% - ${patientHt}%) / ${donorHt}%)<br>` +
+                                `Об'єм = ${weight} кг * ${factor} * (${data.hematocrit_deficit_pct.toFixed(1)} / ${donorHt}) = ${data.required_volume_ml.toFixed(2)} мл`;
+            document.getElementById('math-transfusion-formula').innerHTML = formulaText;
+        })
+        .catch(err => {
+            console.warn("Помилка трансфузії API, перехід на офлайн-режим:", err);
+            runLocal();
+        });
+    }
+
+    function showTransfusionError(msg) {
+        const errorBanner = document.getElementById('transfusion-error-banner');
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetTransfusionResults();
+    }
+
+    function resetTransfusionResults() {
+        document.getElementById('transfusion-res-volume').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span>`;
+        document.getElementById('transfusion-res-deficit-ratio').innerHTML = `0.0 <span style="font-size: 1rem; color: var(--gray-text);">%</span>`;
+        document.getElementById('math-transfusion-formula').innerHTML = "Розрахунок...";
+    }
+
     // 7. Розрахунок дефіциту бікарбонату NaHCO3
     function runBicarbonateCalculation() {
         const weight = parseFloat(document.getElementById('bicarbonate-weight').value) || 0;
@@ -1254,6 +1345,7 @@ const SVG_ICONS = {
     const debouncedRunCalcium = debounce(runCalciumCalculation, 200);
     const debouncedRunOsmolality = debounce(runOsmolalityCalculation, 200);
     const debouncedRunAnesthesia = debounce(runAnesthesiaCalculation, 200);
+    const debouncedRunTransfusion = debounce(runTransfusionCalculation, 200);
 
     // Слухачі подій для реактивних авто-розрахунків при введенні
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
@@ -1322,6 +1414,21 @@ const SVG_ICONS = {
     document.getElementById('anesthesia-species').addEventListener('change', runAnesthesiaCalculation);
     document.getElementById('anesthesia-premedicated').addEventListener('change', runAnesthesiaCalculation);
 
+    const transfusionInputIds = ['transfusion-weight', 'transfusion-patient-ht', 'transfusion-target-ht', 'transfusion-donor-ht', 'transfusion-factor'];
+    transfusionInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', debouncedRunTransfusion);
+        document.getElementById(id).addEventListener('change', runTransfusionCalculation);
+    });
+    document.getElementById('transfusion-species').addEventListener('change', function() {
+        const factorInput = document.getElementById('transfusion-factor');
+        if (this.value === 'dog' || this.value === 'Собака') {
+            factorInput.value = "90.0";
+        } else {
+            factorInput.value = "60.0";
+        }
+        runTransfusionCalculation();
+    });
+
 
 
     // ---------------- ЮРИДИЧНА УГОДА ----------------
@@ -1363,6 +1470,7 @@ const SVG_ICONS = {
         runCalciumCalculation();
         runOsmolalityCalculation();
         runAnesthesiaCalculation();
+        runTransfusionCalculation();
         triggerAudit();
     }
 
@@ -1724,6 +1832,62 @@ const SVG_ICONS = {
             `;
 
             disclaimerHtml = "Анестетики (пропофол, альфаксалон) вводити повільно внутрішньовенно «до ефекту». Проведення премедикації дексмедетомідином у поєднанні з буторфанолом знижує необхідні дози індукції приблизно вдвічі.";
+        } else if (calculatorType === 'transfusion') {
+            const weight = document.getElementById('transfusion-weight').value;
+            const species = document.getElementById('transfusion-species').value;
+            const patientHt = document.getElementById('transfusion-patient-ht').value;
+            const targetHt = document.getElementById('transfusion-target-ht').value;
+            const donorHt = document.getElementById('transfusion-donor-ht').value;
+            const factor = document.getElementById('transfusion-factor').value;
+
+            const resVolume = document.getElementById('transfusion-res-volume').textContent;
+            const resDeficit = document.getElementById('transfusion-res-deficit-ratio').textContent;
+            const mathTransfusion = document.getElementById('math-transfusion-formula').innerHTML;
+
+            title = "Лист призначення: Розрахунок гемотрансфузії";
+
+            patientDetails = `
+                <div class="patient-field"><strong>Вид пацієнта:</strong> <span>${species}</span></div>
+                <div class="patient-field"><strong>Кличка / Власник:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Вага пацієнта:</strong> <span>${weight} кг</span></div>
+                <div class="patient-field"><strong>Поточний гематокрит (Ht):</strong> <span>${patientHt}%</span></div>
+                <div class="patient-field"><strong>Цільовий гематокрит (Ht):</strong> <span>${targetHt}%</span></div>
+                <div class="patient-field"><strong>Гематокрит донора:</strong> <span>${donorHt}%</span></div>
+                <div class="patient-field"><strong>Коефіцієнт об'єму крові:</strong> <span>${factor} мл/кг</span></div>
+            `;
+
+            contentHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Параметр</th>
+                            <th style="text-align: center;">Розраховане значення</th>
+                            <th>Клінічний опис</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Необхідний об'єм донорської крові</strong></td>
+                            <td class="volume-highlight">${resVolume}</td>
+                            <td>Загальний об'єм цільної крові або pRBC для переливання</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Дефіцит гематокриту для покриття</strong></td>
+                            <td class="volume-highlight" style="color: #0284c7; background-color: #f0f9ff !important; border-color: #bae6fd !important;">${resDeficit}</td>
+                            <td>Різниця між цільовим та поточним рівнем гематокриту пацієнта</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            auditHtml = `
+                <div class="audit-box">
+                    <h4><strong style="color: #0284c7;">Покроковий математичний аудит розрахунку гемотрансфузії:</strong></h4>
+                    <div class="audit-formula">${mathTransfusion}</div>
+                </div>
+            `;
+
+            disclaimerHtml = "Перед початком трансфузії провести перехресну пробу (crossmatch) та біологічну пробу. Перші 15-30 хв вводити повільно (0.25-0.5 мл/кг/год) під контролем температури, ЧСС та дихання. Завершити трансфузію протягом 4 годин.";
         }
 
         const printWindow = window.open('', '_blank');

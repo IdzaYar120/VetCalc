@@ -434,6 +434,38 @@ function calculateAnesthesiaLocal(weight_kg, species, premedicated) {
   };
 }
 
+function calculateTransfusionLocal(weight_kg, species, patient_ht, target_ht, donor_ht, blood_volume_factor) {
+  let d_ht, deficit, factor, p_ht, required_volume, t_ht, w;
+
+  if ((weight_kg <= 0)) {
+    throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
+  }
+  if (((patient_ht < 0) || (patient_ht >= 100))) {
+    throw new Error("Гематокрит пацієнта має бути в межах від 0% до 99%.");
+  }
+  if (((target_ht <= patient_ht) || (target_ht >= 100))) {
+    throw new Error("Цільова доза гематокриту має бути більше поточної та менше 100%.");
+  }
+  if (((donor_ht <= 0) || (donor_ht >= 100))) {
+    throw new Error("Гематокрит донорської крові має бути строго більше 0% та менше 100%.");
+  }
+  if ((blood_volume_factor <= 0)) {
+    throw new Error("Коефіцієнт об'єму крові має бути строго більше 0 мл/кг.");
+  }
+  w = Number(String(weight_kg));
+  p_ht = Number(String(patient_ht));
+  t_ht = Number(String(target_ht));
+  d_ht = Number(String(donor_ht));
+  factor = Number(String(blood_volume_factor));
+  deficit = (t_ht - p_ht);
+  required_volume = ((w * factor) * (deficit / d_ht));
+  return {
+    required_volume_ml: Number(preciseRound(required_volume)),
+    hematocrit_deficit_pct: Number(preciseRound(deficit)),
+    blood_volume_factor: Number(preciseRound(factor))
+  };
+}
+
 // Сумісність для розрахунку екстрених реанімаційних доз CPR
 function calculateEmergencyLocal(weight_kg) {
     const orig = _calculateEmergencyLocal(weight_kg);
@@ -574,5 +606,6 @@ export {
     calculateAdjustedCalciumLocal,
     calculatePlasmaOsmolalityLocal,
     calculateAnesthesiaLocal,
+    calculateTransfusionLocal,
     LOCAL_COMPATIBILITY_MATRIX
 };

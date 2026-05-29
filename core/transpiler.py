@@ -24,7 +24,8 @@ class PythonToJSTranspiler(ast.NodeVisitor):
             'calculate_bicarbonate': 'calculateBicarbonateLocal',
             'calculate_adjusted_calcium': 'calculateAdjustedCalciumLocal',
             'calculate_plasma_osmolality': 'calculatePlasmaOsmolalityLocal',
-            'calculate_anesthesia_doses': 'calculateAnesthesiaLocal'
+            'calculate_anesthesia_doses': 'calculateAnesthesiaLocal',
+            'calculate_transfusion': 'calculateTransfusionLocal'
         }
         js_name = name_map.get(node.name, node.name)
         
@@ -398,6 +399,7 @@ export {
     calculateAdjustedCalciumLocal,
     calculatePlasmaOsmolalityLocal,
     calculateAnesthesiaLocal,
+    calculateTransfusionLocal,
     LOCAL_COMPATIBILITY_MATRIX
 };
 """

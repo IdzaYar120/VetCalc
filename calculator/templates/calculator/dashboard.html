@@ -90,7 +90,7 @@
                 </div>
                 <div class="category-info">
                     <span class="category-title">Інфузійна терапія</span>
-                    <span class="category-desc">Гідратація, Калій, Бікарбонат</span>
+                    <span class="category-desc">Гідратація, Калій, Гемотрансфузія</span>
                 </div>
             </button>
             
@@ -143,6 +143,10 @@
             <button class="sub-chip-btn" id="chip-bicarbonate-tab" onclick="switchTab('bicarbonate-tab', this)">
                 <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
                 <span>Дефіцит бікарбонату</span>
+            </button>
+            <button class="sub-chip-btn" id="chip-transfusion-tab" onclick="switchTab('transfusion-tab', this)">
+                <i data-lucide="droplets" style="width: 16px; height: 16px;"></i>
+                <span>Гемотрансфузія</span>
             </button>
         </div>
 
@@ -905,6 +909,104 @@
                 <div class="math-box" style="margin-top: 20px;">
                     <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий математичний аудит:</span></h4>
                     <div class="math-formula" id="math-bicarbonate-formula">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ---------------- ТАБ З: ГЕМОТРАНСФУЗІЯ (Blood Transfusion) ---------------- -->
+    <div id="transfusion-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри гемотрансфузії</span></div>
+                
+                <div id="transfusion-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="transfusion-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="transfusion-weight" value="10.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transfusion-species">Вид тварини</label>
+                    <div class="input-group">
+                        <select id="transfusion-species">
+                            <option value="Собака" selected>Собака (Blood Vol ~ 90 мл/кг)</option>
+                            <option value="Кіт">Кіт (Blood Vol ~ 60 мл/кг)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transfusion-patient-ht">Поточний гематокрит пацієнта (Ht / PCV) [%]</label>
+                    <div class="input-group">
+                        <input type="number" id="transfusion-patient-ht" value="12.0" step="0.5" min="0" max="99">
+                        <span class="unit-addon">%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transfusion-target-ht">Цільовий гематокрит пацієнта (Ht / PCV) [%]</label>
+                    <div class="input-group">
+                        <input type="number" id="transfusion-target-ht" value="25.0" step="0.5" min="1" max="99">
+                        <span class="unit-addon">%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transfusion-donor-ht">Гематокрит донорської крові/маси [%]</label>
+                    <div class="input-group">
+                        <input type="number" id="transfusion-donor-ht" value="40.0" step="0.5" min="1" max="99">
+                        <span class="unit-addon">%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transfusion-factor">Коефіцієнт об'єму крові пацієнта (мл/кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="transfusion-factor" value="90.0" step="1.0" min="1">
+                        <span class="unit-addon">мл/кг</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div class="card-title" style="margin: 0;"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку трансфузії</span></div>
+                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('transfusion')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                        <span>Друк / PDF</span>
+                    </button>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card" style="background: var(--bg-metric-hover);">
+                        <div class="metric-value" id="transfusion-res-volume" style="color: var(--primary);">0.00 <span style="font-size: 1rem; color: var(--gray-text);">мл</span></div>
+                        <div class="metric-label">Необхідний об'єм донорської крові</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="transfusion-res-deficit-ratio">0.00 <span style="font-size: 1rem; color: var(--gray-text);">%</span></div>
+                        <div class="metric-label">Дефіцит гематокриту для покриття</div>
+                    </div>
+                </div>
+
+                <div class="success-card" style="margin-top: 20px; border-left: 4px solid var(--primary);">
+                    <div class="success-title"><i data-lucide="info" style="color: var(--primary); width: 20px; height: 20px;"></i> <span>Швидкість та правила введення гемотрансфузії</span></div>
+                    <div class="success-text" id="transfusion-safety-text" style="font-size: 0.9rem; line-height: 1.5; color: var(--gray-text);">
+                        • <strong>Перші 15-30 хв:</strong> вводити дуже повільно зі швидкістю <strong>0.25 - 0.5 мл/кг/год</strong> для моніторингу гострих алергічних або гемолітичних реакцій.<br>
+                        • <strong>Подальше введення:</strong> за відсутності реакцій збільшити швидкість до <strong>2.0 - 4.0 мл/кг/год</strong> (при хронічній анемії) або більше при гострому шоці.<br>
+                        • <strong>Часовий ліміт:</strong> трансфузія повинна бути завершена строго протягом <strong>4 годин</strong> для уникнення бактеріального забруднення крові.
+                    </div>
+                </div>
+
+                <div class="math-box" style="margin-top: 20px;">
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий математичний аудит:</span></h4>
+                    <div class="math-formula" id="math-transfusion-formula">Розрахунок...</div>
                 </div>
             </div>
         </div>
