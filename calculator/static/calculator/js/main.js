@@ -1500,6 +1500,19 @@ const SVG_ICONS = {
         updateNetworkStatus();
         registerServiceWorker();
         checkLegalConsent();
+
+        // Ініціалізація локального архіву (IndexedDB)
+        initIndexedDB()
+            .then(() => {
+                renderArchiveTable();
+                const searchInput = document.getElementById('archive-search');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        renderArchiveTable(this.value);
+                    });
+                }
+            })
+            .catch(err => console.error("Не вдалося запустити архів IndexedDB:", err));
     });
 
     // ---------------- ДРУК ТА PDF ЕКСПОРТ (ЛИСТИ ПРИЗНАЧЕННЯ) ----------------
@@ -2185,5 +2198,645 @@ const SVG_ICONS = {
         \`);
         printWindow.document.close();
     };
+
+    // ---------------- ЛОКАЛЬНИЙ АРХІВ ПАЦІЄНТІВ (IndexedDB) ----------------
+    const DB_NAME = "VetCalcArchiveDB";
+    const DB_VERSION = 1;
+    const STORE_NAME = "calculations";
+    let db = null;
+
+    function initIndexedDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            
+            request.onerror = (event) => {
+                console.error("Помилка відкриття IndexedDB:", event);
+                reject(event);
+            };
+            
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                console.log("IndexedDB ініціалізовано успішно.");
+                resolve(db);
+            };
+            
+            request.onupgradeneeded = (event) => {
+                const upgradeDb = event.target.result;
+                if (!upgradeDb.objectStoreNames.contains(STORE_NAME)) {
+                    const store = upgradeDb.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+                    store.createIndex("patientName", "patientName", { unique: false });
+                    store.createIndex("ownerName", "ownerName", { unique: false });
+                    store.createIndex("calculatorType", "calculatorType", { unique: false });
+                    store.createIndex("timestamp", "timestamp", { unique: false });
+                    console.log("Створено сховище об'єктів IndexedDB.");
+                }
+            };
+        });
+    }
+
+    function addCalculationRecord(record) {
+        return new Promise((resolve, reject) => {
+            if (!db) {
+                reject("База даних не ініціалізована");
+                return;
+            }
+            const transaction = db.transaction([STORE_NAME], "readwrite");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.add(record);
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e);
+        });
+    }
+
+    function deleteCalculationRecord(id) {
+        return new Promise((resolve, reject) => {
+            if (!db) {
+                reject("База даних не ініціалізована");
+                return;
+            }
+            const transaction = db.transaction([STORE_NAME], "readwrite");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.delete(Number(id));
+            
+            request.onsuccess = () => resolve();
+            request.onerror = (e) => reject(e);
+        });
+    }
+
+    function getCalculationRecord(id) {
+        return new Promise((resolve, reject) => {
+            if (!db) {
+                reject("База даних не ініціалізована");
+                return;
+            }
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(Number(id));
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e);
+        });
+    }
+
+    function fetchAllRecords() {
+        return new Promise((resolve, reject) => {
+            if (!db) {
+                reject("База даних не ініціалізована");
+                return;
+            }
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const index = store.index("timestamp");
+            const request = index.openCursor(null, "prev"); // Зворотній порядок (найновіші спочатку)
+            const results = [];
+            
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    results.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    resolve(results);
+                }
+            };
+            
+            request.onerror = (e) => reject(e);
+        });
+    }
+
+    // Відкриття модального вікна збереження
+    window.openArchiveSaveModal = function(calculatorType) {
+        document.getElementById('archive-save-type').value = calculatorType;
+        document.getElementById('archive-save-patient').value = "";
+        document.getElementById('archive-save-owner').value = "";
+        document.getElementById('archive-save-ward').value = "";
+        document.getElementById('archive-save-notes').value = "";
+        
+        document.getElementById('archive-save-modal').classList.add('active');
+    };
+
+    window.closeArchiveSaveModal = function() {
+        document.getElementById('archive-save-modal').classList.remove('active');
+    };
+
+    // Збереження активного розрахунку
+    window.confirmSaveToArchive = function() {
+        const patientName = document.getElementById('archive-save-patient').value.trim();
+        const ownerName = document.getElementById('archive-save-owner').value.trim();
+        const wardBox = document.getElementById('archive-save-ward').value.trim();
+        const notes = document.getElementById('archive-save-notes').value.trim();
+        const calculatorType = document.getElementById('archive-save-type').value;
+
+        if (!patientName) {
+            alert("Помилка: Кличка пацієнта є обов'язковою для збереження в архів.");
+            return;
+        }
+
+        let weight = 0;
+        let species = "Н/Д";
+        let inputs = {};
+        let results = {};
+        let audit = "";
+
+        // Вилучаємо дані залежно від типу калькулятора
+        if (calculatorType === 'cri') {
+            weight = parseFloat(document.getElementById('cri-weight').value) || 0;
+            inputs = {
+                bagVolume: parseFloat(document.getElementById('cri-bag-volume').value),
+                targetDose: parseFloat(document.getElementById('cri-dose').value),
+                targetDoseUnit: document.getElementById('cri-dose-unit').value,
+                ampConc: parseFloat(document.getElementById('cri-amp-conc').value),
+                addVol: parseFloat(document.getElementById('cri-add-vol').value),
+                dripFactor: parseInt(document.getElementById('cri-drip-factor').value)
+            };
+            results = {
+                bagConc: document.getElementById('cri-res-bag-conc').textContent,
+                infusionRate: document.getElementById('cri-res-infusion-rate').textContent,
+                dripRate: document.getElementById('cri-res-drip-rate').textContent
+            };
+            audit = document.getElementById('math-bag-conc').parentNode.innerHTML; // Математичний аудит
+
+        } else if (calculatorType === 'fluid') {
+            weight = parseFloat(document.getElementById('fluid-weight').value) || 0;
+            inputs = {
+                dehydration: parseFloat(document.getElementById('fluid-dehydration').value),
+                maintenance: parseFloat(document.getElementById('fluid-maintenance').value),
+                losses: parseFloat(document.getElementById('fluid-losses').value),
+                dripFactor: parseInt(document.getElementById('fluid-drip-factor').value)
+            };
+            results = {
+                deficit: document.getElementById('fluid-res-deficit').textContent,
+                maintenance: document.getElementById('fluid-res-maintenance').textContent,
+                total: document.getElementById('fluid-res-total').textContent,
+                rate: document.getElementById('fluid-res-rate').textContent,
+                drip: document.getElementById('fluid-res-drip').textContent
+            };
+            audit = document.getElementById('math-fluid-deficit').parentNode.innerHTML;
+
+        } else if (calculatorType === 'cpr') {
+            weight = parseFloat(document.getElementById('emergency-weight').value) || 0;
+            inputs = {};
+            results = {
+                adrLowMg: document.getElementById('em-adr-low-mg').textContent,
+                adrLowMl: document.getElementById('em-adr-low-ml').textContent,
+                adrHighMg: document.getElementById('em-adr-high-mg').textContent,
+                adrHighMl: document.getElementById('em-adr-high-ml').textContent,
+                atrMg: document.getElementById('em-atr-mg').textContent,
+                atrMl: document.getElementById('em-atr-ml').textContent,
+                lidoDogMg: document.getElementById('em-lido-dog-mg').textContent,
+                lidoDogMl: document.getElementById('em-lido-dog-ml').textContent,
+                lidoCatMg: document.getElementById('em-lido-cat-mg').textContent,
+                lidoCatMl: document.getElementById('em-lido-cat-ml').textContent,
+                nalMg: document.getElementById('em-nal-mg').textContent,
+                nalMl: document.getElementById('em-nal-ml').textContent,
+                dexMg: document.getElementById('em-dex-mg').textContent,
+                dexMl: document.getElementById('em-dex-ml').textContent,
+                norMg: document.getElementById('em-nor-mg').textContent,
+                norMl: document.getElementById('em-nor-ml').textContent,
+                dopMg: document.getElementById('em-dop-mg').textContent,
+                dopMl: document.getElementById('em-dop-ml').textContent
+            };
+            audit = "Розраховано за стандартами RECOVER Initiative Guidelines.";
+
+        } else if (calculatorType === 'anesthesia') {
+            weight = parseFloat(document.getElementById('anesthesia-weight').value) || 0;
+            species = document.getElementById('anesthesia-species').value === 'dog' ? 'Собака' : 'Кіт';
+            inputs = {
+                premedicated: document.getElementById('anesthesia-premedicated').checked
+            };
+            results = {
+                propDose: document.getElementById('anes-prop-dose-kg').textContent,
+                propMg: document.getElementById('anes-prop-mg').textContent,
+                propMl: document.getElementById('anes-prop-ml').textContent,
+                alfaxDose: document.getElementById('anes-alfax-dose-kg').textContent,
+                alfaxMg: document.getElementById('anes-alfax-mg').textContent,
+                alfaxMl: document.getElementById('anes-alfax-ml').textContent,
+                ketDose: document.getElementById('anes-ket-dose-kg').textContent,
+                ketMg: document.getElementById('anes-ket-mg').textContent,
+                ketMl: document.getElementById('anes-ket-ml').textContent,
+                dexDose: document.getElementById('anes-dex-dose-kg').textContent,
+                dexMg: document.getElementById('anes-dex-mg').textContent,
+                dexMl: document.getElementById('anes-dex-ml').textContent,
+                butDose: document.getElementById('anes-but-dose-kg').textContent,
+                butMg: document.getElementById('anes-but-mg').textContent,
+                butMl: document.getElementById('anes-but-ml').textContent
+            };
+            audit = "Дози розраховані для премедикації та індукції наркозу.";
+
+        } else if (calculatorType === 'transfusion') {
+            weight = parseFloat(document.getElementById('transfusion-weight').value) || 0;
+            species = document.getElementById('transfusion-species').value;
+            inputs = {
+                patientHt: parseFloat(document.getElementById('transfusion-patient-ht').value),
+                targetHt: parseFloat(document.getElementById('transfusion-target-ht').value),
+                donorHt: parseFloat(document.getElementById('transfusion-donor-ht').value),
+                factor: parseFloat(document.getElementById('transfusion-factor').value)
+            };
+            results = {
+                volume: document.getElementById('transfusion-res-volume').textContent,
+                deficit: document.getElementById('transfusion-res-deficit-ratio').textContent
+            };
+            audit = document.getElementById('math-transfusion-formula').parentNode.innerHTML;
+        }
+
+        const record = {
+            patientName: patientName,
+            ownerName: ownerName || "Н/Д",
+            wardBox: wardBox || "Н/Д",
+            notes: notes || "",
+            calculatorType: calculatorType,
+            timestamp: new Date().toISOString(),
+            weight: weight,
+            species: species,
+            inputs: inputs,
+            results: results,
+            audit: audit
+        };
+
+        addCalculationRecord(record)
+            .then(() => {
+                closeArchiveSaveModal();
+                alert(`Успішно збережено в локальний архів для пацієнта "${patientName}"!`);
+                renderArchiveTable(); // Оновлюємо таблицю архіву
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Помилка збереження в IndexedDB.");
+            });
+    };
+
+    // Оновлення таблиці архіву пацієнтів у DOM
+    window.renderArchiveTable = function(searchQuery = "") {
+        fetchAllRecords()
+            .then(records => {
+                const tbody = document.getElementById('archive-table-body');
+                if (!tbody) return;
+                
+                tbody.innerHTML = "";
+                
+                const filtered = records.filter(r => {
+                    const q = searchQuery.toLowerCase();
+                    return r.patientName.toLowerCase().includes(q) || 
+                           r.ownerName.toLowerCase().includes(q) ||
+                           r.notes.toLowerCase().includes(q);
+                });
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--gray-text); padding: 40px 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; opacity: 0.5;"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="M3.3 7 12 12l8.7-5"></path><path d="M12 22V12"></path></svg>
+                                <br>${searchQuery ? "Пацієнтів не знайдено за вашим пошуком." : "Архів порожній. Збережіть розрахунок з будь-якого калькулятора."}
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                filtered.forEach(record => {
+                    const date = new Date(record.timestamp).toLocaleString('uk-UA', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    let typeBadge = "";
+                    if (record.calculatorType === 'cri') typeBadge = `<span class="badge" style="background-color: var(--primary-light); color: var(--primary-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Постійна інфузія (CRI)</span>`;
+                    else if (record.calculatorType === 'fluid') typeBadge = `<span class="badge" style="background-color: var(--primary-light); color: var(--primary-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Гідратація (Fluids)</span>`;
+                    else if (record.calculatorType === 'cpr') typeBadge = `<span class="badge" style="background-color: var(--danger-light); color: var(--danger-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Реанімація (CPR)</span>`;
+                    else if (record.calculatorType === 'anesthesia') typeBadge = `<span class="badge" style="background-color: var(--primary-light); color: var(--primary-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Наркоз (Anesthesia)</span>`;
+                    else if (record.calculatorType === 'transfusion') typeBadge = `<span class="badge" style="background-color: var(--primary-light); color: var(--primary-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Гемотрансфузія</span>`;
+
+                    tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 12px 8px; font-size: 0.9rem;">${date}</td>
+                            <td style="padding: 12px 8px; font-size: 0.95rem;"><strong>${record.patientName}</strong><br><span style="font-size: 0.82rem; color: var(--gray-text);">Власник: ${record.ownerName}</span></td>
+                            <td style="padding: 12px 8px;">${typeBadge}</td>
+                            <td style="padding: 12px 8px; font-size: 0.9rem; font-weight: 500;">${record.weight} кг</td>
+                            <td style="padding: 12px 8px; text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <button class="sub-chip-btn active" onclick="openArchiveViewModal(${record.id})" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        <span>Перегляд</span>
+                                    </button>
+                                    <button class="sub-chip-btn" onclick="printArchiveRecord(${record.id})" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; border: 1px solid var(--border);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8" rx="1"></rect><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"></path></svg>
+                                        <span>Друк</span>
+                                    </button>
+                                    <button class="sub-chip-btn" onclick="deleteArchiveRecord(${record.id})" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; color: var(--danger-dark); background: var(--danger-light); border: none; display: flex; align-items: center; gap: 4px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                                        <span>Видалити</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                if (window.lucide) { lucide.createIcons(); }
+            });
+    };
+
+    // Відкриття перегляду картки
+    window.openArchiveViewModal = function(id) {
+        getCalculationRecord(id)
+            .then(record => {
+                if (!record) return;
+                
+                document.getElementById('archive-view-title').textContent = `Картка пацієнта: ${record.patientName} (Архів #00${record.id})`;
+                
+                let detailHtml = `
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; background-color: var(--bg-card); border: 1px solid var(--border); padding: 15px; border-radius: 8px;">
+                        <div><strong>Кличка пацієнта:</strong> ${record.patientName}</div>
+                        <div><strong>ПІБ Власника:</strong> ${record.ownerName}</div>
+                        <div><strong>Палата / Бокс:</strong> ${record.wardBox}</div>
+                        <div><strong>Вид пацієнта:</strong> ${record.species || "Н/Д"}</div>
+                        <div><strong>Вага:</strong> ${record.weight} кг</div>
+                        <div><strong>Дата розрахунку:</strong> ${new Date(record.timestamp).toLocaleString('uk-UA')}</div>
+                    </div>
+                `;
+
+                if (record.notes) {
+                    detailHtml += `
+                        <div style="background-color: var(--bg-metric-hover); padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--primary); font-size: 0.92rem;">
+                            <strong>Клінічні нотатки лікаря:</strong><br>${record.notes}
+                        </div>
+                    `;
+                }
+
+                // Виводимо специфічні результати
+                detailHtml += `<h4>Результати розрахунків:</h4>`;
+                
+                if (record.calculatorType === 'cri') {
+                    detailHtml += `
+                        <table class="compatibility-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <thead>
+                                <tr><th>Показник</th><th>Обчислено</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Загальна концентрація препарату у флаконі</td><td><strong>${record.results.bagConc}</strong></td></tr>
+                                <tr><td>Швидкість потоку інфузії</td><td><strong style="color: var(--primary);">${record.results.infusionRate}</strong></td></tr>
+                                <tr><td>Швидкість крапельниці</td><td><strong>${record.results.dripRate}</strong></td></tr>
+                            </tbody>
+                        </table>
+                    `;
+                } else if (record.calculatorType === 'fluid') {
+                    detailHtml += `
+                        <table class="compatibility-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <thead>
+                                <tr><th>Показник</th><th>Обчислено</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Дефіцит рідини (Rehydration)</td><td><strong>${record.results.deficit}</strong></td></tr>
+                                <tr><td>Фізіологічна потреба (Maintenance)</td><td><strong>${record.results.maintenance}</strong></td></tr>
+                                <tr><td>Загальний добовий об'єм</td><td><strong>${record.results.total}</strong></td></tr>
+                                <tr><td>Швидкість потоку інфузомату</td><td><strong style="color: var(--primary);">${record.results.rate}</strong></td></tr>
+                                <tr><td>Швидкість введення крапельниці</td><td><strong>${record.results.drip}</strong></td></tr>
+                            </tbody>
+                        </table>
+                    `;
+                } else if (record.calculatorType === 'cpr') {
+                    detailHtml += `
+                        <table class="compatibility-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <thead>
+                                <tr><th>Препарат</th><th>Доза</th><th>Об'єм для введення</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Адреналін (Низька доза)</td><td>${record.results.adrLowMg}</td><td><strong style="color: var(--success);">${record.results.adrLowMl}</strong></td></tr>
+                                <tr><td>Адреналін (Висока доза)</td><td>${record.results.adrHighMg}</td><td><strong style="color: var(--danger-dark);">${record.results.adrHighMl}</strong></td></tr>
+                                <tr><td>Атропін сульфат</td><td>${record.results.atrMg}</td><td><strong>${record.results.atrMl}</strong></td></tr>
+                                <tr><td>Лідокаїн 2% (Собаки)</td><td>${record.results.lidoDogMg}</td><td><strong>${record.results.lidoDogMl}</strong></td></tr>
+                                <tr><td>Лідокаїн 2% (Коти)</td><td>${record.results.lidoCatMg}</td><td><strong style="color: var(--danger-dark);">${record.results.lidoCatMl}</strong></td></tr>
+                                <tr><td>Налоксон</td><td>${record.results.nalMg}</td><td><strong>${record.results.nalMl}</strong></td></tr>
+                                <tr><td>Дексаметазон</td><td>${record.results.dexMg}</td><td><strong>${record.results.dexMl}</strong></td></tr>
+                                <tr><td>Норадреналін (CRI)</td><td>${record.results.norMg} мг/год</td><td><strong style="color: var(--danger-dark);">${record.results.norMl} мл/год (CRI)</strong></td></tr>
+                                <tr><td>Дофамін (CRI)</td><td>${record.results.dopMg} мг/год</td><td><strong>${record.results.dopMl} мл/год (CRI)</strong></td></tr>
+                            </tbody>
+                        </table>
+                    `;
+                } else if (record.calculatorType === 'anesthesia') {
+                    detailHtml += `
+                        <table class="compatibility-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <thead>
+                                <tr><th>Препарат</th><th>Цільова доза</th><th>Абсолютна доза</th><th>Об'єм (мл)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Пропофол 1%</td><td>${record.results.propDose}</td><td>${record.results.propMg}</td><td><strong style="color: var(--success);">${record.results.propMl}</strong></td></tr>
+                                <tr><td>Альфаксалон</td><td>${record.results.alfaxDose}</td><td>${record.results.alfaxMg}</td><td><strong>${record.results.alfaxMl}</strong></td></tr>
+                                <tr><td>Кетамін</td><td>${record.results.ketDose}</td><td>${record.results.ketMg}</td><td><strong>${record.results.ketMl}</strong></td></tr>
+                                <tr><td>Дексмедетомідин</td><td>${record.results.dexDose}</td><td>${record.results.dexMg}</td><td><strong style="color: var(--danger-dark);">${record.results.dexMl}</strong></td></tr>
+                                <tr><td>Буторфанол</td><td>${record.results.butDose}</td><td>${record.results.butMg}</td><td><strong>${record.results.butMl}</strong></td></tr>
+                            </tbody>
+                        </table>
+                    `;
+                } else if (record.calculatorType === 'transfusion') {
+                    detailHtml += `
+                        <table class="compatibility-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <thead>
+                                <tr><th>Параметр</th><th>Обчислено</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Необхідний об'єм донорської крові</td><td><strong style="color: var(--primary);">${record.results.volume}</strong></td></tr>
+                                <tr><td>Дефіцит гематокриту для покриття</td><td><strong>${record.results.deficit}</strong></td></tr>
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                if (record.audit && record.calculatorType !== 'cpr' && record.calculatorType !== 'anesthesia') {
+                    detailHtml += `
+                        <div class="math-box" style="margin-top: 15px;">
+                            <h4>Математичний аудит розрахунку:</h4>
+                            <div style="font-size: 0.88rem; line-height: 1.5;">${record.audit}</div>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('archive-view-body').innerHTML = detailHtml;
+                
+                // Налаштування кнопок дій у модалці перегляду
+                document.getElementById('archive-view-print-btn').onclick = function() {
+                    printArchiveRecord(record.id);
+                };
+                
+                document.getElementById('archive-view-restore-btn').onclick = function() {
+                    restoreRecordToCalculator(record.id);
+                };
+
+                document.getElementById('archive-view-modal').classList.add('active');
+                if (window.lucide) { lucide.createIcons(); }
+            });
+    };
+
+    window.closeArchiveViewModal = function() {
+        document.getElementById('archive-view-modal').classList.remove('active');
+    };
+
+    // Видалення картки
+    window.deleteArchiveRecord = function(id) {
+        if (confirm("Ви дійсно хочете безповоротно видалити цей розрахунок з архіву?")) {
+            deleteCalculationRecord(id)
+                .then(() => {
+                    alert("Успішно видалено з архіву.");
+                    renderArchiveTable();
+                })
+                .catch(err => console.error(err));
+        }
+    };
+
+    // Прямий друк з архіву
+    window.printArchiveRecord = function(id) {
+        getCalculationRecord(id)
+            .then(record => {
+                if (!record) return;
+                
+                // Встановлюємо тимчасово значення в інпути, викликаємо оригінальний друк і потім повертаємо старі значення
+                const backup = backupInputs(record.calculatorType);
+                populateDOMWithRecord(record);
+                
+                printTreatmentSheet(record.calculatorType);
+                
+                // Повертаємо старі значення в DOM через 500мс
+                setTimeout(() => {
+                    restoreInputsBackup(record.calculatorType, backup);
+                }, 500);
+            });
+    };
+
+    // Відновлення картки безпосередньо в активну форму
+    window.restoreRecordToCalculator = function(id) {
+        getCalculationRecord(id)
+            .then(record => {
+                if (!record) return;
+                
+                populateDOMWithRecord(record);
+                closeArchiveViewModal();
+                
+                // Визначаємо категорію та таб для перемикання
+                let cat = "";
+                let tab = "";
+                if (record.calculatorType === 'cri') { cat = "emergency"; tab = "cri-tab"; }
+                else if (record.calculatorType === 'fluid') { cat = "fluids"; tab = "fluid-tab"; }
+                else if (record.calculatorType === 'cpr') { cat = "emergency"; tab = "emergency-tab"; }
+                else if (record.calculatorType === 'anesthesia') { cat = "emergency"; tab = "anesthesia-tab"; }
+                else if (record.calculatorType === 'transfusion') { cat = "fluids"; tab = "transfusion-tab"; }
+
+                // Перемикаємо вкладку
+                const catBtn = document.querySelector(`.category-btn[data-category="${cat}"]`);
+                if (catBtn) switchCategory(cat, catBtn);
+                
+                const tabBtn = document.getElementById(`chip-${tab}`);
+                if (tabBtn) switchTab(tab, tabBtn);
+
+                alert(`Дані пацієнта "${record.patientName}" успішно відновлено та завантажено в форму!`);
+            });
+    };
+
+    // Допоміжні функції для резервного копіювання/відновлення DOM
+    function backupInputs(type) {
+        const backup = {};
+        if (type === 'cri') {
+            backup.weight = document.getElementById('cri-weight').value;
+            backup.bagVolume = document.getElementById('cri-bag-volume').value;
+            backup.dose = document.getElementById('cri-dose').value;
+            backup.doseUnit = document.getElementById('cri-dose-unit').value;
+            backup.ampConc = document.getElementById('cri-amp-conc').value;
+            backup.addVol = document.getElementById('cri-add-vol').value;
+            backup.dripFactor = document.getElementById('cri-drip-factor').value;
+        } else if (type === 'fluid') {
+            backup.weight = document.getElementById('fluid-weight').value;
+            backup.dehydration = document.getElementById('fluid-dehydration').value;
+            backup.maintenance = document.getElementById('fluid-maintenance').value;
+            backup.losses = document.getElementById('fluid-losses').value;
+            backup.dripFactor = document.getElementById('fluid-drip-factor').value;
+        } else if (type === 'cpr') {
+            backup.weight = document.getElementById('emergency-weight').value;
+        } else if (type === 'anesthesia') {
+            backup.weight = document.getElementById('anesthesia-weight').value;
+            backup.species = document.getElementById('anesthesia-species').value;
+            backup.premedicated = document.getElementById('anesthesia-premedicated').checked;
+        } else if (type === 'transfusion') {
+            backup.weight = document.getElementById('transfusion-weight').value;
+            backup.species = document.getElementById('transfusion-species').value;
+            backup.patientHt = document.getElementById('transfusion-patient-ht').value;
+            backup.targetHt = document.getElementById('transfusion-target-ht').value;
+            backup.donorHt = document.getElementById('transfusion-donor-ht').value;
+            backup.factor = document.getElementById('transfusion-factor').value;
+        }
+        return backup;
+    }
+
+    function restoreInputsBackup(type, backup) {
+        if (type === 'cri') {
+            document.getElementById('cri-weight').value = backup.weight;
+            document.getElementById('cri-bag-volume').value = backup.bagVolume;
+            document.getElementById('cri-dose').value = backup.dose;
+            document.getElementById('cri-dose-unit').value = backup.doseUnit;
+            document.getElementById('cri-amp-conc').value = backup.ampConc;
+            document.getElementById('cri-add-vol').value = backup.addVol;
+            document.getElementById('cri-drip-factor').value = backup.dripFactor;
+            runCriCalculation();
+        } else if (type === 'fluid') {
+            document.getElementById('fluid-weight').value = backup.weight;
+            document.getElementById('fluid-dehydration').value = backup.dehydration;
+            document.getElementById('fluid-maintenance').value = backup.maintenance;
+            document.getElementById('fluid-losses').value = backup.losses;
+            document.getElementById('fluid-drip-factor').value = backup.dripFactor;
+            runFluidCalculation();
+        } else if (type === 'cpr') {
+            document.getElementById('emergency-weight').value = backup.weight;
+            runEmergencyCalculation();
+        } else if (type === 'anesthesia') {
+            document.getElementById('anesthesia-weight').value = backup.weight;
+            document.getElementById('anesthesia-species').value = backup.species;
+            document.getElementById('anesthesia-premedicated').checked = backup.premedicated;
+            runAnesthesiaCalculation();
+        } else if (type === 'transfusion') {
+            document.getElementById('transfusion-weight').value = backup.weight;
+            document.getElementById('transfusion-species').value = backup.species;
+            document.getElementById('transfusion-patient-ht').value = backup.patientHt;
+            document.getElementById('transfusion-target-ht').value = backup.targetHt;
+            document.getElementById('transfusion-donor-ht').value = backup.donorHt;
+            document.getElementById('transfusion-factor').value = backup.factor;
+            runTransfusionCalculation();
+        }
+    }
+
+    function populateDOMWithRecord(record) {
+        const type = record.calculatorType;
+        if (type === 'cri') {
+            document.getElementById('cri-weight').value = record.weight;
+            document.getElementById('cri-bag-volume').value = record.inputs.bagVolume;
+            document.getElementById('cri-dose').value = record.inputs.targetDose;
+            document.getElementById('cri-dose-unit').value = record.inputs.targetDoseUnit;
+            document.getElementById('cri-amp-conc').value = record.inputs.ampConc;
+            document.getElementById('cri-add-vol').value = record.inputs.addVol;
+            document.getElementById('cri-drip-factor').value = record.inputs.dripFactor;
+            runCriCalculation();
+        } else if (type === 'fluid') {
+            document.getElementById('fluid-weight').value = record.weight;
+            document.getElementById('fluid-dehydration').value = record.inputs.dehydration;
+            document.getElementById('fluid-maintenance').value = record.inputs.maintenance;
+            document.getElementById('fluid-losses').value = record.inputs.losses;
+            document.getElementById('fluid-drip-factor').value = record.inputs.dripFactor;
+            runFluidCalculation();
+        } else if (type === 'cpr') {
+            document.getElementById('emergency-weight').value = record.weight;
+            runEmergencyCalculation();
+        } else if (type === 'anesthesia') {
+            document.getElementById('anesthesia-weight').value = record.weight;
+            document.getElementById('anesthesia-species').value = record.species === 'Собака' ? 'dog' : 'cat';
+            document.getElementById('anesthesia-premedicated').checked = record.inputs.premedicated;
+            runAnesthesiaCalculation();
+        } else if (type === 'transfusion') {
+            document.getElementById('transfusion-weight').value = record.weight;
+            document.getElementById('transfusion-species').value = record.species;
+            document.getElementById('transfusion-patient-ht').value = record.inputs.patientHt;
+            document.getElementById('transfusion-target-ht').value = record.inputs.targetHt;
+            document.getElementById('transfusion-donor-ht').value = record.inputs.donorHt;
+            document.getElementById('transfusion-factor').value = record.inputs.factor;
+            runTransfusionCalculation();
+        }
+    }
 
     if (window.lucide) { lucide.createIcons(); }

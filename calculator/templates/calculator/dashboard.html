@@ -100,7 +100,7 @@
                 </div>
                 <div class="category-info">
                     <span class="category-title">Клінічний аудит</span>
-                    <span class="category-desc">Сумісність, Кальцій, Осмолярність</span>
+                    <span class="category-desc">Сумісність, Кальцій, Архів пацієнтів</span>
                 </div>
             </button>
             
@@ -162,6 +162,10 @@
             <button class="sub-chip-btn" id="chip-osmolality-tab" onclick="switchTab('osmolality-tab', this)">
                 <i data-lucide="compass" style="width: 16px; height: 16px;"></i>
                 <span>Осмолярність плазми</span>
+            </button>
+            <button class="sub-chip-btn" id="chip-archive-tab" onclick="switchTab('archive-tab', this)">
+                <i data-lucide="archive" style="width: 16px; height: 16px;"></i>
+                <span>Архів пацієнтів (Офлайн)</span>
             </button>
         </div>
 
@@ -242,10 +246,16 @@
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <div class="card-title" style="margin: 0;"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку інфузії</span></div>
-                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('cri')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
-                        <span>Друк / PDF</span>
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="sub-chip-btn active" onclick="printTreatmentSheet('cri')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                            <span>Друк / PDF</span>
+                        </button>
+                        <button class="sub-chip-btn" onclick="openArchiveSaveModal('cri')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; background: var(--bg-card); border: 1px solid var(--border); color: var(--gray-text);">
+                            <i data-lucide="archive" style="width: 14px; height: 14px;"></i>
+                            <span>В архів</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="metrics-grid">
@@ -406,10 +416,16 @@
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <div class="card-title" style="margin: 0;"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку гідратації</span></div>
-                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('fluid')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
-                        <span>Друк / PDF</span>
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="sub-chip-btn active" onclick="printTreatmentSheet('fluid')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                            <span>Друк / PDF</span>
+                        </button>
+                        <button class="sub-chip-btn" onclick="openArchiveSaveModal('fluid')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; background: var(--bg-card); border: 1px solid var(--border); color: var(--gray-text);">
+                            <i data-lucide="archive" style="width: 14px; height: 14px;"></i>
+                            <span>В архів</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -556,10 +572,16 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <div class="card-title" style="margin: 0;"><i data-lucide="heart-pulse" style="color: var(--danger);"></i> <span>Реанімаційний калькулятор першої лінії (CPR Emergency List)</span></div>
-                <button class="sub-chip-btn active" onclick="printTreatmentSheet('cpr')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
-                    <span>Друк / PDF</span>
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('cpr')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                        <span>Друк / PDF</span>
+                    </button>
+                    <button class="sub-chip-btn" onclick="openArchiveSaveModal('cpr')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; background: var(--bg-card); border: 1px solid var(--border); color: var(--gray-text);">
+                        <i data-lucide="archive" style="width: 14px; height: 14px;"></i>
+                        <span>В архів</span>
+                    </button>
+                </div>
             </div>
             <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.95rem;">
                 Миттєве відображення точних клінічних об'ємів лікарських засобів для невідкладної ветеринарної допомоги на основі ваги пацієнта (за стандартами RECOVER Initiative).
@@ -718,10 +740,16 @@
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <div class="card-title" style="margin: 0;"><i data-lucide="award" style="color: var(--primary);"></i> <span>Розраховані дози для анестезії</span></div>
-                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('anesthesia')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
-                        <span>Друк / PDF</span>
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="sub-chip-btn active" onclick="printTreatmentSheet('anesthesia')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                            <span>Друк / PDF</span>
+                        </button>
+                        <button class="sub-chip-btn" onclick="openArchiveSaveModal('anesthesia')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; background: var(--bg-card); border: 1px solid var(--border); color: var(--gray-text);">
+                            <i data-lucide="archive" style="width: 14px; height: 14px;"></i>
+                            <span>В архів</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="matrix-container">
@@ -910,6 +938,48 @@
                     <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий математичний аудит:</span></h4>
                     <div class="math-formula" id="math-bicarbonate-formula">Розрахунок...</div>
                 </div>
+
+    <!-- ---------------- ТАБ И: АРХІВ ПАЦІЄНТІВ (IndexedDB Archive) ---------------- -->
+    <div id="archive-tab" class="tab-content">
+        <div class="card" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div class="card-title" style="margin: 0;"><i data-lucide="archive" style="color: var(--primary);"></i> <span>Локальний архів розрахованих листів призначень</span></div>
+                <div style="display: flex; gap: 10px; width: 100%; max-width: 400px; box-sizing: border-box;">
+                    <div class="input-group" style="margin: 0; width: 100%;">
+                        <input type="text" id="archive-search" placeholder="Пошук за кличкою тварини або власником..." style="padding: 10px 14px; font-size: 0.95rem; width: 100%;">
+                    </div>
+                </div>
+            </div>
+            <p style="margin: 12px 0 0 0; color: var(--gray-text); font-size: 0.9rem;">
+                Усі збережені листи призначень записуються у внутрішню базу даних вашого браузера (**IndexedDB**). Вони працюють повністю автономно та зберігаються навіть без інтернету.
+            </p>
+        </div>
+
+        <div class="card">
+            <div id="archive-list-container" style="overflow-x: auto;">
+                <table class="compatibility-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; width: 20%;">Дата та час</th>
+                            <th style="text-align: left; width: 22%;">Пацієнт / Власник</th>
+                            <th style="text-align: left; width: 18%;">Тип калькулятора</th>
+                            <th style="text-align: left; width: 12%;">Вага тварини</th>
+                            <th style="text-align: center; width: 28%;">Дії з картою</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive-table-body">
+                        <!-- Динамічно заповнюється з IndexedDB -->
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--gray-text); padding: 40px 0;">
+                                <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                <br>Архів порожній. Збережіть розрахунок з будь-якого калькулятора за допомогою кнопки "В архів".
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
             </div>
         </div>
     </div>
@@ -978,10 +1048,16 @@
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <div class="card-title" style="margin: 0;"><i data-lucide="trending-up" style="color: var(--primary);"></i> <span>Результати розрахунку трансфузії</span></div>
-                    <button class="sub-chip-btn active" onclick="printTreatmentSheet('transfusion')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
-                        <span>Друк / PDF</span>
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="sub-chip-btn active" onclick="printTreatmentSheet('transfusion')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                            <span>Друк / PDF</span>
+                        </button>
+                        <button class="sub-chip-btn" onclick="openArchiveSaveModal('transfusion')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; background: var(--bg-card); border: 1px solid var(--border); color: var(--gray-text);">
+                            <i data-lucide="archive" style="width: 14px; height: 14px;"></i>
+                            <span>В архів</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="metrics-grid">
@@ -1188,6 +1264,69 @@
         </div>
         <div class="modal-footer">
             <button class="btn-modal btn-modal-primary" onclick="acceptLegalTerms()">Я згоден, прийняти умови та продовжити</button>
+        </div>
+    </div>
+</div>
+
+<!-- ---------------- МОДАЛЬНЕ ВІКНО ЗБЕРЕЖЕННЯ В АРХІВ ---------------- -->
+<div id="archive-save-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 500px;">
+        <div class="modal-header">
+            <div class="modal-title"><i data-lucide="archive" style="width: 20px; height: 20px; color: var(--primary);"></i> <span>Зберегти розрахунок в локальний архів</span></div>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="archive-save-type">
+            
+            <div class="form-group">
+                <label for="archive-save-patient">Кличка пацієнта *</label>
+                <div class="input-group">
+                    <input type="text" id="archive-save-patient" placeholder="Наприклад: Рекс, Мурка" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="archive-save-owner">ПІБ власника</label>
+                <div class="input-group">
+                    <input type="text" id="archive-save-owner" placeholder="Наприклад: Іванов І.І.">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="archive-save-ward">Палата / Бокс</label>
+                <div class="input-group">
+                    <input type="text" id="archive-save-ward" placeholder="Наприклад: Бокс 3, ВРІТ">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="archive-save-notes">Клінічні нотатки</label>
+                <textarea id="archive-save-notes" placeholder="Особливості пацієнта, діагноз тощо" style="width: 100%; min-height: 80px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="sub-chip-btn" onclick="closeArchiveSaveModal()" style="padding: 10px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: none;">Скасувати</button>
+            <button class="btn-modal btn-modal-primary" onclick="confirmSaveToArchive()" style="padding: 10px 22px; border-radius: 8px; margin: 0; cursor: pointer;">Зберегти в архів</button>
+        </div>
+    </div>
+</div>
+
+<!-- ---------------- МОДАЛЬНЕ ВІКНО ПЕРЕГЛЯДУ З АРХІВУ ---------------- -->
+<div id="archive-view-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 750px;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 15px;">
+            <div class="modal-title"><i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--primary);"></i> <span id="archive-view-title" style="font-weight: 600;">Перегляд картки пацієнта</span></div>
+            <button onclick="closeArchiveViewModal()" style="background: none; border: none; cursor: pointer; color: var(--gray-text); font-size: 1.8rem; line-height: 1;">&times;</button>
+        </div>
+        <div class="modal-body" id="archive-view-body" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+            <!-- Сюди динамічно генеруватиметься детальний огляд картки -->
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+            <button class="sub-chip-btn" onclick="closeArchiveViewModal()" style="padding: 10px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: none;">Закрити</button>
+            <button class="sub-chip-btn active" id="archive-view-print-btn" style="padding: 10px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                <span>Друк / PDF</span>
+            </button>
+            <button class="btn-modal btn-modal-primary" id="archive-view-restore-btn" style="padding: 10px 22px; border-radius: 8px; margin: 0; cursor: pointer;">Відновити в калькулятор</button>
         </div>
     </div>
 </div>
