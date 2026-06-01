@@ -2,6 +2,10 @@ from typing import List, Optional
 from ninja import Schema, NinjaAPI
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from datetime import datetime
+from .models import ArchiveRecord
+
 from core import (
     calculate_cri, 
     calculate_bsa, 
@@ -88,6 +92,27 @@ class TransfusionInput(Schema):
     target_ht: float = Field(..., ge=0, lt=100)
     donor_ht: float = Field(..., gt=0, lt=100)
     blood_volume_factor: float = Field(90.0, gt=0)
+
+class LoginInput(Schema):
+    username: str
+    password: str
+
+class SyncRecordInput(Schema):
+    id: int
+    patient_name: str
+    owner_name: Optional[str] = ""
+    ward_box: Optional[str] = ""
+    notes: Optional[str] = ""
+    calculator_type: str
+    weight: Optional[float] = None
+    species: Optional[str] = ""
+    inputs: Optional[dict] = {}
+    results: Optional[dict] = {}
+    audit: Optional[str] = ""
+    timestamp: str
+
+class SyncPayloadInput(Schema):
+    records: List[SyncRecordInput]
 
 # --------- ENDPOINTS ---------
 
@@ -252,4 +277,64 @@ def api_calculate_transfusion(request, data: TransfusionInput):
         blood_volume_factor=data.blood_volume_factor
     )
     return results
+
+@api.post("/auth/login/")
+@ratelimit(key='ip', rate='10/m', block=True)
+def api_login(request, data: LoginInput):
+    user = authenticate(request, username=data.username, password=data.password)
+    if user is not None:
+        auth_login(request, user)
+        return {"status": "success", "username": user.username}
+    return api.create_response(request, {"status": "error", "message": "Невірний логін або пароль"}, status=401)
+
+@api.post("/auth/logout/")
+def api_logout(request):
+    auth_logout(request)
+    return {"status": "success"}
+
+@api.get("/auth/status/")
+def api_auth_status(request):
+    if request.user.is_authenticated:
+        return {"authenticated": True, "username": request.user.username}
+    return {"authenticated": False}
+
+@api.post("/archive/sync/")
+def api_sync_archive(request, data: SyncPayloadInput):
+    if not request.user.is_authenticated:
+        return api.create_response(request, {"status": "error", "message": "Необхідна авторизація"}, status=401)
+    
+    synced_ids = []
+    for rec in data.records:
+        try:
+            dt = datetime.fromisoformat(rec.timestamp.replace('Z', '+00:00'))
+        except:
+            dt = datetime.now()
+            
+        ArchiveRecord.objects.update_or_create(
+            user=request.user,
+            local_id=rec.id,
+            defaults={
+                'patient_name': rec.patient_name,
+                'owner_name': rec.owner_name,
+                'ward_box': rec.ward_box,
+                'notes': rec.notes,
+                'calculator_type': rec.calculator_type,
+                'weight': rec.weight,
+                'species': rec.species,
+                'inputs': rec.inputs,
+                'results': rec.results,
+                'audit': rec.audit,
+                'timestamp': dt
+            }
+        )
+        synced_ids.append(rec.id)
+    return {"status": "success", "synced_ids": synced_ids}
+
+@api.get("/archive/")
+def api_get_archive(request):
+    if not request.user.is_authenticated:
+        return api.create_response(request, {"status": "error", "message": "Необхідна авторизація"}, status=401)
+    
+    records = ArchiveRecord.objects.filter(user=request.user).values()
+    return {"status": "success", "records": list(records)}
 

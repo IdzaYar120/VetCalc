@@ -2840,3 +2840,144 @@ const SVG_ICONS = {
     }
 
     if (window.lucide) { lucide.createIcons(); }
+
+    // ---------------- CLOUD SYNC & AUTHENTICATION ----------------
+    function getCsrfToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    window.openCloudAuthModal = function() {
+        document.getElementById('cloud-auth-modal').classList.add('active');
+        checkCloudAuthStatus();
+    };
+
+    window.closeCloudAuthModal = function() {
+        document.getElementById('cloud-auth-modal').classList.remove('active');
+        document.getElementById('cloud-auth-error').style.display = 'none';
+        document.getElementById('cloud-sync-status').style.display = 'none';
+    };
+
+    function checkCloudAuthStatus() {
+        fetch('/api/auth/status/')
+        .then(res => res.json())
+        .then(data => {
+            if (data.authenticated) {
+                document.getElementById('cloud-unauth-view').style.display = 'none';
+                document.getElementById('cloud-auth-view').style.display = 'block';
+                document.getElementById('cloud-logged-user').textContent = data.username;
+                document.getElementById('btn-cloud-login').style.display = 'none';
+                document.getElementById('btn-cloud-logout').style.display = 'inline-block';
+                document.getElementById('cloud-status-text').textContent = 'Синхронізація увімкнена';
+            } else {
+                document.getElementById('cloud-unauth-view').style.display = 'block';
+                document.getElementById('cloud-auth-view').style.display = 'none';
+                document.getElementById('btn-cloud-login').style.display = 'inline-block';
+                document.getElementById('btn-cloud-logout').style.display = 'none';
+                document.getElementById('cloud-status-text').textContent = 'Офлайн Архів';
+            }
+        })
+        .catch(console.error);
+    }
+
+    document.getElementById('btn-cloud-login').addEventListener('click', () => {
+        const username = document.getElementById('cloud-username').value;
+        const password = document.getElementById('cloud-password').value;
+        const errorEl = document.getElementById('cloud-auth-error');
+        
+        fetch('/api/auth/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({username, password})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                errorEl.style.display = 'none';
+                checkCloudAuthStatus();
+            } else {
+                errorEl.textContent = data.message || "Помилка авторизації";
+                errorEl.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            errorEl.textContent = "Помилка з'єднання із сервером.";
+            errorEl.style.display = 'block';
+        });
+    });
+
+    document.getElementById('btn-cloud-logout').addEventListener('click', () => {
+        fetch('/api/auth/logout/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        }).then(() => checkCloudAuthStatus());
+    });
+
+    document.getElementById('btn-sync-now').addEventListener('click', async () => {
+        const statusEl = document.getElementById('cloud-sync-status');
+        try {
+            const records = await db.getAllRecords();
+            if (records.length === 0) {
+                statusEl.textContent = "Локальний архів порожній.";
+                statusEl.style.color = "var(--gray-text)";
+                statusEl.style.display = 'block';
+                return;
+            }
+            
+            // Format for API
+            const payload = records.map(r => ({
+                id: r.id,
+                patient_name: r.patientName,
+                owner_name: r.ownerName || "",
+                ward_box: r.wardBox || "",
+                notes: r.notes || "",
+                calculator_type: r.calculatorType,
+                weight: r.weight,
+                species: r.species || "",
+                inputs: r.inputs || {},
+                results: r.results || {},
+                audit: r.audit || "",
+                timestamp: r.timestamp
+            }));
+
+            const response = await fetch('/api/archive/sync/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({records: payload})
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                statusEl.textContent = `Синхронізовано ${data.synced_ids.length} записів успішно!`;
+                statusEl.style.color = "var(--success)";
+                statusEl.style.display = 'block';
+            } else {
+                statusEl.textContent = "Помилка синхронізації: " + data.message;
+                statusEl.style.color = "var(--danger)";
+                statusEl.style.display = 'block';
+            }
+        } catch (err) {
+            statusEl.textContent = "Помилка з'єднання під час синхронізації.";
+            statusEl.style.color = "var(--danger)";
+            statusEl.style.display = 'block';
+        }
+    });
+
+    // Initial check
+    setTimeout(checkCloudAuthStatus, 1000);

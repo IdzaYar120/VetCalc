@@ -43,9 +43,9 @@
                     <i id="theme-icon-sun" data-lucide="sun"></i>
                     <i id="theme-icon-moon" data-lucide="moon" style="display: none;"></i>
                 </button>
-                <div id="network-status" class="network-badge network-online">
-                    <i data-lucide="wifi"></i>
-                    <span>Онлайн</span>
+                <div id="network-status" class="network-badge network-online" style="cursor: pointer; transition: all 0.3s ease;" onclick="window.openCloudAuthModal && window.openCloudAuthModal()">
+                    <i id="cloud-status-icon" data-lucide="cloud"></i>
+                    <span id="cloud-status-text">Офлайн Архів</span>
                 </div>
             </div>
         </div>
@@ -1327,6 +1327,55 @@
                 <span>Друк / PDF</span>
             </button>
             <button class="btn-modal btn-modal-primary" id="archive-view-restore-btn" style="padding: 10px 22px; border-radius: 8px; margin: 0; cursor: pointer;">Відновити в калькулятор</button>
+        </div>
+    </div>
+</div>
+
+<!-- ---------------- МОДАЛЬНЕ ВІКНО ХМАРНОЇ СИНХРОНІЗАЦІЇ ---------------- -->
+<div id="cloud-auth-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 450px;">
+        <div class="modal-header">
+            <div class="modal-title"><i data-lucide="cloud" style="width: 20px; height: 20px; color: var(--primary);"></i> <span>Хмарна синхронізація</span></div>
+        </div>
+        <div class="modal-body">
+            <!-- Стан 1: Не авторизовано -->
+            <div id="cloud-unauth-view">
+                <p style="margin-bottom: 15px; color: var(--gray-text); font-size: 0.95rem;">Увійдіть до системи клініки, щоб зберегти локальні розрахунки у хмарі та синхронізувати їх з іншими пристроями.</p>
+                <div id="cloud-auth-error" class="alert-error" style="display: none; padding: 10px; margin-bottom: 15px; border-radius: 6px;"></div>
+                
+                <div class="form-group">
+                    <label>Логін (Username)</label>
+                    <div class="input-group">
+                        <input type="text" id="cloud-username" placeholder="Введіть логін">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <div class="input-group">
+                        <input type="password" id="cloud-password" placeholder="Введіть пароль">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Стан 2: Авторизовано -->
+            <div id="cloud-auth-view" style="display: none; text-align: center; padding: 10px 0;">
+                <div style="width: 60px; height: 60px; background-color: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                    <i data-lucide="user-check" style="width: 30px; height: 30px; color: var(--primary-dark);"></i>
+                </div>
+                <h4 style="margin: 0 0 5px 0; color: var(--dark);">Авторизовано як: <span id="cloud-logged-user" style="color: var(--primary);"></span></h4>
+                <p style="color: var(--gray-text); font-size: 0.9rem; margin-bottom: 20px;">Ваш архів готовий до синхронізації з сервером клініки.</p>
+                
+                <button class="btn-modal btn-modal-primary" id="btn-sync-now" style="width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="refresh-cw"></i> Синхронізувати архів зараз
+                </button>
+                <div id="cloud-sync-status" style="font-size: 0.85rem; color: var(--success); font-weight: 500; display: none;">Синхронізація успішна!</div>
+            </div>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="sub-chip-btn" onclick="closeCloudAuthModal()" style="padding: 10px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: none;">Закрити</button>
+            
+            <button class="btn-modal btn-modal-primary" id="btn-cloud-login" style="padding: 10px 22px; border-radius: 8px; margin: 0; cursor: pointer;">Увійти</button>
+            <button class="sub-chip-btn" id="btn-cloud-logout" style="display: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--danger); color: var(--danger); background: none;">Вийти</button>
         </div>
     </div>
 </div>
