@@ -17,6 +17,8 @@ function applyTheme(theme) {
     }
 }
 
+window.applyTheme = applyTheme;
+
 if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
         const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';

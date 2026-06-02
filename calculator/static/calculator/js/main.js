@@ -38,7 +38,7 @@ const SVG_ICONS = {
     }
 
     // Дебаунс перемальовування іконок для запобігання лагам інтерфейсу
-    if (window.lucide) {
+    if (window.lucide && !window.lucide.isOverridden) {
         const originalCreateIcons = window.lucide.createIcons;
         let lucideTimeout = null;
         window.lucide.createIcons = function(options) {
@@ -47,6 +47,7 @@ const SVG_ICONS = {
                 originalCreateIcons(options);
             }, 60);
         };
+        window.lucide.isOverridden = true;
     }
 
     // Зміна категорії
@@ -1421,10 +1422,25 @@ const SVG_ICONS = {
     });
     document.getElementById('transfusion-species').addEventListener('change', function() {
         const factorInput = document.getElementById('transfusion-factor');
-        if (this.value === 'dog' || this.value === 'Собака') {
-            factorInput.value = "90.0";
-        } else {
-            factorInput.value = "60.0";
+        switch(this.value) {
+            case 'Собака':
+            case 'dog':
+                factorInput.value = "90.0";
+                break;
+            case 'Кіт':
+            case 'cat':
+            case 'Тхір':
+            case 'Кролик':
+                factorInput.value = "60.0";
+                break;
+            case 'Морська свинка':
+                factorInput.value = "70.0";
+                break;
+            case 'Гризун':
+                factorInput.value = "65.0";
+                break;
+            default:
+                factorInput.value = "60.0";
         }
         runTransfusionCalculation();
     });
@@ -2982,15 +2998,4 @@ const SVG_ICONS = {
     // Initial check
     setTimeout(checkCloudAuthStatus, 1000);
 
-    // ---------------- EXOTICS TRANSFUSION EVENT LISTENER ----------------
-    document.getElementById('transfusion-species').addEventListener('change', function() {
-        const factorInput = document.getElementById('transfusion-factor');
-        switch(this.value) {
-            case 'Собака': factorInput.value = 90.0; break;
-            case 'Кіт': factorInput.value = 60.0; break;
-            case 'Тхір': factorInput.value = 60.0; break;
-            case 'Кролик': factorInput.value = 60.0; break;
-            case 'Морська свинка': factorInput.value = 70.0; break;
-            case 'Гризун': factorInput.value = 65.0; break;
-        }
-    });
+
