@@ -51,20 +51,11 @@ self.addEventListener('fetch', event => {
         );
         return;
     }
-
     // Cache-first strategy for app shell assets and external fonts
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {
                 if (cachedResponse) {
-                    // Return from cache, then optionally update cache in background (stale-while-revalidate)
-                    fetch(event.request).then(networkResponse => {
-                        if (networkResponse.status === 200) {
-                            caches.open(CACHE_NAME).then(cache => {
-                                cache.put(event.request, networkResponse);
-                            });
-                        }
-                    }).catch(() => {/* Ignore network update errors when offline */});
                     return cachedResponse;
                 }
 
