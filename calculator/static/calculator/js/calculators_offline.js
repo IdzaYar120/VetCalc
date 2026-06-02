@@ -16,6 +16,9 @@ const SPECIES_K_FACTORS = {
     "Собака": 10.1,
     "Кіт": 10.0,
     "Птах": 10.4,
+    "Кролик": 9.77,
+    "Тхір": 9.9,
+    "Морська свинка": 9.0,
     "Гризун": 9.0
 };
 
@@ -370,34 +373,82 @@ function calculatePlasmaOsmolalityLocal(sodium, glucose, glucose_unit, bun, bun_
 }
 
 function calculateAnesthesiaLocal(weight_kg, species, premedicated) {
-  let alfax_dose_mg_kg, alfax_mg, alfax_ml, but_dose_mg_kg, but_mg, but_ml, dex_dose_mcg_kg, dex_mg, dex_ml, is_dog, ket_dose_mg_kg, ket_mg, ket_ml, prop_dose_mg_kg, prop_mg, prop_ml, w;
+  let alfax_dose_mg_kg, alfax_mg, alfax_ml, but_dose_mg_kg, but_mg, but_ml, dex_dose_mcg_kg, dex_mg, dex_ml, is_cat, is_dog, is_ferret, is_gp_rodent, is_rabbit, ket_dose_mg_kg, ket_mg, ket_ml, prop_dose_mg_kg, prop_mg, prop_ml, w;
 
   if ((weight_kg <= 0)) {
     throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
   }
   w = Number(String(weight_kg));
   is_dog = (species === "Собака");
+  is_cat = (species === "Кіт");
+  is_ferret = (species === "Тхір");
+  is_rabbit = (species === "Кролик");
+  is_gp_rodent = ["Морська свинка", "Гризун"].includes(species);
   if (is_dog) {
     prop_dose_mg_kg = (premedicated ? Number("2.0") : Number("4.0"));
-  } else {
-    prop_dose_mg_kg = (premedicated ? Number("3.0") : Number("6.0"));
-  }
+  } else if (is_cat) {
+      prop_dose_mg_kg = (premedicated ? Number("3.0") : Number("6.0"));
+    } else if (is_ferret) {
+        prop_dose_mg_kg = (premedicated ? Number("4.0") : Number("8.0"));
+      } else if (is_rabbit) {
+          prop_dose_mg_kg = (premedicated ? Number("5.0") : Number("10.0"));
+        } else if (is_gp_rodent) {
+            prop_dose_mg_kg = (premedicated ? Number("8.0") : Number("12.0"));
+          } else {
+            prop_dose_mg_kg = Number("3.0");
+          }
   prop_mg = (w * prop_dose_mg_kg);
   prop_ml = (prop_mg / Number("10.0"));
   if (is_dog) {
     alfax_dose_mg_kg = (premedicated ? Number("1.0") : Number("2.0"));
-  } else {
-    alfax_dose_mg_kg = (premedicated ? Number("2.0") : Number("5.0"));
-  }
+  } else if (is_cat) {
+      alfax_dose_mg_kg = (premedicated ? Number("2.0") : Number("5.0"));
+    } else if (is_ferret) {
+        alfax_dose_mg_kg = (premedicated ? Number("2.0") : Number("5.0"));
+      } else if (is_rabbit) {
+          alfax_dose_mg_kg = (premedicated ? Number("3.0") : Number("6.0"));
+        } else if (is_gp_rodent) {
+            alfax_dose_mg_kg = (premedicated ? Number("5.0") : Number("10.0"));
+          } else {
+            alfax_dose_mg_kg = Number("2.0");
+          }
   alfax_mg = (w * alfax_dose_mg_kg);
   alfax_ml = (alfax_mg / Number("10.0"));
-  ket_dose_mg_kg = (premedicated ? Number("2.5") : Number("5.0"));
+  if ((is_dog || is_cat)) {
+    ket_dose_mg_kg = (premedicated ? Number("2.5") : Number("5.0"));
+  } else if (is_ferret) {
+      ket_dose_mg_kg = (premedicated ? Number("5.0") : Number("10.0"));
+    } else if (is_rabbit) {
+        ket_dose_mg_kg = (premedicated ? Number("10.0") : Number("15.0"));
+      } else if (is_gp_rodent) {
+          ket_dose_mg_kg = (premedicated ? Number("20.0") : Number("40.0"));
+        } else {
+          ket_dose_mg_kg = Number("2.5");
+        }
   ket_mg = (w * ket_dose_mg_kg);
   ket_ml = (ket_mg / Number("50.0"));
-  dex_dose_mcg_kg = (is_dog ? Number("5.0") : Number("10.0"));
+  if (is_dog) {
+    dex_dose_mcg_kg = Number("5.0");
+  } else if ((is_cat || is_ferret)) {
+      dex_dose_mcg_kg = Number("10.0");
+    } else if (is_rabbit) {
+        dex_dose_mcg_kg = Number("15.0");
+      } else if (is_gp_rodent) {
+          dex_dose_mcg_kg = Number("20.0");
+        } else {
+          dex_dose_mcg_kg = Number("10.0");
+        }
   dex_mg = (w * (dex_dose_mcg_kg / Number("1000.0")));
   dex_ml = (dex_mg / Number("0.5"));
-  but_dose_mg_kg = Number("0.2");
+  if ((is_dog || is_cat || is_ferret)) {
+    but_dose_mg_kg = Number("0.2");
+  } else if (is_rabbit) {
+      but_dose_mg_kg = Number("0.3");
+    } else if (is_gp_rodent) {
+        but_dose_mg_kg = Number("0.5");
+      } else {
+        but_dose_mg_kg = Number("0.2");
+      }
   but_mg = (w * but_dose_mg_kg);
   but_ml = (but_mg / Number("10.0"));
   return {

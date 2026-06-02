@@ -492,36 +492,80 @@ def calculate_anesthesia_doses(
 
     w = Decimal(str(weight_kg))
     is_dog = species == "Собака"
+    is_cat = species == "Кіт"
+    is_ferret = species == "Тхір"
+    is_rabbit = species == "Кролик"
+    is_gp_rodent = species in ["Морська свинка", "Гризун"]
 
     # 1. Пропофол 1% (10 мг/мл)
     if is_dog:
         prop_dose_mg_kg = Decimal('2.0') if premedicated else Decimal('4.0')
-    else:
+    elif is_cat:
         prop_dose_mg_kg = Decimal('3.0') if premedicated else Decimal('6.0')
+    elif is_ferret:
+        prop_dose_mg_kg = Decimal('4.0') if premedicated else Decimal('8.0')
+    elif is_rabbit:
+        prop_dose_mg_kg = Decimal('5.0') if premedicated else Decimal('10.0')
+    elif is_gp_rodent:
+        prop_dose_mg_kg = Decimal('8.0') if premedicated else Decimal('12.0')
+    else:
+        prop_dose_mg_kg = Decimal('3.0') # Fallback
     prop_mg = w * prop_dose_mg_kg
     prop_ml = prop_mg / Decimal('10.0')
 
     # 2. Альфаксалон (10 мг/мл)
     if is_dog:
         alfax_dose_mg_kg = Decimal('1.0') if premedicated else Decimal('2.0')
-    else:
+    elif is_cat:
         alfax_dose_mg_kg = Decimal('2.0') if premedicated else Decimal('5.0')
+    elif is_ferret:
+        alfax_dose_mg_kg = Decimal('2.0') if premedicated else Decimal('5.0')
+    elif is_rabbit:
+        alfax_dose_mg_kg = Decimal('3.0') if premedicated else Decimal('6.0')
+    elif is_gp_rodent:
+        alfax_dose_mg_kg = Decimal('5.0') if premedicated else Decimal('10.0')
+    else:
+        alfax_dose_mg_kg = Decimal('2.0') # Fallback
     alfax_mg = w * alfax_dose_mg_kg
     alfax_ml = alfax_mg / Decimal('10.0')
 
     # 3. Кетамін (50 мг/мл)
-    ket_dose_mg_kg = Decimal('2.5') if premedicated else Decimal('5.0')
+    if is_dog or is_cat:
+        ket_dose_mg_kg = Decimal('2.5') if premedicated else Decimal('5.0')
+    elif is_ferret:
+        ket_dose_mg_kg = Decimal('5.0') if premedicated else Decimal('10.0')
+    elif is_rabbit:
+        ket_dose_mg_kg = Decimal('10.0') if premedicated else Decimal('15.0')
+    elif is_gp_rodent:
+        ket_dose_mg_kg = Decimal('20.0') if premedicated else Decimal('40.0')
+    else:
+        ket_dose_mg_kg = Decimal('2.5') # Fallback
     ket_mg = w * ket_dose_mg_kg
     ket_ml = ket_mg / Decimal('50.0')
 
     # 4. Дексмедетомідин (0.5 мг/мл = 500 мкг/мл)
-    # Собака: 5 мкг/кг (0.005 мг/кг). Кіт: 10 мкг/кг (0.010 мг/кг)
-    dex_dose_mcg_kg = Decimal('5.0') if is_dog else Decimal('10.0')
+    if is_dog:
+        dex_dose_mcg_kg = Decimal('5.0')
+    elif is_cat or is_ferret:
+        dex_dose_mcg_kg = Decimal('10.0')
+    elif is_rabbit:
+        dex_dose_mcg_kg = Decimal('15.0')
+    elif is_gp_rodent:
+        dex_dose_mcg_kg = Decimal('20.0')
+    else:
+        dex_dose_mcg_kg = Decimal('10.0') # Fallback
     dex_mg = w * (dex_dose_mcg_kg / Decimal('1000.0'))
     dex_ml = dex_mg / Decimal('0.5')
 
     # 5. Буторфанол (10 мг/мл)
-    but_dose_mg_kg = Decimal('0.2')
+    if is_dog or is_cat or is_ferret:
+        but_dose_mg_kg = Decimal('0.2')
+    elif is_rabbit:
+        but_dose_mg_kg = Decimal('0.3')
+    elif is_gp_rodent:
+        but_dose_mg_kg = Decimal('0.5')
+    else:
+        but_dose_mg_kg = Decimal('0.2') # Fallback
     but_mg = w * but_dose_mg_kg
     but_ml = but_mg / Decimal('10.0')
 

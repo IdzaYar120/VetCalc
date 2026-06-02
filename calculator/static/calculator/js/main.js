@@ -2981,3 +2981,16 @@ const SVG_ICONS = {
 
     // Initial check
     setTimeout(checkCloudAuthStatus, 1000);
+
+    // ---------------- EXOTICS TRANSFUSION EVENT LISTENER ----------------
+    document.getElementById('transfusion-species').addEventListener('change', function() {
+        const factorInput = document.getElementById('transfusion-factor');
+        switch(this.value) {
+            case 'Собака': factorInput.value = 90.0; break;
+            case 'Кіт': factorInput.value = 60.0; break;
+            case 'Тхір': factorInput.value = 60.0; break;
+            case 'Кролик': factorInput.value = 60.0; break;
+            case 'Морська свинка': factorInput.value = 70.0; break;
+            case 'Гризун': factorInput.value = 65.0; break;
+        }
+    });
