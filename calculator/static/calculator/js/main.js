@@ -14,6 +14,7 @@ import {
     calculateAdjustedCalciumLocal,
     calculatePlasmaOsmolalityLocal,
     calculateAnesthesiaLocal,
+    calculateTransfusionLocal,
     LOCAL_COMPATIBILITY_MATRIX
 } from './calculators_offline.js';
 
