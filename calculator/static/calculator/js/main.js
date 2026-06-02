@@ -2191,7 +2191,7 @@ const SVG_ICONS = {
     <div class="section-title">Розрахункові показники та дози</div>
     ${contentHtml}
 
-    ${auditHtml ? \`<div class="section-title">Покроковий аудит та формули</div>${auditHtml}\` : ''}
+    ${auditHtml ? `<div class="section-title">Покроковий аудит та формули</div>${auditHtml}` : ''}
 
     <div class="disclaimer-box">
         <strong>⚠️ Клінічне попередження та інструкція:</strong> ${disclaimerHtml}
