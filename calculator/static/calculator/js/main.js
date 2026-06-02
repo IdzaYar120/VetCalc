@@ -1926,12 +1926,12 @@ const SVG_ICONS = {
             return;
         }
 
-        printWindow.document.write(\`
+        printWindow.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>\${title}</title>
+    <title>${title}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -2183,18 +2183,18 @@ const SVG_ICONS = {
     <div class="patient-card">
         <div class="patient-field"><strong>Клініка:</strong> <span class="manual-field"></span></div>
         <div class="patient-field"><strong>Лікуючий лікар:</strong> <span class="manual-field"></span></div>
-        <div class="patient-field"><strong>Дата та час розрахунку:</strong> <span>\${currentDateStr}</span></div>
+        <div class="patient-field"><strong>Дата та час розрахунку:</strong> <span>${currentDateStr}</span></div>
         <div class="patient-field"><strong>Палата / Бокс:</strong> <span class="manual-field"></span></div>
-        \${patientDetails}
+        ${patientDetails}
     </div>
 
     <div class="section-title">Розрахункові показники та дози</div>
-    \${contentHtml}
+    ${contentHtml}
 
-    \${auditHtml ? \`<div class="section-title">Покроковий аудит та формули</div>\${auditHtml}\` : ''}
+    ${auditHtml ? \`<div class="section-title">Покроковий аудит та формули</div>${auditHtml}\` : ''}
 
     <div class="disclaimer-box">
-        <strong>⚠️ Клінічне попередження та інструкція:</strong> \${disclaimerHtml}
+        <strong>⚠️ Клінічне попередження та інструкція:</strong> ${disclaimerHtml}
     </div>
 
     <div class="signature-section">
@@ -2212,7 +2212,7 @@ const SVG_ICONS = {
     </script>
 </body>
 </html>
-        \`);
+        `);
         printWindow.document.close();
     };
 
