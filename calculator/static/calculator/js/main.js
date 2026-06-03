@@ -15,6 +15,7 @@ import {
     calculatePlasmaOsmolalityLocal,
     calculateAnesthesiaLocal,
     calculateTransfusionLocal,
+    calculateToxicityLocal,
     LOCAL_COMPATIBILITY_MATRIX
 } from './calculators_offline.js';
 
@@ -297,6 +298,147 @@ const SVG_ICONS = {
         document.getElementById('math-bsa-weight-g').textContent = "Розрахунок скасовано.";
         document.getElementById('math-bsa-calc').textContent = "Розрахунок скасовано.";
         document.getElementById('math-bsa-dose').textContent = "Розрахунок скасовано.";
+    }
+
+    // 2-2. Розрахунок Токсичності
+    function runToxicityCalculation() {
+        const weight = parseFloat(document.getElementById('toxicity-weight').value) || 0;
+        const poisonType = document.getElementById('toxicity-poison-type').value;
+        const amount = parseFloat(document.getElementById('toxicity-amount').value) || 0;
+        const errorBanner = document.getElementById('toxicity-error-banner');
+
+        if (weight <= 0) {
+            showToxicityError("❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.");
+            return;
+        }
+        if (amount <= 0) {
+            showToxicityError("❌ Помилка валідації: Кількість отрути повинна бути строго більше 0 г.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const updateUI = (data, isOffline = false) => {
+            document.getElementById('toxicity-res-dose').innerHTML = `${data.dose_mg_kg.toFixed(2)} <span id="toxicity-res-unit" style="font-size: 1rem; color: var(--gray-text);">${data.unit}</span>`;
+            document.getElementById('toxicity-res-active').textContent = data.active_substance;
+            
+            const card = document.getElementById('toxicity-severity-card');
+            const icon = document.getElementById('toxicity-severity-icon');
+            const severityEl = document.getElementById('toxicity-res-severity');
+            const recEl = document.getElementById('toxicity-res-recommendations');
+            
+            severityEl.textContent = data.severity;
+            recEl.textContent = data.recommendations;
+            
+            card.style.backgroundColor = "";
+            card.style.color = "";
+            
+            if (data.color === 'green') {
+                card.className = "success-card";
+                card.style.borderLeft = "4px solid var(--success)";
+                icon.setAttribute("data-lucide", "check-circle");
+            } else if (data.color === 'yellow') {
+                card.className = "success-card";
+                card.style.borderLeft = "4px solid #eab308";
+                icon.setAttribute("data-lucide", "info");
+            } else if (data.color === 'orange') {
+                card.className = "danger-card";
+                card.style.borderLeft = "4px solid #f97316";
+                card.style.backgroundColor = "rgba(249, 115, 22, 0.1)";
+                card.style.color = "#c2410c";
+                icon.setAttribute("data-lucide", "alert-triangle");
+            } else { // red
+                card.className = "danger-card";
+                card.style.borderLeft = "4px solid var(--danger)";
+                card.style.backgroundColor = "var(--danger-light)";
+                card.style.color = "var(--danger-dark)";
+                icon.setAttribute("data-lucide", "alert-triangle");
+            }
+            if (window.lucide) lucide.createIcons();
+
+            let formulaStr = "";
+            if (poisonType.includes("шоколад") || poisonType.includes("порошок") || poisonType.includes("випікання")) {
+                let factor = 5.5;
+                if (poisonType === "Молочний шоколад") factor = 2.0;
+                else if (poisonType === "Білий шоколад") factor = 0.25;
+                else if (poisonType === "Какао-порошок") factor = 26.0;
+                else if (poisonType === "Шоколад для випікання") factor = 16.0;
+
+                formulaStr = `Доза = (Кількість (${amount} г) * Концентрація (${factor} мг/г)) / Вага (${weight} кг) = ${data.dose_mg_kg.toFixed(2)} мг/кг`;
+            } else if (poisonType === "Ксилітол") {
+                formulaStr = `Доза = (Кількість ксилітолу (${amount} г) * 1000) / Вага (${weight} кг) = ${data.dose_mg_kg.toFixed(2)} мг/кг`;
+            } else if (poisonType === "Виноград / Родзинки") {
+                formulaStr = `Доза = Кількість (${amount} г) / Вага (${weight} кг) = ${data.dose_mg_kg.toFixed(2)} г/кг`;
+            }
+            
+            if (isOffline) {
+                formulaStr += ` [${SVG_ICONS.wifiOff} Автономно]`;
+            }
+            document.getElementById('math-toxicity-formula').innerHTML = formulaStr;
+        };
+
+        const runLocal = () => {
+            try {
+                const data = calculateToxicityLocal(weight, poisonType, amount);
+                updateUI(data, true);
+            } catch (err) {
+                showToxicityError("❌ Помилка: " + err.message);
+            }
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-toxicity/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                weight_kg: weight,
+                poison_type: poisonType,
+                amount_g: amount
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Невідома помилка");
+            return response.json();
+        })
+        .then(data => {
+            updateUI(data, false);
+        })
+        .catch(err => {
+            console.warn("Помилка Toxicity API, перехід на офлайн-режим:", err);
+            runLocal();
+        });
+    }
+
+    function showToxicityError(msg) {
+        const errorBanner = document.getElementById('toxicity-error-banner');
+        errorBanner.textContent = msg;
+        errorBanner.style.display = 'block';
+        resetToxicityResults();
+    }
+
+    function resetToxicityResults() {
+        document.getElementById('toxicity-res-dose').innerHTML = `0.00 <span style="font-size: 1rem; color: var(--gray-text);">мг/кг</span>`;
+        document.getElementById('toxicity-res-active').textContent = "Невідомо";
+        
+        const card = document.getElementById('toxicity-severity-card');
+        const icon = document.getElementById('toxicity-severity-icon');
+        const severityEl = document.getElementById('toxicity-res-severity');
+        const recEl = document.getElementById('toxicity-res-recommendations');
+        
+        severityEl.textContent = "Розрахунок припинено";
+        recEl.textContent = "Введіть коректні параметри пацієнта.";
+        card.className = "success-card";
+        card.style.borderLeft = "4px solid var(--primary)";
+        card.style.backgroundColor = "";
+        card.style.color = "";
+        icon.setAttribute("data-lucide", "info");
+        if (window.lucide) lucide.createIcons();
+        
+        document.getElementById('math-toxicity-formula').textContent = "Розрахунок припинено.";
     }
 
     // 3. Аудит сумісності ліків
@@ -1348,6 +1490,7 @@ const SVG_ICONS = {
     const debouncedRunOsmolality = debounce(runOsmolalityCalculation, 200);
     const debouncedRunAnesthesia = debounce(runAnesthesiaCalculation, 200);
     const debouncedRunTransfusion = debounce(runTransfusionCalculation, 200);
+    const debouncedRunToxicity = debounce(runToxicityCalculation, 200);
 
     // Слухачі подій для реактивних авто-розрахунків при введенні
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
@@ -1446,6 +1589,12 @@ const SVG_ICONS = {
         runTransfusionCalculation();
     });
 
+    const toxicityInputIds = ['toxicity-weight', 'toxicity-poison-type', 'toxicity-amount'];
+    toxicityInputIds.forEach(id => {
+        document.getElementById(id).addEventListener('input', debouncedRunToxicity);
+        document.getElementById(id).addEventListener('change', runToxicityCalculation);
+    });
+
 
 
     // ---------------- ЮРИДИЧНА УГОДА ----------------
@@ -1488,6 +1637,7 @@ const SVG_ICONS = {
         runOsmolalityCalculation();
         runAnesthesiaCalculation();
         runTransfusionCalculation();
+        runToxicityCalculation();
         triggerAudit();
     }
 
@@ -1917,7 +2067,69 @@ const SVG_ICONS = {
                 </div>
             `;
 
-            disclaimerHtml = "Перед початком трансфузії провести перехресну пробу (crossmatch) та біологічну пробу. Перші 15-30 хв вводити повільно (0.25-0.5 мл/кг/год) під контролем температури, ЧСС та дихання. Завершити трансфузію протягом 4 годин.";
+            disclaimerHtml = "Перед початком трансфузії провести перехресну пробу (crossmatch) та біологичну пробу. Перші 15-30 хв вводити повільно (0.25-0.5 мл/кг/год) під контролем температури, ЧСС та дихання. Завершити трансфузію протягом 4 годин.";
+        } else if (calculatorType === 'toxicity') {
+            const weight = document.getElementById('toxicity-weight').value;
+            const poisonType = document.getElementById('toxicity-poison-type').value;
+            const amount = document.getElementById('toxicity-amount').value;
+
+            const resDose = document.getElementById('toxicity-res-dose').textContent;
+            const resActive = document.getElementById('toxicity-res-active').textContent;
+            const resSeverity = document.getElementById('toxicity-res-severity').textContent;
+            const resRecommendations = document.getElementById('toxicity-res-recommendations').textContent;
+            const mathToxicity = document.getElementById('math-toxicity-formula').innerHTML;
+
+            title = "Лист призначення: Токсикологічна експертиза";
+
+            patientDetails = `
+                <div class="patient-field"><strong>Вид пацієнта:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Кличка / Власник:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Вага пацієнта:</strong> <span>${weight} кг</span></div>
+                <div class="patient-field"><strong>Токсикант / Отрута:</strong> <span>${poisonType}</span></div>
+                <div class="patient-field"><strong>З'їдена кількість:</strong> <span>${amount} г</span></div>
+            `;
+
+            contentHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Показник</th>
+                            <th style="text-align: center;">Розраховане значення</th>
+                            <th>Клінічний опис</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Діюча речовина</strong></td>
+                            <td class="volume-highlight" style="color: #475569; background-color: #f8fafc !important; border-color: #cbd5e1 !important;">${resActive}</td>
+                            <td>Основний токсичний компонент</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Розрахована доза токсину</strong></td>
+                            <td class="volume-highlight">${resDose}</td>
+                            <td>Кількість отриманої отрути на одиницю маси тіла пацієнта</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ступінь загрози</strong></td>
+                            <td class="volume-highlight" style="color: #dc2626; background-color: #fef2f2 !important; border-color: #fecaca !important;">${resSeverity}</td>
+                            <td>Оцінка ступеня небезпеки для життя</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="disclaimer-box" style="margin-top: 15px; border-color: #e2e8f0; background-color: #f8fafc; color: #334155;">
+                    <strong>Рекомендований протокол терапії:</strong><br>
+                    ${resRecommendations}
+                </div>
+            `;
+
+            auditHtml = `
+                <div class="audit-box">
+                    <h4><strong style="color: #0284c7;">Покроковий математичний аудит розрахунку токсичності:</strong></h4>
+                    <div class="audit-formula">${mathToxicity}</div>
+                </div>
+            `;
+
+            disclaimerHtml = "Усі токсикологічні випадки потребують ретельного спостереження. За появи клінічних симптомів негайно розпочніть симптоматичну терапію та підтримуйте роботу життєво важливих органів.";
         }
 
         const printWindow = window.open('', '_blank');
@@ -2455,6 +2667,19 @@ const SVG_ICONS = {
                 deficit: document.getElementById('transfusion-res-deficit-ratio').textContent
             };
             audit = document.getElementById('math-transfusion-formula').parentNode.innerHTML;
+        } else if (calculatorType === 'toxicity') {
+            weight = parseFloat(document.getElementById('toxicity-weight').value) || 0;
+            inputs = {
+                poisonType: document.getElementById('toxicity-poison-type').value,
+                amount: parseFloat(document.getElementById('toxicity-amount').value) || 0
+            };
+            results = {
+                dose: document.getElementById('toxicity-res-dose').textContent,
+                active: document.getElementById('toxicity-res-active').textContent,
+                severity: document.getElementById('toxicity-res-severity').textContent,
+                recommendations: document.getElementById('toxicity-res-recommendations').textContent
+            };
+            audit = document.getElementById('math-toxicity-formula').parentNode.innerHTML;
         }
 
         const record = {
@@ -2523,6 +2748,7 @@ const SVG_ICONS = {
                     else if (record.calculatorType === 'cpr') typeBadge = `<span class="badge" style="background-color: var(--danger-light); color: var(--danger-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Реанімація (CPR)</span>`;
                     else if (record.calculatorType === 'anesthesia') typeBadge = `<span class="badge" style="background-color: var(--primary-light); color: var(--primary-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Наркоз (Anesthesia)</span>`;
                     else if (record.calculatorType === 'transfusion') typeBadge = `<span class="badge" style="background-color: var(--primary-light); color: var(--primary-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Гемотрансфузія</span>`;
+                    else if (record.calculatorType === 'toxicity') typeBadge = `<span class="badge" style="background-color: var(--danger-light); color: var(--danger-dark); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Токсичність</span>`;
 
                     tbody.innerHTML += `
                         <tr style="border-bottom: 1px solid var(--border);">
@@ -2658,6 +2884,24 @@ const SVG_ICONS = {
                             </tbody>
                         </table>
                     `;
+                } else if (record.calculatorType === 'toxicity') {
+                    detailHtml += `
+                        <table class="compatibility-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <thead>
+                                <tr><th>Параметр</th><th>Обчислено</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Токсикант / Отрута</td><td><strong>${record.inputs.poisonType}</strong></td></tr>
+                                <tr><td>З'їдена кількість</td><td><strong>${record.inputs.amount} г</strong></td></tr>
+                                <tr><td>Розрахована доза токсину</td><td><strong style="color: var(--primary);">${record.results.dose}</strong></td></tr>
+                                <tr><td>Діюча речовина</td><td><strong>${record.results.active}</strong></td></tr>
+                                <tr><td>Ступінь загрози</td><td><strong style="color: var(--danger-dark);">${record.results.severity}</strong></td></tr>
+                            </tbody>
+                        </table>
+                        <div style="background-color: var(--bg-metric-hover); padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--danger); font-size: 0.92rem;">
+                            <strong>Клінічні рекомендації:</strong><br>${record.results.recommendations}
+                        </div>
+                    `;
                 }
 
                 if (record.audit && record.calculatorType !== 'cpr' && record.calculatorType !== 'anesthesia') {
@@ -2737,6 +2981,7 @@ const SVG_ICONS = {
                 else if (record.calculatorType === 'cpr') { cat = "emergency"; tab = "emergency-tab"; }
                 else if (record.calculatorType === 'anesthesia') { cat = "emergency"; tab = "anesthesia-tab"; }
                 else if (record.calculatorType === 'transfusion') { cat = "fluids"; tab = "transfusion-tab"; }
+                else if (record.calculatorType === 'toxicity') { cat = "dosing"; tab = "toxicity-tab"; }
 
                 // Перемикаємо вкладку
                 const catBtn = document.querySelector(`.category-btn[data-category="${cat}"]`);
@@ -2779,6 +3024,10 @@ const SVG_ICONS = {
             backup.targetHt = document.getElementById('transfusion-target-ht').value;
             backup.donorHt = document.getElementById('transfusion-donor-ht').value;
             backup.factor = document.getElementById('transfusion-factor').value;
+        } else if (type === 'toxicity') {
+            backup.weight = document.getElementById('toxicity-weight').value;
+            backup.poisonType = document.getElementById('toxicity-poison-type').value;
+            backup.amount = document.getElementById('toxicity-amount').value;
         }
         return backup;
     }
@@ -2816,6 +3065,11 @@ const SVG_ICONS = {
             document.getElementById('transfusion-donor-ht').value = backup.donorHt;
             document.getElementById('transfusion-factor').value = backup.factor;
             runTransfusionCalculation();
+        } else if (type === 'toxicity') {
+            document.getElementById('toxicity-weight').value = backup.weight;
+            document.getElementById('toxicity-poison-type').value = backup.poisonType;
+            document.getElementById('toxicity-amount').value = backup.amount;
+            runToxicityCalculation();
         }
     }
 
@@ -2853,6 +3107,11 @@ const SVG_ICONS = {
             document.getElementById('transfusion-donor-ht').value = record.inputs.donorHt;
             document.getElementById('transfusion-factor').value = record.inputs.factor;
             runTransfusionCalculation();
+        } else if (type === 'toxicity') {
+            document.getElementById('toxicity-weight').value = record.weight;
+            document.getElementById('toxicity-poison-type').value = record.inputs.poisonType;
+            document.getElementById('toxicity-amount').value = record.inputs.amount;
+            runToxicityCalculation();
         }
     }
 

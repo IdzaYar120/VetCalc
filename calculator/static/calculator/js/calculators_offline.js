@@ -517,6 +517,105 @@ function calculateTransfusionLocal(weight_kg, species, patient_ht, target_ht, do
   };
 }
 
+function calculateToxicityLocal(weight_kg, poison_type, amount_g) {
+  let active_substance, amt, color, dose_mg_kg, recommendations, severity, unit, w;
+
+  if ((weight_kg <= 0)) {
+    throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
+  }
+  if ((amount_g <= 0)) {
+    throw new Error("Кількість речовини повинна бути строго більше 0 г.");
+  }
+  w = Number(String(weight_kg));
+  amt = Number(String(amount_g));
+  dose_mg_kg = Number("0.0");
+  active_substance = "";
+  unit = "мг/кг";
+  if ((poison_type === "Чорний шоколад")) {
+    active_substance = "Метилксантини (Теобромін + Кофеїн)";
+    dose_mg_kg = ((amt * Number("5.5")) / w);
+  } else if ((poison_type === "Молочний шоколад")) {
+      active_substance = "Метилксантини (Теобромін + Кофеїн)";
+      dose_mg_kg = ((amt * Number("2.0")) / w);
+    } else if ((poison_type === "Білий шоколад")) {
+        active_substance = "Метилксантини (Теобромін + Кофеїн)";
+        dose_mg_kg = ((amt * Number("0.25")) / w);
+      } else if ((poison_type === "Какао-порошок")) {
+          active_substance = "Метилксантини (Теобромін + Кофеїн)";
+          dose_mg_kg = ((amt * Number("26.0")) / w);
+        } else if ((poison_type === "Шоколад для випікання")) {
+            active_substance = "Метилксантини (Теобромін + Кофеїн)";
+            dose_mg_kg = ((amt * Number("16.0")) / w);
+          } else if ((poison_type === "Ксилітол")) {
+              active_substance = "Ксилітол";
+              dose_mg_kg = ((amt * Number("1000.0")) / w);
+            } else if ((poison_type === "Виноград / Родзинки")) {
+                active_substance = "Токсин винограду (імовірно тартрат калію)";
+                dose_mg_kg = (amt / w);
+                unit = "г/кг";
+              } else {
+                throw new Error("Невідомий тип отрути.");
+              }
+  severity = "";
+  color = "";
+  recommendations = "";
+  if (((poison_type === "Чорний шоколад") || (poison_type === "Молочний шоколад") || (poison_type === "Білий шоколад") || (poison_type === "Какао-порошок") || (poison_type === "Шоколад для випікання"))) {
+    if ((dose_mg_kg < Number("20.0"))) {
+      severity = "Низький ризик / Симптоми малоймовірні";
+      color = "green";
+      recommendations = "Деконтамінація: спостереження вдома. Симптоматична терапія при розладах ШКТ (діарея, блювання).";
+    } else if ((dose_mg_kg < Number("40.0"))) {
+        severity = "Легкий ступінь токсичності";
+        color = "yellow";
+        recommendations = "Рекомендовано: викликати блювання (якщо пройшло <2 год від поїдання). Ввести активоване вугілля (1-2 г/кг перорально).";
+      } else if ((dose_mg_kg < Number("60.0"))) {
+          severity = "Середній ступінь (Кардіотоксичність)";
+          color = "orange";
+          recommendations = "⚠️ КЛІНІЧНА ЗАГРОЗА! Ризик тахікардії та аритмій. Рекомендовано: промивання шлунку, активоване вугілля кожні 4-6 годин. Моніторинг ЕКГ. При тахікардії >180 уд/хв - метопролол або есмолол. Інфузійна терапія для форсованого діурезу.";
+        } else {
+          severity = "Важкий ступінь (Нейротоксичність)";
+          color = "red";
+          recommendations = "🚨 СМЕРТЕЛЬНА ЗАГРОЗА! Ризик судом, коми та зупинки серця. Негайна госпіталізація у ВРІТ. Контроль судом: Діазепам (0.5-1.0 мг/кг IV). Постійний ЕКГ-моніторинг. Інтенсивна інфузійна терапія.";
+        }
+  } else if ((poison_type === "Ксилітол")) {
+      if ((dose_mg_kg < Number("75.0"))) {
+        severity = "Безпечна доза";
+        color = "green";
+        recommendations = "Специфічна терапія не потрібна. Спостереження за станом.";
+      } else if ((dose_mg_kg < Number("500.0"))) {
+          severity = "Середній ризик (Загроза гіпоглікемії)";
+          color = "orange";
+          recommendations = "⚠️ Ризик гіпоглікемії. Рекомендовано: контроль глюкози кожні 1-2 години. При гіпоглікемії - болюс 10-25% глюкози IV, потім інфузія 2.5-5% глюкози.";
+        } else {
+          severity = "Важкий ризик (Гострий некроз печінки)";
+          color = "red";
+          recommendations = "🚨 КРИТИЧНО! Ризик печінкової недостатності. Контроль глюкози, інфузійна терапія, гепатопротектори (SAMe, силімарин), N-ацетилцистеїн IV.";
+        }
+    } else if ((poison_type === "Виноград / Родзинки")) {
+        if ((dose_mg_kg < Number("1.0"))) {
+          severity = "Низький ризик";
+          color = "green";
+          recommendations = "Низька імовірність токсичного ефекту, проте чутливість індивідуальна. Рекомендовано спостереження.";
+        } else if ((dose_mg_kg < Number("3.0"))) {
+            severity = "Помірний ризик (Загроза ГПН)";
+            color = "orange";
+            recommendations = "⚠️ Рекомендовано: деконтамінація, агресивна інфузійна терапія протягом 48 годин. Контроль креатиніну, сечовини щодня.";
+          } else {
+            severity = "Важкий ризик (Гостра ниркова недостатність)";
+            color = "red";
+            recommendations = "🚨 ВИСОКА ТОКСИЧНІСТЬ! Загроза анурії. Термінова деконтамінація. Інтенсивна інфузійна терапія, моніторинг діурезу, креатиніну та калію.";
+          }
+      }
+  return {
+    active_substance: active_substance,
+    dose_mg_kg: Number(preciseRound(dose_mg_kg, 2)),
+    unit: unit,
+    severity: severity,
+    color: color,
+    recommendations: recommendations
+  };
+}
+
 // Сумісність для розрахунку екстрених реанімаційних доз CPR
 function calculateEmergencyLocal(weight_kg) {
     const orig = _calculateEmergencyLocal(weight_kg);
@@ -658,5 +757,6 @@ export {
     calculatePlasmaOsmolalityLocal,
     calculateAnesthesiaLocal,
     calculateTransfusionLocal,
+    calculateToxicityLocal,
     LOCAL_COMPATIBILITY_MATRIX
 };

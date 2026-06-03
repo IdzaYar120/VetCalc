@@ -13,7 +13,8 @@ from core.calculators import (
     calculate_adjusted_calcium,
     calculate_plasma_osmolality,
     calculate_anesthesia_doses,
-    calculate_transfusion
+    calculate_transfusion,
+    calculate_toxicity
 )
 from core.database import SPECIES_K_FACTORS, SUPPORTED_DRUGS, COMPATIBILITY_MATRIX
 
@@ -29,6 +30,7 @@ __all__ = [
     "calculate_plasma_osmolality",
     "calculate_anesthesia_doses",
     "calculate_transfusion",
+    "calculate_toxicity",
     "SPECIES_K_FACTORS",
     "SUPPORTED_DRUGS",
     "COMPATIBILITY_MATRIX"

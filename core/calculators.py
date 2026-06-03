@@ -642,3 +642,109 @@ def calculate_transfusion(
         "blood_volume_factor": float(precise_round(factor))
     }
 
+def calculate_toxicity(
+    weight_kg: float,
+    poison_type: str,
+    amount_g: float
+) -> Dict[str, Any]:
+    """
+    Розраховує токсичне навантаження отрути (шоколад, ксилітол, виноград) на кг маси тіла
+    та надає детальні рекомендації з лікування.
+    """
+    if weight_kg <= 0:
+        raise ValueError("Вага пацієнта повинна бути строго більше 0 кг.")
+    if amount_g <= 0:
+        raise ValueError("Кількість речовини повинна бути строго більше 0 г.")
+
+    w = Decimal(str(weight_kg))
+    amt = Decimal(str(amount_g))
+    
+    dose_mg_kg = Decimal('0.0')
+    active_substance = ""
+    unit = "мг/кг"
+    
+    if poison_type == "Чорний шоколад":
+        active_substance = "Метилксантини (Теобромін + Кофеїн)"
+        dose_mg_kg = (amt * Decimal('5.5')) / w
+    elif poison_type == "Молочний шоколад":
+        active_substance = "Метилксантини (Теобромін + Кофеїн)"
+        dose_mg_kg = (amt * Decimal('2.0')) / w
+    elif poison_type == "Білий шоколад":
+        active_substance = "Метилксантини (Теобромін + Кофеїн)"
+        dose_mg_kg = (amt * Decimal('0.25')) / w
+    elif poison_type == "Какао-порошок":
+        active_substance = "Метилксантини (Теобромін + Кофеїн)"
+        dose_mg_kg = (amt * Decimal('26.0')) / w
+    elif poison_type == "Шоколад для випікання":
+        active_substance = "Метилксантини (Теобромін + Кофеїн)"
+        dose_mg_kg = (amt * Decimal('16.0')) / w
+    elif poison_type == "Ксилітол":
+        active_substance = "Ксилітол"
+        dose_mg_kg = (amt * Decimal('1000.0')) / w
+    elif poison_type == "Виноград / Родзинки":
+        active_substance = "Токсин винограду (імовірно тартрат калію)"
+        dose_mg_kg = amt / w
+        unit = "г/кг"
+    else:
+        raise ValueError("Невідомий тип отрути.")
+
+    severity = ""
+    color = ""
+    recommendations = ""
+    
+    if (poison_type == "Чорний шоколад") or (poison_type == "Молочний шоколад") or (poison_type == "Білий шоколад") or (poison_type == "Какао-порошок") or (poison_type == "Шоколад для випікання"):
+        if dose_mg_kg < Decimal('20.0'):
+            severity = "Низький ризик / Симптоми малоймовірні"
+            color = "green"
+            recommendations = "Деконтамінація: спостереження вдома. Симптоматична терапія при розладах ШКТ (діарея, блювання)."
+        elif dose_mg_kg < Decimal('40.0'):
+            severity = "Легкий ступінь токсичності"
+            color = "yellow"
+            recommendations = "Рекомендовано: викликати блювання (якщо пройшло <2 год від поїдання). Ввести активоване вугілля (1-2 г/кг перорально)."
+        elif dose_mg_kg < Decimal('60.0'):
+            severity = "Середній ступінь (Кардіотоксичність)"
+            color = "orange"
+            recommendations = "⚠️ КЛІНІЧНА ЗАГРОЗА! Ризик тахікардії та аритмій. Рекомендовано: промивання шлунку, активоване вугілля кожні 4-6 годин. Моніторинг ЕКГ. При тахікардії >180 уд/хв - метопролол або есмолол. Інфузійна терапія для форсованого діурезу."
+        else:
+            severity = "Важкий ступінь (Нейротоксичність)"
+            color = "red"
+            recommendations = "🚨 СМЕРТЕЛЬНА ЗАГРОЗА! Ризик судом, коми та зупинки серця. Негайна госпіталізація у ВРІТ. Контроль судом: Діазепам (0.5-1.0 мг/кг IV). Постійний ЕКГ-моніторинг. Інтенсивна інфузійна терапія."
+            
+    elif poison_type == "Ксилітол":
+        if dose_mg_kg < Decimal('75.0'):
+            severity = "Безпечна доза"
+            color = "green"
+            recommendations = "Специфічна терапія не потрібна. Спостереження за станом."
+        elif dose_mg_kg < Decimal('500.0'):
+            severity = "Середній ризик (Загроза гіпоглікемії)"
+            color = "orange"
+            recommendations = "⚠️ Ризик гіпоглікемії. Рекомендовано: контроль глюкози кожні 1-2 години. При гіпоглікемії - болюс 10-25% глюкози IV, потім інфузія 2.5-5% глюкози."
+        else:
+            severity = "Важкий ризик (Гострий некроз печінки)"
+            color = "red"
+            recommendations = "🚨 КРИТИЧНО! Ризик печінкової недостатності. Контроль глюкози, інфузійна терапія, гепатопротектори (SAMe, силімарин), N-ацетилцистеїн IV."
+            
+    elif poison_type == "Виноград / Родзинки":
+        if dose_mg_kg < Decimal('1.0'):
+            severity = "Низький ризик"
+            color = "green"
+            recommendations = "Низька імовірність токсичного ефекту, проте чутливість індивідуальна. Рекомендовано спостереження."
+        elif dose_mg_kg < Decimal('3.0'):
+            severity = "Помірний ризик (Загроза ГПН)"
+            color = "orange"
+            recommendations = "⚠️ Рекомендовано: деконтамінація, агресивна інфузійна терапія протягом 48 годин. Контроль креатиніну, сечовини щодня."
+        else:
+            severity = "Важкий ризик (Гостра ниркова недостатність)"
+            color = "red"
+            recommendations = "🚨 ВИСОКА ТОКСИЧНІСТЬ! Загроза анурії. Термінова деконтамінація. Інтенсивна інфузійна терапія, моніторинг діурезу, креатиніну та калію."
+
+    return {
+        "active_substance": active_substance,
+        "dose_mg_kg": float(precise_round(dose_mg_kg, 2)),
+        "unit": unit,
+        "severity": severity,
+        "color": color,
+        "recommendations": recommendations
+    }
+
+

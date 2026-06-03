@@ -174,6 +174,10 @@
                 <i data-lucide="bar-chart-2" style="width: 16px; height: 16px;"></i>
                 <span>Розрахунок площі тіла (BSA)</span>
             </button>
+            <button class="sub-chip-btn" id="chip-toxicity-tab" onclick="switchTab('toxicity-tab', this)">
+                <i data-lucide="skull" style="width: 16px; height: 16px;"></i>
+                <span>Токсичність шоколаду та отрут</span>
+            </button>
         </div>
     </div>
 
@@ -351,6 +355,92 @@
                     <div class="math-formula" id="math-bsa-calc">Розрахунок...</div>
                     <p><strong>3. Кінцева абсолютна доза:</strong></p>
                     <div class="math-formula" id="math-bsa-dose">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ Б-2: КАЛЬКУЛЯТОР ТОКСИЧНОСТІ (Toxicity) ---------------- -->
+    <div id="toxicity-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані -->
+            <div class="card">
+                <div class="card-title"><i data-lucide="sliders" style="color: var(--primary);"></i> <span>Параметри токсикологічного випадку</span></div>
+                
+                <div id="toxicity-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="toxicity-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="toxicity-weight" value="10.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="toxicity-poison-type">Токсикант / Отрута</label>
+                    <div class="input-group">
+                        <select id="toxicity-poison-type">
+                            <option value="Чорний шоколад" selected>Чорний шоколад</option>
+                            <option value="Молочний шоколад">Молочний шоколад</option>
+                            <option value="Білий шоколад">Білий шоколад</option>
+                            <option value="Какао-порошок">Какао-порошок</option>
+                            <option value="Шоколад для випікання">Шоколад для випікання</option>
+                            <option value="Ксилітол">Ксилітол (замінник цукру)</option>
+                            <option value="Виноград / Родзинки">Виноград / Родзинки</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="toxicity-amount">З'їдена кількість (г)</label>
+                    <div class="input-group">
+                        <input type="number" id="toxicity-amount" value="50.0" step="1" min="0.1">
+                        <span class="unit-addon">грам</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div class="card-title" style="margin: 0;"><i data-lucide="skull" style="color: var(--primary);"></i> <span>Результати токсикологічної експертизи</span></div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="sub-chip-btn active" onclick="printTreatmentSheet('toxicity')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <i data-lucide="printer" style="width: 14px; height: 14px;"></i>
+                            <span>Друк / PDF</span>
+                        </button>
+                        <button class="sub-chip-btn" onclick="openArchiveSaveModal('toxicity')" style="padding: 6px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; background: var(--bg-card); border: 1px solid var(--border); color: var(--gray-text);">
+                            <i data-lucide="archive" style="width: 14px; height: 14px;"></i>
+                            <span>В архів</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card" style="background: var(--bg-metric-hover);">
+                        <div class="metric-value" id="toxicity-res-dose" style="color: var(--primary);">0.00 <span id="toxicity-res-unit" style="font-size: 1rem; color: var(--gray-text);">мг/кг</span></div>
+                        <div class="metric-label">Отримана доза токсину</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="toxicity-res-active" style="font-size: 1.15rem; color: var(--dark); font-weight: 600;">Невідомо</div>
+                        <div class="metric-label">Діюча речовина</div>
+                    </div>
+                </div>
+
+                <div id="toxicity-severity-card" class="success-card" style="margin-top: 20px; border-left: 4px solid var(--primary); transition: all 0.3s ease;">
+                    <div class="success-title" style="display: flex; align-items: center; gap: 8px;">
+                        <i id="toxicity-severity-icon" data-lucide="info" style="width: 20px; height: 20px;"></i> 
+                        <span id="toxicity-res-severity" style="font-weight: 600;">Розрахунок не проводився</span>
+                    </div>
+                    <div class="success-text" id="toxicity-res-recommendations" style="font-size: 0.9rem; line-height: 1.5; color: var(--gray-text); margin-top: 8px;">
+                        Введіть дані пацієнта для розрахунку ступеня отруєння та отримання клінічних рекомендацій.
+                    </div>
+                </div>
+
+                <div class="math-box" style="margin-top: 20px;">
+                    <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий математичний аудит:</span></h4>
+                    <div class="math-formula" id="math-toxicity-formula">Розрахунок...</div>
                 </div>
             </div>
         </div>

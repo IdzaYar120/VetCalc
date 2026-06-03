@@ -17,6 +17,7 @@ from core import (
     calculate_plasma_osmolality,
     calculate_anesthesia_doses,
     calculate_transfusion,
+    calculate_toxicity,
     COMPATIBILITY_MATRIX
 )
 from pydantic import Field
@@ -92,6 +93,11 @@ class TransfusionInput(Schema):
     target_ht: float = Field(..., ge=0, lt=100)
     donor_ht: float = Field(..., gt=0, lt=100)
     blood_volume_factor: float = Field(90.0, gt=0)
+
+class ToxicityInput(Schema):
+    weight_kg: float = Field(..., gt=0)
+    poison_type: str
+    amount_g: float = Field(..., gt=0)
 
 class LoginInput(Schema):
     username: str
@@ -275,6 +281,16 @@ def api_calculate_transfusion(request, data: TransfusionInput):
         target_ht=data.target_ht,
         donor_ht=data.donor_ht,
         blood_volume_factor=data.blood_volume_factor
+    )
+    return results
+
+@api.post("/calculate-toxicity/")
+@ratelimit(key='ip', rate='60/m', block=True)
+def api_calculate_toxicity(request, data: ToxicityInput):
+    results = calculate_toxicity(
+        weight_kg=data.weight_kg,
+        poison_type=data.poison_type,
+        amount_g=data.amount_g
     )
     return results
 
