@@ -438,6 +438,23 @@
                     </div>
                 </div>
 
+                <!-- Карточка дози сорбенту -->
+                <div id="charcoal-dosage-card" class="success-card" style="margin-top: 15px; border-left: 4px solid var(--primary); background: var(--bg-card); display: none;">
+                    <div class="success-title" style="display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="shield-alert" style="color: var(--primary); width: 20px; height: 20px;"></i>
+                        <span style="font-weight: 600;">Рекомендована доза активованого вугілля (сорбенту):</span>
+                    </div>
+                    <div class="success-text" style="font-size: 0.92rem; line-height: 1.5; color: var(--gray-text); margin-top: 8px;">
+                        <ul style="margin: 0; padding-left: 20px; list-style-type: disc;">
+                            <li><strong>Сухий порошок (1-2 г/кг):</strong> <span id="charcoal-res-powder" style="font-family: 'Roboto Mono', monospace; font-weight: bold; color: var(--dark);">0.0 - 0.0 г</span></li>
+                            <li><strong>20% суспензія (5-10 мл/кг):</strong> <span id="charcoal-res-susp" style="font-family: 'Roboto Mono', monospace; font-weight: bold; color: var(--dark);">0.0 - 0.0 мл</span></li>
+                        </ul>
+                        <p id="charcoal-xylitol-note" style="margin: 8px 0 0 0; font-size: 0.82rem; color: #dc2626; font-weight: 500; display: none;">
+                            ⚠️ Примітка: для Ксилітолу активоване вугілля малоефективне через надзвичайно швидке всмоктування токсиканту.
+                        </p>
+                    </div>
+                </div>
+
                 <div class="math-box" style="margin-top: 20px;">
                     <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий математичний аудит:</span></h4>
                     <div class="math-formula" id="math-toxicity-formula">Розрахунок...</div>

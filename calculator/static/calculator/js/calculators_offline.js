@@ -518,7 +518,7 @@ function calculateTransfusionLocal(weight_kg, species, patient_ht, target_ht, do
 }
 
 function calculateToxicityLocal(weight_kg, poison_type, amount_g) {
-  let active_substance, amt, color, dose_mg_kg, recommendations, severity, unit, w;
+  let active_substance, amt, charcoal_powder_max_g, charcoal_powder_min_g, charcoal_susp_max_ml, charcoal_susp_min_ml, color, dose_mg_kg, recommendations, severity, unit, w;
 
   if ((weight_kg <= 0)) {
     throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
@@ -606,13 +606,21 @@ function calculateToxicityLocal(weight_kg, poison_type, amount_g) {
             recommendations = "🚨 ВИСОКА ТОКСИЧНІСТЬ! Загроза анурії. Термінова деконтамінація. Інтенсивна інфузійна терапія, моніторинг діурезу, креатиніну та калію.";
           }
       }
+  charcoal_powder_min_g = (w * Number("1.0"));
+  charcoal_powder_max_g = (w * Number("2.0"));
+  charcoal_susp_min_ml = (w * Number("5.0"));
+  charcoal_susp_max_ml = (w * Number("10.0"));
   return {
     active_substance: active_substance,
     dose_mg_kg: Number(preciseRound(dose_mg_kg, 2)),
     unit: unit,
     severity: severity,
     color: color,
-    recommendations: recommendations
+    recommendations: recommendations,
+    charcoal_powder_min_g: Number(preciseRound(charcoal_powder_min_g, 1)),
+    charcoal_powder_max_g: Number(preciseRound(charcoal_powder_max_g, 1)),
+    charcoal_susp_min_ml: Number(preciseRound(charcoal_susp_min_ml, 1)),
+    charcoal_susp_max_ml: Number(preciseRound(charcoal_susp_max_ml, 1))
   };
 }
 

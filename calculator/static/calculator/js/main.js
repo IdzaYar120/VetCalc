@@ -354,6 +354,28 @@ const SVG_ICONS = {
                 card.style.color = "var(--danger-dark)";
                 icon.setAttribute("data-lucide", "alert-triangle");
             }
+
+            // Оновлюємо дози сорбенту
+            const charcoalCard = document.getElementById('charcoal-dosage-card');
+            if (charcoalCard) {
+                if (data.charcoal_powder_min_g !== undefined) {
+                    document.getElementById('charcoal-res-powder').textContent = `${data.charcoal_powder_min_g.toFixed(1)} - ${data.charcoal_powder_max_g.toFixed(1)} г`;
+                    document.getElementById('charcoal-res-susp').textContent = `${data.charcoal_susp_min_ml.toFixed(1)} - ${data.charcoal_susp_max_ml.toFixed(1)} мл`;
+                    charcoalCard.style.display = "block";
+                    
+                    const xylitolNote = document.getElementById('charcoal-xylitol-note');
+                    if (xylitolNote) {
+                        if (poisonType === "Ксилітол") {
+                            xylitolNote.style.display = "block";
+                        } else {
+                            xylitolNote.style.display = "none";
+                        }
+                    }
+                } else {
+                    charcoalCard.style.display = "none";
+                }
+            }
+
             if (window.lucide) lucide.createIcons();
 
             let formulaStr = "";
@@ -436,6 +458,12 @@ const SVG_ICONS = {
         card.style.backgroundColor = "";
         card.style.color = "";
         icon.setAttribute("data-lucide", "info");
+        
+        const charcoalCard = document.getElementById('charcoal-dosage-card');
+        if (charcoalCard) {
+            charcoalCard.style.display = "none";
+        }
+        
         if (window.lucide) lucide.createIcons();
         
         document.getElementById('math-toxicity-formula').textContent = "Розрахунок припинено.";
@@ -2078,6 +2106,10 @@ const SVG_ICONS = {
             const resSeverity = document.getElementById('toxicity-res-severity').textContent;
             const resRecommendations = document.getElementById('toxicity-res-recommendations').textContent;
             const mathToxicity = document.getElementById('math-toxicity-formula').innerHTML;
+            
+            const charcoalPowder = document.getElementById('charcoal-res-powder').textContent;
+            const charcoalSusp = document.getElementById('charcoal-res-susp').textContent;
+            const isXylitol = poisonType === "Ксилітол";
 
             title = "Лист призначення: Токсикологічна експертиза";
 
@@ -2088,6 +2120,18 @@ const SVG_ICONS = {
                 <div class="patient-field"><strong>Токсикант / Отрута:</strong> <span>${poisonType}</span></div>
                 <div class="patient-field"><strong>З'їдена кількість:</strong> <span>${amount} г</span></div>
             `;
+
+            let charcoalHtml = "";
+            if (charcoalPowder && charcoalPowder !== "0.0 - 0.0 г" && charcoalPowder !== "0.0-0.0 г" && charcoalPowder.trim() !== "") {
+                charcoalHtml = `
+                <div class="disclaimer-box" style="margin-top: 15px; border-color: #bbf7d0; background-color: #f0fdf4; color: #166534;">
+                    <strong>Рекомендована доза активованого вугілля (сорбенту):</strong><br>
+                    • Сухий порошок (1-2 г/кг): <strong>${charcoalPowder}</strong><br>
+                    • 20% суспензія (5-10 мл/кг): <strong>${charcoalSusp}</strong>
+                    ${isXylitol ? '<br><span style="color: #991b1b; font-weight: bold;">⚠️ Примітка: для Ксилітолу активоване вугілля малоефективне через надзвичайно швидке всмоктування.</span>' : ''}
+                </div>
+                `;
+            }
 
             contentHtml = `
                 <table class="data-table">
@@ -2120,6 +2164,7 @@ const SVG_ICONS = {
                     <strong>Рекомендований протокол терапії:</strong><br>
                     ${resRecommendations}
                 </div>
+                ${charcoalHtml}
             `;
 
             auditHtml = `
@@ -2677,7 +2722,9 @@ const SVG_ICONS = {
                 dose: document.getElementById('toxicity-res-dose').textContent,
                 active: document.getElementById('toxicity-res-active').textContent,
                 severity: document.getElementById('toxicity-res-severity').textContent,
-                recommendations: document.getElementById('toxicity-res-recommendations').textContent
+                recommendations: document.getElementById('toxicity-res-recommendations').textContent,
+                charcoalPowder: document.getElementById('charcoal-res-powder').textContent,
+                charcoalSusp: document.getElementById('charcoal-res-susp').textContent
             };
             audit = document.getElementById('math-toxicity-formula').parentNode.innerHTML;
         }
@@ -2885,6 +2932,10 @@ const SVG_ICONS = {
                         </table>
                     `;
                 } else if (record.calculatorType === 'toxicity') {
+                    const powderText = record.results.charcoalPowder || "0.0 - 0.0 г";
+                    const suspText = record.results.charcoalSusp || "0.0 - 0.0 мл";
+                    const isXylitol = record.inputs.poisonType === "Ксилітол";
+
                     detailHtml += `
                         <table class="compatibility-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                             <thead>
@@ -2898,6 +2949,14 @@ const SVG_ICONS = {
                                 <tr><td>Ступінь загрози</td><td><strong style="color: var(--danger-dark);">${record.results.severity}</strong></td></tr>
                             </tbody>
                         </table>
+                        
+                        <div style="background-color: var(--bg-metric-hover); padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--primary); font-size: 0.92rem;">
+                            <strong>Рекомендована доза активованого вугілля:</strong><br>
+                            • Сухий порошок (1-2 г/кг): <strong>${powderText}</strong><br>
+                            • 20% суспензія (5-10 мл/кг): <strong>${suspText}</strong>
+                            ${isXylitol ? '<br><span style="color: #dc2626; font-weight: bold;">⚠️ Примітка: для Ксилітолу активоване вугілля малоефективне.</span>' : ''}
+                        </div>
+                        
                         <div style="background-color: var(--bg-metric-hover); padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--danger); font-size: 0.92rem;">
                             <strong>Клінічні рекомендації:</strong><br>${record.results.recommendations}
                         </div>

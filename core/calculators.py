@@ -738,13 +738,24 @@ def calculate_toxicity(
             color = "red"
             recommendations = "🚨 ВИСОКА ТОКСИЧНІСТЬ! Загроза анурії. Термінова деконтамінація. Інтенсивна інфузійна терапія, моніторинг діурезу, креатиніну та калію."
 
+    # Розрахунок дози сорбенту (активованого вугілля):
+    # Стандартна ветеринарна доза: 1-2 г/кг сухого порошку або 5-10 мл/кг 20% водної суспензії
+    charcoal_powder_min_g = w * Decimal('1.0')
+    charcoal_powder_max_g = w * Decimal('2.0')
+    charcoal_susp_min_ml = w * Decimal('5.0')
+    charcoal_susp_max_ml = w * Decimal('10.0')
+
     return {
         "active_substance": active_substance,
         "dose_mg_kg": float(precise_round(dose_mg_kg, 2)),
         "unit": unit,
         "severity": severity,
         "color": color,
-        "recommendations": recommendations
+        "recommendations": recommendations,
+        "charcoal_powder_min_g": float(precise_round(charcoal_powder_min_g, 1)),
+        "charcoal_powder_max_g": float(precise_round(charcoal_powder_max_g, 1)),
+        "charcoal_susp_min_ml": float(precise_round(charcoal_susp_min_ml, 1)),
+        "charcoal_susp_max_ml": float(precise_round(charcoal_susp_max_ml, 1))
     }
 
 
