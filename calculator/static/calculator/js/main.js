@@ -39,6 +39,128 @@ const SVG_ICONS = {
         };
     }
 
+    // --- Валідація аномальної ваги пацієнта (Weight Sanity Check) ---
+    const WARNING_ICON = `<svg class="lucide-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+
+    const WEIGHT_BOUNDS = {
+        'Собака': { min: 0.3, max: 85, name: 'для собак' },
+        'dog': { min: 0.3, max: 85, name: 'для собак' },
+        'Кіт': { min: 0.2, max: 10, name: 'для котів' },
+        'cat': { min: 0.2, max: 10, name: 'для котів' },
+        'Тхір': { min: 0.1, max: 3, name: 'для тхорів' },
+        'ferret': { min: 0.1, max: 3, name: 'для тхорів' },
+        'Кролик': { min: 0.15, max: 8, name: 'для кроликів' },
+        'rabbit': { min: 0.15, max: 8, name: 'для кроликів' },
+        'Морська свинка': { min: 0.1, max: 1.8, name: 'для морських свинок' },
+        'guinea_pig': { min: 0.1, max: 1.8, name: 'для морських свинок' },
+        'Гризун': { min: 0.005, max: 1, name: 'для гризунів' },
+        'rodent': { min: 0.005, max: 1, name: 'для гризунів' },
+        'Птах': { min: 0.01, max: 5, name: 'для птахів' },
+        'bird': { min: 0.01, max: 5, name: 'для птахів' }
+    };
+    const DEFAULT_WEIGHT_BOUNDS = { min: 0.1, max: 85, name: '' };
+
+    function validateWeightSanity(inputEl, species = null) {
+        if (!inputEl) return;
+        const weightVal = parseFloat(inputEl.value);
+        if (isNaN(weightVal) || weightVal <= 0) {
+            removeWeightWarning(inputEl);
+            return;
+        }
+
+        let bounds = DEFAULT_WEIGHT_BOUNDS;
+        if (species && WEIGHT_BOUNDS[species]) {
+            bounds = WEIGHT_BOUNDS[species];
+        }
+
+        if (weightVal < bounds.min || weightVal > bounds.max) {
+            let msg = '';
+            if (bounds.name) {
+                if (species === 'Гризун' || species === 'rodent') {
+                    msg = `Нетипова вага для гризунів (очікується від 5 г до 1 кг)`;
+                } else if (species === 'Птах' || species === 'bird') {
+                    msg = `Нетипова вага для птахів (очікується від 10 г до 5 кг)`;
+                } else {
+                    msg = `Нетипова вага ${bounds.name} (очікується від ${bounds.min} до ${bounds.max} кг)`;
+                }
+            } else {
+                msg = `Нетипова вага (очікується від ${bounds.min} до ${bounds.max} кг)`;
+            }
+            showWeightWarning(inputEl, msg);
+        } else {
+            removeWeightWarning(inputEl);
+        }
+    }
+
+    function showWeightWarning(inputEl, message) {
+        const formGroup = inputEl.closest('.form-group');
+        if (!formGroup) return;
+
+        let warningLabel = formGroup.querySelector('.weight-warning-label');
+        if (!warningLabel) {
+            warningLabel = document.createElement('div');
+            warningLabel.className = 'weight-warning-label';
+            warningLabel.innerHTML = `${WARNING_ICON} <span>${message}</span>`;
+            formGroup.appendChild(warningLabel);
+        } else {
+            warningLabel.innerHTML = `${WARNING_ICON} <span>${message}</span>`;
+        }
+    }
+
+    function removeWeightWarning(inputEl) {
+        const formGroup = inputEl.closest('.form-group');
+        if (!formGroup) return;
+
+        const warningLabel = formGroup.querySelector('.weight-warning-label');
+        if (warningLabel) {
+            warningLabel.remove();
+        }
+    }
+
+    function initWeightSanityCheck() {
+        const weightCheckConfigs = [
+            { weightId: 'cri-weight', speciesId: null },
+            { weightId: 'bsa-weight', speciesId: 'bsa-species' },
+            { weightId: 'toxicity-weight', speciesId: null },
+            { weightId: 'fluid-weight', speciesId: null },
+            { weightId: 'k-weight', speciesId: null },
+            { weightId: 'emergency-weight', speciesId: null },
+            { weightId: 'anesthesia-weight', speciesId: 'anesthesia-species' },
+            { weightId: 'bicarbonate-weight', speciesId: null },
+            { weightId: 'transfusion-weight', speciesId: 'transfusion-species' }
+        ];
+
+        weightCheckConfigs.forEach(config => {
+            const weightEl = document.getElementById(config.weightId);
+            if (!weightEl) return;
+
+            const runCheck = () => {
+                let speciesVal = null;
+                if (config.speciesId) {
+                    const speciesEl = document.getElementById(config.speciesId);
+                    if (speciesEl) {
+                        speciesVal = speciesEl.value;
+                    }
+                }
+                validateWeightSanity(weightEl, speciesVal);
+            };
+
+            weightEl.addEventListener('input', debounce(runCheck, 200));
+            weightEl.addEventListener('change', runCheck);
+
+            if (config.speciesId) {
+                const speciesEl = document.getElementById(config.speciesId);
+                if (speciesEl) {
+                    speciesEl.addEventListener('change', runCheck);
+                }
+            }
+
+            // Початковий запуск
+            runCheck();
+        });
+    }
+
+
     // Дебаунс перемальовування іконок для запобігання лагам інтерфейсу
     if (window.lucide && !window.lucide.isOverridden) {
         const originalCreateIcons = window.lucide.createIcons;
@@ -1695,6 +1817,7 @@ const SVG_ICONS = {
         updateNetworkStatus();
         registerServiceWorker();
         checkLegalConsent();
+        initWeightSanityCheck();
 
         // Ініціалізація локального архіву (IndexedDB)
         initIndexedDB()
