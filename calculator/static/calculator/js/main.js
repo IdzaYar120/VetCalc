@@ -3327,22 +3327,29 @@ const SVG_ICONS = {
     };
 
     function checkCloudAuthStatus() {
+        const unauthView = document.getElementById('cloud-unauth-view');
+        const authView = document.getElementById('cloud-auth-view');
+        const loggedUser = document.getElementById('cloud-logged-user');
+        const loginBtn = document.getElementById('btn-cloud-login');
+        const logoutBtn = document.getElementById('btn-cloud-logout');
+        const statusText = document.getElementById('cloud-status-text');
+
         fetch('/api/auth/status/')
         .then(res => res.json())
         .then(data => {
             if (data.authenticated) {
-                document.getElementById('cloud-unauth-view').style.display = 'none';
-                document.getElementById('cloud-auth-view').style.display = 'block';
-                document.getElementById('cloud-logged-user').textContent = data.username;
-                document.getElementById('btn-cloud-login').style.display = 'none';
-                document.getElementById('btn-cloud-logout').style.display = 'inline-block';
-                document.getElementById('cloud-status-text').textContent = 'Синхронізація увімкнена';
+                if (unauthView) unauthView.style.display = 'none';
+                if (authView) authView.style.display = 'block';
+                if (loggedUser) loggedUser.textContent = data.username;
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                if (statusText) statusText.textContent = 'Синхронізація увімкнена';
             } else {
-                document.getElementById('cloud-unauth-view').style.display = 'block';
-                document.getElementById('cloud-auth-view').style.display = 'none';
-                document.getElementById('btn-cloud-login').style.display = 'inline-block';
-                document.getElementById('btn-cloud-logout').style.display = 'none';
-                document.getElementById('cloud-status-text').textContent = 'Офлайн Архів';
+                if (unauthView) unauthView.style.display = 'block';
+                if (authView) authView.style.display = 'none';
+                if (loginBtn) loginBtn.style.display = 'inline-block';
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                if (statusText) statusText.textContent = 'Офлайн Архів';
             }
         })
         .catch(console.error);
@@ -3439,5 +3446,377 @@ const SVG_ICONS = {
 
     // Initial check
     setTimeout(checkCloudAuthStatus, 1000);
+
+    // --- Копіювання результатів в історію хвороби (Copy to EVMR) ---
+    window.copyToClipboard = function(calculatorType) {
+        let text = "";
+        const currentDateStr = new Date().toLocaleString('uk-UA', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        const cleanAudit = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return "";
+            return el.textContent
+                .replace(/\s*\[.*Автономно.*\]/gi, '')
+                .replace(/\s*Автономно/gi, '')
+                .trim();
+        };
+
+        const getVal = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : "";
+        };
+
+        const getText = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.textContent.trim() : "";
+        };
+
+        if (calculatorType === 'cri') {
+            const weight = getVal('cri-weight');
+            const bagVol = getVal('cri-bag-volume');
+            const dose = getVal('cri-dose');
+            const doseUnit = getVal('cri-dose-unit');
+            const ampConc = getVal('cri-amp-conc');
+            const addVol = getVal('cri-add-vol');
+            const dripFactor = getVal('cri-drip-factor');
+
+            const resBagConc = getText('cri-res-bag-conc');
+            const resInfusionRate = getText('cri-res-infusion-rate');
+            const resDripRate = getText('cri-res-drip-rate');
+
+            const mathHourly = cleanAudit('math-hourly-dose');
+            const mathBag = cleanAudit('math-bag-conc');
+            const mathFlow = cleanAudit('math-flow-rate');
+            const mathDrip = cleanAudit('math-drip-rate');
+
+            text = `=== КЛІНІЧНИЙ РОЗРАХУНОК: ПОСТІЙНА ІНФУЗІЯ (CRI) ===
+Дата: ${currentDateStr}
+Вага пацієнта: ${weight} кг
+
+ВХІДНІ ПАРАМЕТРИ:
+- Об'єм флакону розчину: ${bagVol} мл
+- Цільова доза: ${dose} ${doseUnit}
+- Концентрація препарату в ампулі: ${ampConc} мг/мл
+- Об'єм препарату, доданий у флакон: ${addVol} мл
+- Фактор крапельниці: ${dripFactor} кр/мл
+
+РЕЗУЛЬТАТИ:
+- Загальна концентрація у флаконі: ${resBagConc}
+- Швидкість потоку інфузомату: ${resInfusionRate}
+- Швидкість введення крапельниці: ${resDripRate}
+
+МАТЕМАТИЧНИЙ АУДИТ:
+1. Годинне дозування: ${mathHourly}
+2. Концентрація суміші: ${mathBag}
+3. Швидкість інфузомату: ${mathFlow}
+4. Швидкість крапельниці: ${mathDrip}
+`;
+
+        } else if (calculatorType === 'fluid') {
+            const weight = getVal('fluid-weight');
+            const dehydration = getVal('fluid-dehydration');
+            const maintenance = getVal('fluid-maintenance');
+            const losses = getVal('fluid-losses');
+            const dripFactor = getVal('fluid-drip-factor');
+
+            const resDeficit = getText('fluid-res-deficit');
+            const resMaint = getText('fluid-res-maintenance');
+            const resTotal = getText('fluid-res-total');
+            const resRate = getText('fluid-res-rate');
+            const resDrip = getText('fluid-res-drip');
+
+            const mathDeficit = cleanAudit('math-fluid-deficit');
+            const mathMaint = cleanAudit('math-fluid-maintenance');
+            const mathTotal = cleanAudit('math-fluid-total');
+            const mathRate = cleanAudit('math-fluid-rate');
+            const mathDrip = cleanAudit('math-fluid-drip');
+
+            text = `=== КЛІНІЧНИЙ РОЗРАХУНОК: ІНФУЗІЙНА ТЕРАПІЯ ===
+Дата: ${currentDateStr}
+Вага пацієнта: ${weight} кг
+
+ВХІДНІ ПАРАМЕТРИ:
+- Дегідратація (зневоднення): ${dehydration}%
+- Підтримуюча доза: ${maintenance} мл/кг/добу
+- Патологічні втрати: ${losses} мл/добу
+- Фактор крапельниці: ${dripFactor} кр/мл
+
+РЕЗУЛЬТАТИ:
+- Дефіцит рідини (Rehydration): ${resDeficit}
+- Фізіологічна добова потреба (Maintenance): ${resMaint}
+- Загальний необхідний добовий об'єм: ${resTotal}
+- Швидкість потоку інфузомату: ${resRate}
+- Швидкість введення крапельниці: ${resDrip}
+
+МАТЕМАТИЧНИЙ АУДИТ:
+1. Дефіцит рідини: ${mathDeficit}
+2. Фізіологічна потреба: ${mathMaint}
+3. Загальний об'єм: ${mathTotal}
+4. Швидкість інфузомату: ${mathRate}
+5. Швидкість крапельниці: ${mathDrip}
+`;
+
+        } else if (calculatorType === 'cpr') {
+            const weight = getVal('emergency-weight');
+            
+            text = `=== КЛІНІЧНИЙ РОЗРАХУНОК: РЕАНІМАЦІЙНІ ДОЗИ (CPR EMERGENCY) ===
+Дата: ${currentDateStr}
+Вага пацієнта: ${weight} кг
+Протокол: RECOVER Initiative Guidelines
+
+РЕЗУЛЬТАТИ ДОЗУВАННЯ ПРЕПАРАТІВ:
+1. Адреналін 1 мг/мл (Низька доза, 0.01 мг/кг):
+   - Абс. доза: ${getText('em-adr-low-mg')}
+   - Об'єм для введення: ${getText('em-adr-low-ml')}
+   - Примітки: ${cleanAudit('em-adr-low-info')}
+
+2. Адреналін 1 мг/мл (Висока доза, 0.1 мг/кг):
+   - Абс. доза: ${getText('em-adr-high-mg')}
+   - Об'єм для введення: ${getText('em-adr-high-ml')}
+   - Примітки: ${cleanAudit('em-adr-high-info')}
+
+3. Атропін сульфат 0.5 мг/мл (0.04 мг/кг):
+   - Абс. доза: ${getText('em-atr-mg')}
+   - Об'єм для введення: ${getText('em-atr-ml')}
+   - Примітки: ${cleanAudit('em-atr-info')}
+
+4. Лідокаїн 2% 20 мг/мл (Собаки, 2.0 мг/кг):
+   - Абс. доза: ${getText('em-lido-dog-mg')}
+   - Об'єм для введення: ${getText('em-lido-dog-ml')}
+   - Примітки: ${cleanAudit('em-lido-dog-info')}
+
+5. Лідокаїн 2% 20 мг/мл (Коти, 0.2 мг/кг):
+   - Абс. доза: ${getText('em-lido-cat-mg')}
+   - Об'єм для введення: ${getText('em-lido-cat-ml')}
+   - Примітки: ${cleanAudit('em-lido-cat-info')}
+
+6. Налоксон 0.4 мг/мл (0.04 мг/кг):
+   - Абс. доза: ${getText('em-nal-mg')}
+   - Об'єм для введення: ${getText('em-nal-ml')}
+   - Примітки: ${cleanAudit('em-nal-info')}
+
+7. Дексаметазон 4 мг/мл (1.0 мг/кг):
+   - Абс. доза: ${getText('em-dex-mg')}
+   - Об'єм для введення: ${getText('em-dex-ml')}
+   - Примітки: ${cleanAudit('em-dex-info')}
+
+8. Норадреналін (CRI) 1 мг/мл (0.1 мкг/кг/хв):
+   - Швидкість: ${getText('em-nor-mg')} мг/год | ${getText('em-nor-ml')} мл/год
+   - Примітки: ${cleanAudit('em-nor-info')}
+
+9. Дофамін (CRI) 40 мг/мл (5.0 мкг/кг/хв):
+   - Швидкість: ${getText('em-dop-mg')} мг/год | ${getText('em-dop-ml')} мл/год
+   - Примітки: ${cleanAudit('em-dop-info')}
+
+* Дозування розраховані для негайного IV/IO введення (окрім CRI інфузій).
+`;
+
+        } else if (calculatorType === 'anesthesia') {
+            const weight = getVal('anesthesia-weight');
+            const speciesVal = getVal('anesthesia-species');
+            const species = speciesVal === 'dog' ? 'Собака' : (speciesVal === 'cat' ? 'Кіт' : speciesVal);
+            const premedicated = document.getElementById('anesthesia-premedicated') && document.getElementById('anesthesia-premedicated').checked ? 'Так (знижені дози індукції)' : 'Ні (повні дози)';
+
+            text = `=== КЛІНІЧНИЙ РОЗРАХУНОК: НАРКОЗ ТА АНЕСТЕЗІЯ ===
+Дата: ${currentDateStr}
+Вага пацієнта: ${weight} кг
+Вид: ${species}
+Премедикація: ${premedicated}
+
+РЕЗУЛЬТАТИ РОЗРАХУНКУ:
+1. Пропофол 1% (10 мг/мл):
+   - Цільова доза: ${getText('anes-prop-dose-kg')}
+   - Абсолютна доза: ${getText('anes-prop-mg')}
+   - Об'єм для введення: ${getText('anes-prop-ml')}
+   - Примітки: ${cleanAudit('anes-prop-info')}
+
+2. Альфаксалон (10 мг/мл):
+   - Цільова доза: ${getText('anes-alfax-dose-kg')}
+   - Абсолютна доза: ${getText('anes-alfax-mg')}
+   - Об'єм для введення: ${getText('anes-alfax-ml')}
+   - Примітки: ${cleanAudit('anes-alfax-info')}
+
+3. Кетамін (50 мг/мл):
+   - Цільова доза: ${getText('anes-ket-dose-kg')}
+   - Абсолютна доза: ${getText('anes-ket-mg')}
+   - Об'єм для введення: ${getText('anes-ket-ml')}
+   - Примітки: ${cleanAudit('anes-ket-info')}
+
+4. Дексмедетомідин (0.5 мг/мл):
+   - Цільова доза: ${getText('anes-dex-dose-kg')}
+   - Абсолютна доза: ${getText('anes-dex-mg')}
+   - Об'єм для введення: ${getText('anes-dex-ml')}
+   - Примітки: ${cleanAudit('anes-dex-info')}
+
+5. Буторфанол (10 мг/мл):
+   - Цільова доза: ${getText('anes-but-dose-kg')}
+   - Абсолютна доза: ${getText('anes-but-mg')}
+   - Об'єм для введення: ${getText('anes-but-ml')}
+   - Примітки: ${cleanAudit('anes-but-info')}
+
+* Анестетики вводити повільно внутрішньовенно «до ефекту».
+`;
+
+        } else if (calculatorType === 'transfusion') {
+            const weight = getVal('transfusion-weight');
+            const species = getVal('transfusion-species');
+            const patientHt = getVal('transfusion-patient-ht');
+            const targetHt = getVal('transfusion-target-ht');
+            const donorHt = getVal('transfusion-donor-ht');
+            const factor = getVal('transfusion-factor');
+
+            const resVolume = getText('transfusion-res-volume');
+            const resDeficit = getText('transfusion-res-deficit-ratio');
+            const mathTransfusion = cleanAudit('math-transfusion-formula');
+
+            text = `=== КЛІНІЧНИЙ РОЗРАХУНОК: ГЕМОТРАНСФУЗІЯ ===
+Дата: ${currentDateStr}
+Вага пацієнта: ${weight} кг
+Вид пацієнта: ${species}
+
+ВХІДНІ ПАРАМЕТРИ:
+- Поточний гематокрит (Ht): ${patientHt}%
+- Цільовий гематокрит (Ht): ${targetHt}%
+- Гематокрит донора: ${donorHt}%
+- Коефіцієнт об'єму крові: ${factor} мл/кг
+
+РЕЗУЛЬТАТИ:
+- Необхідний об'єм донорської крові: ${resVolume}
+- Дефіцит гематокриту: ${resDeficit}
+
+МАТЕМАТИЧНИЙ АУДИТ:
+Формула розрахунку: ${mathTransfusion}
+
+* Рекомендації: провести crossmatch та біологічну пробу. Перші 15-30 хв швидкість 0.25-0.5 мл/кг/год. Завершити до 4 годин.
+`;
+
+        } else if (calculatorType === 'toxicity') {
+            const weight = getVal('toxicity-weight');
+            const poisonType = getVal('toxicity-poison-type');
+            const amount = getVal('toxicity-amount');
+
+            const resDose = getText('toxicity-res-dose');
+            const resActive = getText('toxicity-res-active');
+            const resSeverity = getText('toxicity-res-severity');
+            const resRecommendations = getText('toxicity-res-recommendations');
+            const mathToxicity = cleanAudit('math-toxicity-formula');
+
+            const charcoalPowder = getText('charcoal-res-powder');
+            const charcoalSusp = getText('charcoal-res-susp');
+
+            let sorbentsText = "";
+            if (charcoalPowder && charcoalPowder !== "0.0 - 0.0 г" && charcoalPowder !== "0.0-0.0 г" && charcoalPowder !== "") {
+                sorbentsText = `
+РЕКОМЕНДОВАНА ДОЗА СОРБЕНТУ (АКТИВОВАНОГО ВУГІЛЛЯ):
+- Сухий порошок (1-2 г/кг): ${charcoalPowder}
+- 20% суспензія (5-10 мл/кг): ${charcoalSusp}`;
+            }
+
+            text = `=== КЛІНІЧНИЙ РОЗРАХУНОК: ТОКСИКОЛОГІЧНИЙ КАЛЬКУЛЯТОР ===
+Дата: ${currentDateStr}
+Вага пацієнта: ${weight} кг
+Токсикант / Отрута: ${poisonType}
+З'їдена кількість: ${amount} г
+
+РЕЗУЛЬТАТИ:
+- Очікувана доза токсиканту: ${resDose}
+- Кількість активної речовини: ${resActive}
+- Ступінь тяжкості: ${resSeverity}
+- Рекомендації терапії: ${resRecommendations}${sorbentsText}
+
+МАТЕМАТИЧНИЙ АУДИТ:
+Формула розрахунку: ${mathToxicity}
+`;
+        }
+
+        if (!text) return;
+
+        // Копіюємо в буфер
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("📋 Результати скопійовано в буфер обміну!");
+            }).catch(err => {
+                fallbackCopyText(text);
+            });
+        } else {
+            fallbackCopyText(text);
+        }
+    };
+
+    function fallbackCopyText(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";  // уникаємо скролінгу
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast("📋 Результати скопійовано в буфер обміну!");
+        } catch (err) {
+            console.error("Не вдалося скопіювати текст:", err);
+            alert("Помилка копіювання в буфер обміну.");
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function showToast(message) {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.position = 'fixed';
+            container.style.bottom = '24px';
+            container.style.right = '24px';
+            container.style.zIndex = '10000';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '10px';
+            container.style.pointerEvents = 'none';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'custom-toast';
+        toast.style.background = 'rgba(23, 185, 120, 0.9)'; // HSL primary color
+        toast.style.color = '#ffffff';
+        toast.style.padding = '12px 20px';
+        toast.style.borderRadius = '12px';
+        toast.style.boxShadow = '0 10px 25px -5px rgba(23, 185, 120, 0.4)';
+        toast.style.backdropFilter = 'blur(10px)';
+        toast.style.fontWeight = '600';
+        toast.style.fontSize = '0.92rem';
+        toast.style.display = 'flex';
+        toast.style.alignItems = 'center';
+        toast.style.gap = '8px';
+        toast.style.pointerEvents = 'auto';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+
+        const checkIcon = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        toast.innerHTML = `${checkIcon} <span>${message}</span>`;
+
+        container.appendChild(toast);
+
+        // Trigger animation
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        }, 10);
+
+        // Dismiss after 3 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
 
 
