@@ -129,6 +129,10 @@
                 <i data-lucide="scissors" style="width: 16px; height: 16px;"></i>
                 <span>Розрахунок наркозу</span>
             </button>
+            <button class="sub-chip-btn" id="chip-mlk-flk-tab" onclick="switchTab('mlk-flk-tab', this)">
+                <i data-lucide="syringe" style="width: 16px; height: 16px;"></i>
+                <span>Коктейлі ІПС (MLK/FLK)</span>
+            </button>
         </div>
 
         <div class="sub-chips-wrapper" id="chips-fluids">
@@ -941,6 +945,185 @@
                     <i data-lucide="info" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
                     <strong>Клінічна нота:</strong> Премедикація дексмедетомідином у поєднанні з буторфанолом забезпечує глибокий седативний та знеболювальний ефект, суттєво полегшуючи індукцію та знижуючи стрес пацієнта перед операцією.
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ: КОКТЕЙЛІ ІПС (MLK / FLK) ---------------- -->
+    <div id="mlk-flk-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Вхідні дані -->
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="sliders" style="color: var(--primary);"></i>
+                    <span>Параметри пацієнта та суміші</span>
+                </div>
+                
+                <div id="mlk-flk-error-banner" class="alert-error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="mlk-flk-weight">Вага пацієнта (кг)</label>
+                    <div class="input-group">
+                        <input type="number" id="mlk-flk-weight" value="10.0" step="0.1" min="0.01">
+                        <span class="unit-addon">кг</span>
+                    </div>
+                    <!-- Weight warning placeholder -->
+                    <span id="mlk-flk-weight-warning" class="weight-warning-label" style="display: none;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="mlk-flk-bag-volume">Об'єм флакону рідини (мл)</label>
+                    <div class="input-group">
+                        <input type="number" id="mlk-flk-bag-volume" value="500" step="50" min="1">
+                        <span class="unit-addon">мл</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mlk-flk-rate">Швидкість інфузії (мл/год)</label>
+                    <div class="input-group">
+                        <input type="number" id="mlk-flk-rate" value="10.0" step="0.5" min="0.1">
+                        <span class="unit-addon">мл/год</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Тип знеболювального коктейлю</label>
+                    <div class="toggle-group" style="margin-top: 5px;">
+                        <button class="toggle-btn active" id="btn-mixture-mlk" onclick="setMixtureType('MLK')">MLK (Морфін)</button>
+                        <button class="toggle-btn" id="btn-mixture-flk" onclick="setMixtureType('FLK')">FLK (Фентаніл)</button>
+                    </div>
+                </div>
+
+                <!-- Кнопка додаткових налаштувань (дози та концентрації) -->
+                <button type="button" class="btn-secondary" onclick="toggleMlkFlkAdvanced()" style="width: 100%; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
+                    <span>Дози та Концентрації</span>
+                </button>
+
+                <!-- Розділ просунутих налаштувань -->
+                <div id="mlk-flk-advanced-section" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">
+                    <h4 style="margin-bottom: 10px; font-size: 0.95rem; color: var(--primary);">Цільові дози (CRI Doses)</h4>
+                    
+                    <div class="form-group-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <!-- Доза Морфіну -->
+                        <div class="form-group" id="group-dose-morphine">
+                            <label for="mlk-flk-dose-morphine">Морфін (мг/кг/год)</label>
+                            <input type="number" id="mlk-flk-dose-morphine" value="0.2" step="0.05" min="0">
+                        </div>
+                        <!-- Доза Фентанілу -->
+                        <div class="form-group" id="group-dose-fentanyl" style="display: none;">
+                            <label for="mlk-flk-dose-fentanyl">Фентаніл (мкг/кг/год)</label>
+                            <input type="number" id="mlk-flk-dose-fentanyl" value="3.0" step="0.5" min="0">
+                        </div>
+                        <!-- Доза Лідокаїну -->
+                        <div class="form-group">
+                            <label for="mlk-flk-dose-lidocaine">Лідокаїн (мг/кг/год)</label>
+                            <input type="number" id="mlk-flk-dose-lidocaine" value="2.0" step="0.2" min="0">
+                        </div>
+                        <!-- Доза Кетаміну -->
+                        <div class="form-group">
+                            <label for="mlk-flk-dose-ketamine">Кетамін (мг/кг/год)</label>
+                            <input type="number" id="mlk-flk-dose-ketamine" value="0.6" step="0.1" min="0">
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 15px 0 10px 0; font-size: 0.95rem; color: var(--primary);">Концентрації препаратів</h4>
+                    
+                    <div class="form-group-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <!-- Концентрація Морфіну -->
+                        <div class="form-group" id="group-conc-morphine">
+                            <label for="mlk-flk-conc-morphine">Морфін (мг/мл)</label>
+                            <input type="number" id="mlk-flk-conc-morphine" value="10.0" step="1" min="0.1">
+                        </div>
+                        <!-- Концентрація Фентанілу -->
+                        <div class="form-group" id="group-conc-fentanyl" style="display: none;">
+                            <label for="mlk-flk-conc-fentanyl">Фентаніл (мкг/мл)</label>
+                            <input type="number" id="mlk-flk-conc-fentanyl" value="50.0" step="5" min="1">
+                        </div>
+                        <!-- Концентрація Лідокаїну -->
+                        <div class="form-group">
+                            <label for="mlk-flk-conc-lidocaine">Лідокаїн (мг/мл)</label>
+                            <input type="number" id="mlk-flk-conc-lidocaine" value="20.0" step="5" min="0.1">
+                        </div>
+                        <!-- Концентрація Кетаміну -->
+                        <div class="form-group">
+                            <label for="mlk-flk-conc-ketamine">Кетамін (мг/мл)</label>
+                            <input type="number" id="mlk-flk-conc-ketamine" value="50.0" step="5" min="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результати розрахунків -->
+            <div class="card" id="mlk-flk-results-card" style="display: none;">
+                <div class="card-title">
+                    <i data-lucide="check-circle" style="color: var(--primary);"></i>
+                    <span>Об'єми для додавання у флакон</span>
+                </div>
+
+                <div class="results-grid" style="margin-top: 15px;">
+                    <!-- Тривалість інфузії -->
+                    <div class="result-item" style="grid-column: span 2;">
+                        <span class="result-label">Тривалість інфузії флакону:</span>
+                        <span class="result-value" id="mlk-flk-res-duration">0 год</span>
+                    </div>
+
+                    <!-- Перший анальгетик (Морфін або Фентаніл) -->
+                    <div class="result-item" id="mlk-flk-res-row-opiate">
+                        <span class="result-label" id="mlk-flk-res-label-opiate">Опіат:</span>
+                        <span class="result-value text-highlight" id="mlk-flk-res-val-opiate">0 мл</span>
+                        <span class="result-sub-value" id="mlk-flk-res-sub-opiate">(0 мг)</span>
+                    </div>
+
+                    <!-- Лідокаїн -->
+                    <div class="result-item">
+                        <span class="result-label">Лідокаїн (Lidocaine):</span>
+                        <span class="result-value text-highlight" id="mlk-flk-res-val-lidocaine">0 мл</span>
+                        <span class="result-sub-value" id="mlk-flk-res-sub-lidocaine">(0 мг)</span>
+                    </div>
+
+                    <!-- Кетамін -->
+                    <div class="result-item">
+                        <span class="result-label">Кетамін (Ketamine):</span>
+                        <span class="result-value text-highlight" id="mlk-flk-res-val-ketamine">0 мл</span>
+                        <span class="result-sub-value" id="mlk-flk-res-sub-ketamine">(0 мг)</span>
+                    </div>
+
+                    <!-- Сумарний об'єм доданих ліків -->
+                    <div class="result-item">
+                        <span class="result-label">Всього ліків додати:</span>
+                        <span class="result-value" id="mlk-flk-res-val-added-drugs">0 мл</span>
+                    </div>
+
+                    <!-- Кінцевий об'єм флакону -->
+                    <div class="result-item" style="grid-column: span 2; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 5px;">
+                        <span class="result-label" style="font-weight: 600;">Кінцевий об'єм флакону з препаратами:</span>
+                        <span class="result-value" id="mlk-flk-res-val-final-volume" style="color: var(--primary); font-weight: 700;">0 мл</span>
+                    </div>
+                </div>
+
+                <!-- Кнопки дій -->
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn-primary" onclick="copyMlkFlkToClipboard()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i data-lucide="clipboard" style="width: 18px; height: 18px;"></i>
+                        <span>Скопіювати</span>
+                    </button>
+                    <button class="btn-secondary" onclick="printMlkFlkSheet()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i data-lucide="printer" style="width: 18px; height: 18px;"></i>
+                        <span>Друк картки</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Математичний аудит розрахунку -->
+        <div class="card" id="mlk-flk-audit-card" style="margin-top: 20px; display: none;">
+            <div class="card-title">
+                <i data-lucide="help-circle" style="color: var(--primary);"></i>
+                <span>Математичний аудит розрахунку суміші</span>
+            </div>
+            <div id="mlk-flk-audit-text" style="font-family: 'Roboto Mono', monospace; font-size: 0.88rem; color: var(--gray-text); line-height: 1.5; white-space: pre-wrap; margin-top: 10px;">
             </div>
         </div>
     </div>

@@ -18,8 +18,10 @@ from core import (
     calculate_anesthesia_doses,
     calculate_transfusion,
     calculate_toxicity,
+    calculate_mlk_flk,
     COMPATIBILITY_MATRIX
 )
+# pyrefly: ignore [missing-import]
 from pydantic import Field
 
 # Inicitalize Ninja API
@@ -98,6 +100,20 @@ class ToxicityInput(Schema):
     weight_kg: float = Field(..., gt=0)
     poison_type: str
     amount_g: float = Field(..., gt=0)
+
+class MlkFlkInput(Schema):
+    weight_kg: float = Field(..., gt=0)
+    bag_volume_ml: float = Field(..., gt=0)
+    infusion_rate_ml_hr: float = Field(..., gt=0)
+    mixture_type: str
+    morphine_dose_mg_kg_hr: float = 0.2
+    fentanyl_dose_mcg_kg_hr: float = 3.0
+    lidocaine_dose_mg_kg_hr: float = 2.0
+    ketamine_dose_mg_kg_hr: float = 0.6
+    morphine_conc_mg_ml: float = 10.0
+    fentanyl_conc_mcg_ml: float = 50.0
+    lidocaine_conc_mg_ml: float = 20.0
+    ketamine_conc_mg_ml: float = 50.0
 
 class LoginInput(Schema):
     username: str
@@ -291,6 +307,25 @@ def api_calculate_toxicity(request, data: ToxicityInput):
         weight_kg=data.weight_kg,
         poison_type=data.poison_type,
         amount_g=data.amount_g
+    )
+    return results
+
+@api.post("/calculate-mlk-flk/")
+@ratelimit(key='ip', rate='60/m', block=True)
+def api_calculate_mlk_flk(request, data: MlkFlkInput):
+    results = calculate_mlk_flk(
+        weight_kg=data.weight_kg,
+        bag_volume_ml=data.bag_volume_ml,
+        infusion_rate_ml_hr=data.infusion_rate_ml_hr,
+        mixture_type=data.mixture_type,
+        morphine_dose_mg_kg_hr=data.morphine_dose_mg_kg_hr,
+        fentanyl_dose_mcg_kg_hr=data.fentanyl_dose_mcg_kg_hr,
+        lidocaine_dose_mg_kg_hr=data.lidocaine_dose_mg_kg_hr,
+        ketamine_dose_mg_kg_hr=data.ketamine_dose_mg_kg_hr,
+        morphine_conc_mg_ml=data.morphine_conc_mg_ml,
+        fentanyl_conc_mcg_ml=data.fentanyl_conc_mcg_ml,
+        lidocaine_conc_mg_ml=data.lidocaine_conc_mg_ml,
+        ketamine_conc_mg_ml=data.ketamine_conc_mg_ml
     )
     return results
 

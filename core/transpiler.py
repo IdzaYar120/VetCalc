@@ -26,7 +26,8 @@ class PythonToJSTranspiler(ast.NodeVisitor):
             'calculate_plasma_osmolality': 'calculatePlasmaOsmolalityLocal',
             'calculate_anesthesia_doses': 'calculateAnesthesiaLocal',
             'calculate_transfusion': 'calculateTransfusionLocal',
-            'calculate_toxicity': 'calculateToxicityLocal'
+            'calculate_toxicity': 'calculateToxicityLocal',
+            'calculate_mlk_flk': 'calculateMlkFlkLocal'
         }
         js_name = name_map.get(node.name, node.name)
         
@@ -405,6 +406,7 @@ export {
     calculateAnesthesiaLocal,
     calculateTransfusionLocal,
     calculateToxicityLocal,
+    calculateMlkFlkLocal,
     LOCAL_COMPATIBILITY_MATRIX
 };
 """

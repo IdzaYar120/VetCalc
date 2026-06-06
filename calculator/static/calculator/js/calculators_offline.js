@@ -624,6 +624,78 @@ function calculateToxicityLocal(weight_kg, poison_type, amount_g) {
   };
 }
 
+function calculateMlkFlkLocal(weight_kg, bag_volume_ml, infusion_rate_ml_hr, mixture_type, morphine_dose_mg_kg_hr, fentanyl_dose_mcg_kg_hr, lidocaine_dose_mg_kg_hr, ketamine_dose_mg_kg_hr, morphine_conc_mg_ml, fentanyl_conc_mcg_ml, lidocaine_conc_mg_ml, ketamine_conc_mg_ml) {
+  let c_fent, c_keta, c_lido, c_morph, d_fent, d_keta, d_lido, d_morph, duration_hr, f_mcg, f_vol, k_mg, k_vol, l_mg, l_vol, m_mg, m_vol, r_inf, v_bag, v_total_added, v_total_bag, w;
+
+  if ((weight_kg <= 0)) {
+    throw new Error("Вага пацієнта повинна бути строго більше 0 кг.");
+  }
+  if ((bag_volume_ml <= 0)) {
+    throw new Error("Об'єм флакону рідини повинен бути строго більше 0 мл.");
+  }
+  if ((infusion_rate_ml_hr <= 0)) {
+    throw new Error("Швидкість інфузії повинна бути строго більше 0 мл/год.");
+  }
+  w = Number(String(weight_kg));
+  v_bag = Number(String(bag_volume_ml));
+  r_inf = Number(String(infusion_rate_ml_hr));
+  duration_hr = (v_bag / r_inf);
+  m_vol = Number("0.0");
+  m_mg = Number("0.0");
+  f_vol = Number("0.0");
+  f_mcg = Number("0.0");
+  if ((mixture_type === "MLK")) {
+    d_morph = Number(String(morphine_dose_mg_kg_hr));
+    c_morph = Number(String(morphine_conc_mg_ml));
+    m_mg = ((w * d_morph) * duration_hr);
+    if ((c_morph > 0)) {
+      m_vol = (m_mg / c_morph);
+    } else {
+      m_vol = Number("0.0");
+    }
+  } else if ((mixture_type === "FLK")) {
+      d_fent = Number(String(fentanyl_dose_mcg_kg_hr));
+      c_fent = Number(String(fentanyl_conc_mcg_ml));
+      f_mcg = ((w * d_fent) * duration_hr);
+      if ((c_fent > 0)) {
+        f_vol = (f_mcg / c_fent);
+      } else {
+        f_vol = Number("0.0");
+      }
+    }
+  d_lido = Number(String(lidocaine_dose_mg_kg_hr));
+  c_lido = Number(String(lidocaine_conc_mg_ml));
+  l_mg = ((w * d_lido) * duration_hr);
+  if ((c_lido > 0)) {
+    l_vol = (l_mg / c_lido);
+  } else {
+    l_vol = Number("0.0");
+  }
+  d_keta = Number(String(ketamine_dose_mg_kg_hr));
+  c_keta = Number(String(ketamine_conc_mg_ml));
+  k_mg = ((w * d_keta) * duration_hr);
+  if ((c_keta > 0)) {
+    k_vol = (k_mg / c_keta);
+  } else {
+    k_vol = Number("0.0");
+  }
+  v_total_added = ((l_vol + k_vol) + ((mixture_type === "MLK") ? m_vol : f_vol));
+  v_total_bag = (v_bag + v_total_added);
+  return {
+    infusion_duration_hr: Number(preciseRound(duration_hr, 2)),
+    morphine_required_mg: Number(preciseRound(m_mg, 2)),
+    morphine_volume_ml: Number(preciseRound(m_vol, 2)),
+    fentanyl_required_mcg: Number(preciseRound(f_mcg, 2)),
+    fentanyl_volume_ml: Number(preciseRound(f_vol, 2)),
+    lidocaine_required_mg: Number(preciseRound(l_mg, 2)),
+    lidocaine_volume_ml: Number(preciseRound(l_vol, 2)),
+    ketamine_required_mg: Number(preciseRound(k_mg, 2)),
+    ketamine_volume_ml: Number(preciseRound(k_vol, 2)),
+    total_added_drugs_volume_ml: Number(preciseRound(v_total_added, 2)),
+    final_bag_volume_ml: Number(preciseRound(v_total_bag, 2))
+  };
+}
+
 // Сумісність для розрахунку екстрених реанімаційних доз CPR
 function calculateEmergencyLocal(weight_kg) {
     const orig = _calculateEmergencyLocal(weight_kg);
@@ -766,5 +838,6 @@ export {
     calculateAnesthesiaLocal,
     calculateTransfusionLocal,
     calculateToxicityLocal,
+    calculateMlkFlkLocal,
     LOCAL_COMPATIBILITY_MATRIX
 };

@@ -16,6 +16,7 @@ import {
     calculateAnesthesiaLocal,
     calculateTransfusionLocal,
     calculateToxicityLocal,
+    calculateMlkFlkLocal,
     LOCAL_COMPATIBILITY_MATRIX
 } from './calculators_offline.js';
 
@@ -127,7 +128,8 @@ const SVG_ICONS = {
             { weightId: 'emergency-weight', speciesId: null },
             { weightId: 'anesthesia-weight', speciesId: 'anesthesia-species' },
             { weightId: 'bicarbonate-weight', speciesId: null },
-            { weightId: 'transfusion-weight', speciesId: 'transfusion-species' }
+            { weightId: 'transfusion-weight', speciesId: 'transfusion-species' },
+            { weightId: 'mlk-flk-weight', speciesId: null }
         ];
 
         weightCheckConfigs.forEach(config => {
@@ -201,6 +203,9 @@ const SVG_ICONS = {
         const tabContent = document.getElementById(tabId);
         if (tabContent) {
             tabContent.classList.add('active');
+        }
+        if (tabId === 'mlk-flk-tab') {
+            runMlkFlkCalculation();
         }
         if (window.lucide) lucide.createIcons();
     };
@@ -589,6 +594,219 @@ const SVG_ICONS = {
         if (window.lucide) lucide.createIcons();
         
         document.getElementById('math-toxicity-formula').textContent = "Розрахунок припинено.";
+    }
+
+    // --- Калькулятор сумішей для знеболення (MLK / FLK CRI) ---
+    let activeMixtureType = 'MLK';
+
+    window.setMixtureType = function(type) {
+        activeMixtureType = type;
+        const btnMlk = document.getElementById('btn-mixture-mlk');
+        const btnFlk = document.getElementById('btn-mixture-flk');
+        
+        if (type === 'MLK') {
+            btnMlk.classList.add('active');
+            btnFlk.classList.remove('active');
+            document.getElementById('group-dose-morphine').style.display = 'block';
+            document.getElementById('group-conc-morphine').style.display = 'block';
+            document.getElementById('group-dose-fentanyl').style.display = 'none';
+            document.getElementById('group-conc-fentanyl').style.display = 'none';
+        } else {
+            btnMlk.classList.remove('active');
+            btnFlk.classList.add('active');
+            document.getElementById('group-dose-morphine').style.display = 'none';
+            document.getElementById('group-conc-morphine').style.display = 'none';
+            document.getElementById('group-dose-fentanyl').style.display = 'block';
+            document.getElementById('group-conc-fentanyl').style.display = 'block';
+        }
+        runMlkFlkCalculation();
+    };
+
+    window.toggleMlkFlkAdvanced = function() {
+        const sec = document.getElementById('mlk-flk-advanced-section');
+        if (sec.style.display === 'none') {
+            sec.style.display = 'block';
+        } else {
+            sec.style.display = 'none';
+        }
+    };
+
+    window.copyMlkFlkToClipboard = function() {
+        window.copyToClipboard('mlk-flk');
+    };
+
+    window.printMlkFlkSheet = function() {
+        window.printTreatmentSheet('mlk-flk');
+    };
+
+    function runMlkFlkCalculation() {
+        const weight = parseFloat(document.getElementById('mlk-flk-weight').value) || 0;
+        const bagVol = parseFloat(document.getElementById('mlk-flk-bag-volume').value) || 0;
+        const rate = parseFloat(document.getElementById('mlk-flk-rate').value) || 0;
+        
+        const errorBanner = document.getElementById('mlk-flk-error-banner');
+        
+        if (weight <= 0) {
+            showMlkFlkError("❌ Помилка валідації: Вага пацієнта повинна бути строго більше 0 кг.");
+            return;
+        }
+        if (bagVol <= 0) {
+            showMlkFlkError("❌ Помилка валідації: Об'єм флакону рідини повинен бути строго більше 0 мл.");
+            return;
+        }
+        if (rate <= 0) {
+            showMlkFlkError("❌ Помилка валідації: Швидкість інфузії повинна бути строго більше 0 мл/год.");
+            return;
+        }
+
+        errorBanner.style.display = 'none';
+
+        const morphDose = parseFloat(document.getElementById('mlk-flk-dose-morphine').value) || 0;
+        const fentDose = parseFloat(document.getElementById('mlk-flk-dose-fentanyl').value) || 0;
+        const lidoDose = parseFloat(document.getElementById('mlk-flk-dose-lidocaine').value) || 0;
+        const ketaDose = parseFloat(document.getElementById('mlk-flk-dose-ketamine').value) || 0;
+
+        const morphConc = parseFloat(document.getElementById('mlk-flk-conc-morphine').value) || 0;
+        const fentConc = parseFloat(document.getElementById('mlk-flk-conc-fentanyl').value) || 0;
+        const lidoConc = parseFloat(document.getElementById('mlk-flk-conc-lidocaine').value) || 0;
+        const ketaConc = parseFloat(document.getElementById('mlk-flk-conc-ketamine').value) || 0;
+
+        const updateUI = (data, isOffline = false) => {
+            document.getElementById('mlk-flk-results-card').style.display = 'block';
+            document.getElementById('mlk-flk-audit-card').style.display = 'block';
+
+            document.getElementById('mlk-flk-res-duration').innerHTML = `${data.infusion_duration_hr.toFixed(2)} год`;
+            
+            const labelOpiate = document.getElementById('mlk-flk-res-label-opiate');
+            const valOpiate = document.getElementById('mlk-flk-res-val-opiate');
+            const subOpiate = document.getElementById('mlk-flk-res-sub-opiate');
+
+            if (activeMixtureType === 'MLK') {
+                labelOpiate.textContent = "Морфін (Morphine):";
+                valOpiate.textContent = `${data.morphine_volume_ml.toFixed(2)} мл`;
+                subOpiate.textContent = `(${data.morphine_required_mg.toFixed(2)} мг)`;
+            } else {
+                labelOpiate.textContent = "Фентаніл (Fentanyl):";
+                valOpiate.textContent = `${data.fentanyl_volume_ml.toFixed(2)} мл`;
+                subOpiate.textContent = `(${data.fentanyl_required_mcg.toFixed(2)} мкг)`;
+            }
+
+            document.getElementById('mlk-flk-res-val-lidocaine').textContent = `${data.lidocaine_volume_ml.toFixed(2)} мл`;
+            document.getElementById('mlk-flk-res-sub-lidocaine').textContent = `(${data.lidocaine_required_mg.toFixed(2)} мг)`;
+
+            document.getElementById('mlk-flk-res-val-ketamine').textContent = `${data.ketamine_volume_ml.toFixed(2)} мл`;
+            document.getElementById('mlk-flk-res-sub-ketamine').textContent = `(${data.ketamine_required_mg.toFixed(2)} мг)`;
+
+            document.getElementById('mlk-flk-res-val-added-drugs').textContent = `${data.total_added_drugs_volume_ml.toFixed(2)} мл`;
+            document.getElementById('mlk-flk-res-val-final-volume').textContent = `${data.final_bag_volume_ml.toFixed(2)} мл`;
+
+            // Математичний аудит розрахунку
+            let auditText = `1. Тривалість інфузії флакону:
+   T = ${bagVol} мл / ${rate} мл/год = ${data.infusion_duration_hr.toFixed(2)} год.
+
+2. Розрахунок препаратів:`;
+
+            if (activeMixtureType === 'MLK') {
+                auditText += `
+   - Морфін (доза ${morphDose} мг/кг/год, конц. ${morphConc} мг/мл):
+     Необхідна кількість: ${weight} кг × ${morphDose} мг/кг/год × ${data.infusion_duration_hr.toFixed(2)} год = ${data.morphine_required_mg.toFixed(2)} мг.
+     Необхідний об'єм: ${data.morphine_required_mg.toFixed(2)} мг / ${morphConc} мг/мл = ${data.morphine_volume_ml.toFixed(2)} мл.`;
+            } else {
+                auditText += `
+   - Фентаніл (доза ${fentDose} мкг/кг/год, конц. ${fentConc} мкг/мл):
+     Необхідна кількість: ${weight} кг × ${fentDose} мкг/кг/год × ${data.infusion_duration_hr.toFixed(2)} год = ${data.fentanyl_required_mcg.toFixed(2)} мкг.
+     Необхідний об'єм: ${data.fentanyl_required_mcg.toFixed(2)} мкг / ${fentConc} мкг/мл = ${data.fentanyl_volume_ml.toFixed(2)} мл.`;
+            }
+
+            auditText += `
+   - Лідокаїн (доза ${lidoDose} мг/кг/год, конц. ${lidoConc} мг/мл):
+     Необхідна кількість: ${weight} кг × ${lidoDose} мг/кг/год × ${data.infusion_duration_hr.toFixed(2)} год = ${data.lidocaine_required_mg.toFixed(2)} мг.
+     Необхідний об'єм: ${data.lidocaine_required_mg.toFixed(2)} мг / ${lidoConc} мг/мл = ${data.lidocaine_volume_ml.toFixed(2)} мл.
+
+   - Кетамін (доза ${ketaDose} мг/кг/год, конц. ${ketaConc} мг/мл):
+     Необхідна кількість: ${weight} кг × ${ketaDose} мг/кг/год × ${data.infusion_duration_hr.toFixed(2)} год = ${data.ketamine_required_mg.toFixed(2)} мг.
+     Необхідний об'єм: ${data.ketamine_required_mg.toFixed(2)} мг / ${ketaConc} мг/мл = ${data.ketamine_volume_ml.toFixed(2)} мл.
+
+3. Підсумок флакону:
+   - Об'єм доданих ліків: ${data.total_added_drugs_volume_ml.toFixed(2)} мл.
+   - Кінцевий об'єм суміші: ${bagVol} мл + ${data.total_added_drugs_volume_ml.toFixed(2)} мл = ${data.final_bag_volume_ml.toFixed(2)} мл.`;
+
+            if (isOffline) {
+                auditText += `\n\n[Автономний режим розрахунку (офлайн)]`;
+            }
+
+            document.getElementById('mlk-flk-audit-text').textContent = auditText;
+            if (window.lucide) lucide.createIcons();
+        };
+
+        const runLocal = () => {
+            try {
+                const result = calculateMlkFlkLocal(
+                    weight, bagVol, rate, activeMixtureType,
+                    morphDose, fentDose, lidoDose, ketaDose,
+                    morphConc, fentConc, lidoConc, ketaConc
+                );
+                updateUI(result, true);
+            } catch (e) {
+                showMlkFlkError("❌ Помилка розрахунку: " + e.message);
+            }
+        };
+
+        if (!navigator.onLine) {
+            runLocal();
+            return;
+        }
+
+        fetch('/api/calculate-mlk-flk/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                weight_kg: weight,
+                bag_volume_ml: bagVol,
+                infusion_rate_ml_hr: rate,
+                mixture_type: activeMixtureType,
+                morphine_dose_mg_kg_hr: morphDose,
+                fentanyl_dose_mcg_kg_hr: fentDose,
+                lidocaine_dose_mg_kg_hr: lidoDose,
+                ketamine_dose_mg_kg_hr: ketaDose,
+                morphine_conc_mg_ml: morphConc,
+                fentanyl_conc_mcg_ml: fentConc,
+                lidocaine_conc_mg_ml: lidoConc,
+                ketamine_conc_mg_ml: ketaConc
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Помилка сервера");
+            return res.json();
+        })
+        .then(data => {
+            updateUI(data, false);
+        })
+        .catch(err => {
+            console.warn("API Error, falling back to local:", err);
+            runLocal();
+        });
+    }
+
+    function showMlkFlkError(msg) {
+        const err = document.getElementById('mlk-flk-error-banner');
+        err.textContent = msg;
+        err.style.display = 'block';
+        document.getElementById('mlk-flk-results-card').style.display = 'none';
+        document.getElementById('mlk-flk-audit-card').style.display = 'none';
+    }
+
+    function resetMlkFlkResults() {
+        document.getElementById('mlk-flk-res-duration').innerHTML = `0 год`;
+        document.getElementById('mlk-flk-res-val-opiate').textContent = `0 мл`;
+        document.getElementById('mlk-flk-res-sub-opiate').textContent = `(0 мг)`;
+        document.getElementById('mlk-flk-res-val-lidocaine').textContent = `0 мл`;
+        document.getElementById('mlk-flk-res-sub-lidocaine').textContent = `(0 мг)`;
+        document.getElementById('mlk-flk-res-val-ketamine').textContent = `0 мл`;
+        document.getElementById('mlk-flk-res-sub-ketamine').textContent = `(0 мг)`;
+        document.getElementById('mlk-flk-res-val-added-drugs').textContent = `0 мл`;
+        document.getElementById('mlk-flk-res-val-final-volume').textContent = `0 мл`;
+        document.getElementById('mlk-flk-audit-text').textContent = "Розрахунок припинено.";
     }
 
     // 3. Аудит сумісності ліків
@@ -1641,6 +1859,7 @@ const SVG_ICONS = {
     const debouncedRunAnesthesia = debounce(runAnesthesiaCalculation, 200);
     const debouncedRunTransfusion = debounce(runTransfusionCalculation, 200);
     const debouncedRunToxicity = debounce(runToxicityCalculation, 200);
+    const debouncedRunMlkFlk = debounce(runMlkFlkCalculation, 200);
 
     // Слухачі подій для реактивних авто-розрахунків при введенні
     const criInputIds = ['cri-weight', 'cri-bag-volume', 'cri-dose', 'cri-dose-unit', 'cri-amp-conc', 'cri-add-vol', 'cri-drip-factor'];
@@ -1745,6 +1964,19 @@ const SVG_ICONS = {
         document.getElementById(id).addEventListener('change', runToxicityCalculation);
     });
 
+    const mlkFlkInputIds = [
+        'mlk-flk-weight', 'mlk-flk-bag-volume', 'mlk-flk-rate',
+        'mlk-flk-dose-morphine', 'mlk-flk-dose-fentanyl', 'mlk-flk-dose-lidocaine', 'mlk-flk-dose-ketamine',
+        'mlk-flk-conc-morphine', 'mlk-flk-conc-fentanyl', 'mlk-flk-conc-lidocaine', 'mlk-flk-conc-ketamine'
+    ];
+    mlkFlkInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', debouncedRunMlkFlk);
+            el.addEventListener('change', runMlkFlkCalculation);
+        }
+    });
+
 
 
     // ---------------- ЮРИДИЧНА УГОДА ----------------
@@ -1788,6 +2020,7 @@ const SVG_ICONS = {
         runAnesthesiaCalculation();
         runTransfusionCalculation();
         runToxicityCalculation();
+        runMlkFlkCalculation();
         triggerAudit();
     }
 
@@ -2298,6 +2531,86 @@ const SVG_ICONS = {
             `;
 
             disclaimerHtml = "Усі токсикологічні випадки потребують ретельного спостереження. За появи клінічних симптомів негайно розпочніть симптоматичну терапію та підтримуйте роботу життєво важливих органів.";
+        } else if (calculatorType === 'mlk-flk') {
+            const weight = document.getElementById('mlk-flk-weight').value;
+            const bagVol = document.getElementById('mlk-flk-bag-volume').value;
+            const rate = document.getElementById('mlk-flk-rate').value;
+            const type = activeMixtureType;
+
+            const resDuration = document.getElementById('mlk-flk-res-duration').textContent;
+            const labelOpiate = document.getElementById('mlk-flk-res-label-opiate').textContent;
+            const valOpiate = document.getElementById('mlk-flk-res-val-opiate').textContent;
+            const subOpiate = document.getElementById('mlk-flk-res-sub-opiate').textContent;
+            
+            const valLido = document.getElementById('mlk-flk-res-val-lidocaine').textContent;
+            const subLido = document.getElementById('mlk-flk-res-sub-lidocaine').textContent;
+
+            const valKeta = document.getElementById('mlk-flk-res-val-ketamine').textContent;
+            const subKeta = document.getElementById('mlk-flk-res-sub-ketamine').textContent;
+
+            const valAdded = document.getElementById('mlk-flk-res-val-added-drugs').textContent;
+            const valFinal = document.getElementById('mlk-flk-res-val-final-volume').textContent;
+
+            const mathAudit = document.getElementById('mlk-flk-audit-text').textContent;
+
+            title = `Лист призначення: Знеболювальний коктейль ІПС (${type})`;
+
+            patientDetails = `
+                <div class="patient-field"><strong>Вид пацієнта:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Кличка / Власник:</strong> <span class="manual-field"></span></div>
+                <div class="patient-field"><strong>Вага пацієнта:</strong> <span>${weight} кг</span></div>
+                <div class="patient-field"><strong>Об'єм флакону рідини:</strong> <span>${bagVol} мл</span></div>
+                <div class="patient-field"><strong>Швидкість інфузії:</strong> <span>${rate} мл/год</span></div>
+                <div class="patient-field"><strong>Тип коктейлю:</strong> <span>${type}</span></div>
+            `;
+
+            contentHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Препарат</th>
+                            <th style="text-align: center;">Об'єм для додавання</th>
+                            <th>Доза та Кількість</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>${labelOpiate.replace(':', '')}</strong></td>
+                            <td class="volume-highlight">${valOpiate}</td>
+                            <td>Доза: ${type === 'MLK' ? document.getElementById('mlk-flk-dose-morphine').value + ' мг/кг/год' : document.getElementById('mlk-flk-dose-fentanyl').value + ' мкг/кг/год'} ${subOpiate}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Лідокаїн (Lidocaine)</strong></td>
+                            <td class="volume-highlight">${valLido}</td>
+                            <td>Доза: ${document.getElementById('mlk-flk-dose-lidocaine').value} мг/кг/год ${subLido}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Кетамін (Ketamine)</strong></td>
+                            <td class="volume-highlight">${valKeta}</td>
+                            <td>Доза: ${document.getElementById('mlk-flk-dose-ketamine').value} мг/кг/год ${subKeta}</td>
+                        </tr>
+                        <tr style="border-top: 2px solid var(--border);">
+                            <td><strong>Всього ліків додати</strong></td>
+                            <td style="text-align: center; font-weight: 700;">${valAdded}</td>
+                            <td>Сумарний об'єм доданих компонентів</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Кінцевий об'єм суміші у флаконі</strong></td>
+                            <td style="text-align: center; font-weight: 700; color: #15803d; background-color: #f0fdf4 !important; border-color: #bbf7d0 !important;">${valFinal}</td>
+                            <td>Об'єм фізрозчину разом із доданими ліками</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            auditHtml = `
+                <div class="audit-box">
+                    <h4><strong style="color: #0284c7;">Покроковий математичний аудит розрахунку суміші:</strong></h4>
+                    <div class="audit-formula" style="white-space: pre-wrap; font-family: monospace;">${mathAudit}</div>
+                </div>
+            `;
+
+            disclaimerHtml = "Мультимодальна аналгезія постійною швидкістю інфузії (CRI) потребує постійного моніторингу глибини анестезії, ЕКГ, артеріального тиску та частоти дихання пацієнта.";
         }
 
         const printWindow = window.open('', '_blank');
@@ -3729,6 +4042,48 @@ const SVG_ICONS = {
 
 МАТЕМАТИЧНИЙ АУДИТ:
 Формула розрахунку: ${mathToxicity}
+`;
+        } else if (calculatorType === 'mlk-flk') {
+            const weight = getVal('mlk-flk-weight');
+            const bagVol = getVal('mlk-flk-bag-volume');
+            const rate = getVal('mlk-flk-rate');
+            const type = activeMixtureType;
+
+            const resDuration = getText('mlk-flk-res-duration');
+            const labelOpiate = document.getElementById('mlk-flk-res-label-opiate') ? document.getElementById('mlk-flk-res-label-opiate').textContent : "Опіат:";
+            const valOpiate = getText('mlk-flk-res-val-opiate');
+            const subOpiate = getText('mlk-flk-res-sub-opiate');
+            
+            const valLido = getText('mlk-flk-res-val-lidocaine');
+            const subLido = getText('mlk-flk-res-sub-lidocaine');
+
+            const valKeta = getText('mlk-flk-res-val-ketamine');
+            const subKeta = getText('mlk-flk-res-sub-ketamine');
+
+            const valAdded = getText('mlk-flk-res-val-added-drugs');
+            const valFinal = getText('mlk-flk-res-val-final-volume');
+
+            const mathAudit = cleanAudit('mlk-flk-audit-text');
+
+            text = `=== КЛІНІЧНИЙ РОЗРАХУНОК: КОКТЕЙЛЬ ЗНЕБОЛЕННЯ ІПС (${type}) ===
+Дата: ${currentDateStr}
+Вага пацієнта: ${weight} кг
+
+ВХІДНІ ПАРАМЕТРИ:
+- Об'єм флакону рідини: ${bagVol} мл
+- Швидкість інфузії: ${rate} мл/год
+- Склад суміші: ${type} (Лідокаїн + Кетамін + ${type === 'MLK' ? 'Морфін' : 'Фентаніл'})
+
+РЕЗУЛЬТАТИ:
+- Тривалість інфузії флакону: ${resDuration}
+- ${labelOpiate} ${valOpiate} ${subOpiate}
+- Лідокаїн (Lidocaine): ${valLido} ${subLido}
+- Кетамін (Ketamine): ${valKeta} ${subKeta}
+- Всього препаратів додати: ${valAdded}
+- Кінцевий об'єм флакону: ${valFinal}
+
+МАТЕМАТИЧНИЙ АУДИТ:
+${mathAudit}
 `;
         }
 

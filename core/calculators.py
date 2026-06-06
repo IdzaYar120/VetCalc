@@ -758,4 +758,90 @@ def calculate_toxicity(
         "charcoal_susp_max_ml": float(precise_round(charcoal_susp_max_ml, 1))
     }
 
+def calculate_mlk_flk(
+    weight_kg: float,
+    bag_volume_ml: float,
+    infusion_rate_ml_hr: float,
+    mixture_type: str,
+    morphine_dose_mg_kg_hr: float = 0.2,
+    fentanyl_dose_mcg_kg_hr: float = 3.0,
+    lidocaine_dose_mg_kg_hr: float = 2.0,
+    ketamine_dose_mg_kg_hr: float = 0.6,
+    morphine_conc_mg_ml: float = 10.0,
+    fentanyl_conc_mcg_ml: float = 50.0,
+    lidocaine_conc_mg_ml: float = 20.0,
+    ketamine_conc_mg_ml: float = 50.0
+) -> Dict[str, Any]:
+    """
+    Розраховує об'єм препаратів для постійної інфузії знеболення (MLK / FLK CRI).
+    """
+    if weight_kg <= 0:
+        raise ValueError("Вага пацієнта повинна бути строго більше 0 кг.")
+    if bag_volume_ml <= 0:
+        raise ValueError("Об'єм флакону рідини повинен бути строго більше 0 мл.")
+    if infusion_rate_ml_hr <= 0:
+        raise ValueError("Швидкість інфузії повинна бути строго більше 0 мл/год.")
+
+    w = Decimal(str(weight_kg))
+    v_bag = Decimal(str(bag_volume_ml))
+    r_inf = Decimal(str(infusion_rate_ml_hr))
+
+    duration_hr = v_bag / r_inf
+
+    m_vol = Decimal('0.0')
+    m_mg = Decimal('0.0')
+    f_vol = Decimal('0.0')
+    f_mcg = Decimal('0.0')
+
+    if mixture_type == "MLK":
+        d_morph = Decimal(str(morphine_dose_mg_kg_hr))
+        c_morph = Decimal(str(morphine_conc_mg_ml))
+        m_mg = w * d_morph * duration_hr
+        if c_morph > 0:
+            m_vol = m_mg / c_morph
+        else:
+            m_vol = Decimal('0.0')
+    elif mixture_type == "FLK":
+        d_fent = Decimal(str(fentanyl_dose_mcg_kg_hr))
+        c_fent = Decimal(str(fentanyl_conc_mcg_ml))
+        f_mcg = w * d_fent * duration_hr
+        if c_fent > 0:
+            f_vol = f_mcg / c_fent
+        else:
+            f_vol = Decimal('0.0')
+
+    d_lido = Decimal(str(lidocaine_dose_mg_kg_hr))
+    c_lido = Decimal(str(lidocaine_conc_mg_ml))
+    l_mg = w * d_lido * duration_hr
+    if c_lido > 0:
+        l_vol = l_mg / c_lido
+    else:
+        l_vol = Decimal('0.0')
+
+    d_keta = Decimal(str(ketamine_dose_mg_kg_hr))
+    c_keta = Decimal(str(ketamine_conc_mg_ml))
+    k_mg = w * d_keta * duration_hr
+    if c_keta > 0:
+        k_vol = k_mg / c_keta
+    else:
+        k_vol = Decimal('0.0')
+
+    v_total_added = l_vol + k_vol + (m_vol if mixture_type == "MLK" else f_vol)
+    v_total_bag = v_bag + v_total_added
+
+    return {
+        "infusion_duration_hr": float(precise_round(duration_hr, 2)),
+        "morphine_required_mg": float(precise_round(m_mg, 2)),
+        "morphine_volume_ml": float(precise_round(m_vol, 2)),
+        "fentanyl_required_mcg": float(precise_round(f_mcg, 2)),
+        "fentanyl_volume_ml": float(precise_round(f_vol, 2)),
+        "lidocaine_required_mg": float(precise_round(l_mg, 2)),
+        "lidocaine_volume_ml": float(precise_round(l_vol, 2)),
+        "ketamine_required_mg": float(precise_round(k_mg, 2)),
+        "ketamine_volume_ml": float(precise_round(k_vol, 2)),
+        "total_added_drugs_volume_ml": float(precise_round(v_total_added, 2)),
+        "final_bag_volume_ml": float(precise_round(v_total_bag, 2))
+    }
+
+
 
