@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vetcalc-cache-v2';
+const CACHE_NAME = 'vetcalc-cache-v3';
 const ASSETS_TO_CACHE = [
     '/',
     '/manifest.json',

@@ -167,6 +167,10 @@
                 <i data-lucide="compass" style="width: 16px; height: 16px;"></i>
                 <span>Осмолярність плазми</span>
             </button>
+            <button class="sub-chip-btn" id="chip-converter-tab" onclick="switchTab('converter-tab', this)">
+                <i data-lucide="shuffle" style="width: 16px; height: 16px;"></i>
+                <span>Швидкий конвертер</span>
+            </button>
             <button class="sub-chip-btn" id="chip-archive-tab" onclick="switchTab('archive-tab', this)">
                 <i data-lucide="archive" style="width: 16px; height: 16px;"></i>
                 <span>Архів пацієнтів (Офлайн)</span>
@@ -1536,6 +1540,98 @@
                 <div class="math-box" style="margin-top: 20px;">
                     <h4><i data-lucide="calculator" style="color: var(--primary); width: 18px; height: 18px; display: inline-flex; align-items: center; gap: 6px;"></i> <span>Покроковий осмолярний аудит:</span></h4>
                     <div class="math-formula" id="math-osmolality-formula">Розрахунок...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------- ТАБ И: ШВИДКИЙ КОНВЕРТЕР ОДИНИЦЬ ---------------- -->
+    <div id="converter-tab" class="tab-content">
+        <div class="grid-layout">
+            <!-- Конвертер Глюкози -->
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="shuffle" style="color: var(--primary);"></i>
+                    <span>Конвертер глюкози (Glucose)</span>
+                </div>
+                <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.9rem;">
+                    Конвертація рівня глюкози в крові між ммоль/л та мг/дл.
+                </p>
+                
+                <div class="form-group">
+                    <label for="conv-glucose-mmol">Глюкоза (ммоль/л)</label>
+                    <div class="input-group">
+                        <input type="number" id="conv-glucose-mmol" value="5.5" step="0.1" min="0">
+                        <span class="unit-addon">ммоль/л</span>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 10px 0; color: var(--gray-text);">
+                    <i data-lucide="chevrons-up-down" style="width: 20px; height: 20px;"></i>
+                </div>
+
+                <div class="form-group">
+                    <label for="conv-glucose-mg">Глюкоза (мг/дл)</label>
+                    <div class="input-group">
+                        <input type="number" id="conv-glucose-mg" value="99.1" step="1" min="0">
+                        <span class="unit-addon">мг/дл</span>
+                    </div>
+                </div>
+
+                <div id="conv-glucose-info" class="success-card" style="margin-top: 20px; border-left: 4px solid var(--primary-light);">
+                    <div class="success-title" style="font-weight: 600; font-size: 0.95rem; color: var(--dark);">
+                        <i data-lucide="info" style="color: var(--primary); width: 18px; height: 18px; margin-right: 6px; vertical-align: middle;"></i>
+                        <span>Клінічні орієнтири (собаки/коти)</span>
+                    </div>
+                    <div class="success-text" style="font-size: 0.85rem; color: var(--gray-text); line-height: 1.4; margin-top: 5px;">
+                        • Гіпоглікемія: &lt; 3.3 ммоль/л (&lt; 60 мг/дл)<br>
+                        • Норма (собаки): 4.1 – 6.7 ммоль/л (74 – 120 мг/дл)<br>
+                        • Норма (коти): 3.9 – 8.3 ммоль/л (70 – 150 мг/дл)<br>
+                        • Нирковий поріг: &gt; 10 ммоль/л (&gt; 180 мг/дл) для собак, &gt; 14 ммоль/л (&gt; 250 мг/дл) для котів
+                    </div>
+                </div>
+            </div>
+
+            <!-- Конвертер Температури -->
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="thermometer" style="color: var(--primary);"></i>
+                    <span>Конвертер температури (Temperature)</span>
+                </div>
+                <p style="margin-bottom: 20px; color: var(--gray-text); font-size: 0.9rem;">
+                    Конвертація температури тіла між градусами Цельсія (°C) та Фаренгейта (°F).
+                </p>
+
+                <div class="form-group">
+                    <label for="conv-temp-c">Температура (°C)</label>
+                    <div class="input-group">
+                        <input type="number" id="conv-temp-c" value="38.5" step="0.1">
+                        <span class="unit-addon">°C</span>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 10px 0; color: var(--gray-text);">
+                    <i data-lucide="chevrons-up-down" style="width: 20px; height: 20px;"></i>
+                </div>
+
+                <div class="form-group">
+                    <label for="conv-temp-f">Температура (°F)</label>
+                    <div class="input-group">
+                        <input type="number" id="conv-temp-f" value="101.3" step="0.1">
+                        <span class="unit-addon">°F</span>
+                    </div>
+                </div>
+
+                <div id="conv-temp-info" class="success-card" style="margin-top: 20px; border-left: 4px solid var(--primary-light);">
+                    <div class="success-title" style="font-weight: 600; font-size: 0.95rem; color: var(--dark);">
+                        <i data-lucide="info" style="color: var(--primary); width: 18px; height: 18px; margin-right: 6px; vertical-align: middle;"></i>
+                        <span>Клінічні орієнтири (собаки/коти)</span>
+                    </div>
+                    <div class="success-text" style="font-size: 0.85rem; color: var(--gray-text); line-height: 1.4; margin-top: 5px;">
+                        • Гіпотермія важка: &lt; 37.2 °C (&lt; 99 °F)<br>
+                        • Нормальний діапазон: 37.8 °C – 39.2 °C (100 °F – 102.5 °F)<br>
+                        • Лихоманка/Гіпертермія: &gt; 39.7 °C (&gt; 103.5 °F)
+                    </div>
                 </div>
             </div>
         </div>

@@ -2042,6 +2042,54 @@ const SVG_ICONS = {
         }
     }
 
+    // --- Швидкий конвертер медичних одиниць ---
+    function initUnitConverter() {
+        const glucoseMmol = document.getElementById('conv-glucose-mmol');
+        const glucoseMg = document.getElementById('conv-glucose-mg');
+        const tempC = document.getElementById('conv-temp-c');
+        const tempF = document.getElementById('conv-temp-f');
+
+        if (glucoseMmol && glucoseMg) {
+            glucoseMmol.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (!isNaN(val) && val >= 0) {
+                    glucoseMg.value = (val * 18.0182).toFixed(1);
+                } else {
+                    glucoseMg.value = '';
+                }
+            });
+
+            glucoseMg.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (!isNaN(val) && val >= 0) {
+                    glucoseMmol.value = (val / 18.0182).toFixed(2);
+                } else {
+                    glucoseMmol.value = '';
+                }
+            });
+        }
+
+        if (tempC && tempF) {
+            tempC.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (!isNaN(val)) {
+                    tempF.value = (val * 1.8 + 32).toFixed(1);
+                } else {
+                    tempF.value = '';
+                }
+            });
+
+            tempF.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (!isNaN(val)) {
+                    tempC.value = ((val - 32) / 1.8).toFixed(1);
+                } else {
+                    tempC.value = '';
+                }
+            });
+        }
+    }
+
     // Первинний запуск при завантаженні для ініціалізації
     document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('vetcalc_theme') || 
@@ -2051,6 +2099,7 @@ const SVG_ICONS = {
         registerServiceWorker();
         checkLegalConsent();
         initWeightSanityCheck();
+        initUnitConverter();
 
         // Ініціалізація локального архіву (IndexedDB)
         initIndexedDB()
