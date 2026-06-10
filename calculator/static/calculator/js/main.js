@@ -4222,5 +4222,40 @@ ${mathAudit}
         }, 3000);
     }
 
+    // --- Гарячі клавіші для швидкої роботи (Clinical Hotkeys) ---
+    window.addEventListener('keydown', function(e) {
+        // Орієнтуємося на літеру C/c або код клавіші KeyC
+        const isC = e.key.toLowerCase() === 'c' || e.code === 'KeyC';
+        // Орієнтуємося на літеру P/p або код клавіші KeyP
+        const isP = e.key.toLowerCase() === 'p' || e.code === 'KeyP';
+
+        const isCopy = (e.altKey && isC) || (e.ctrlKey && e.shiftKey && isC);
+        const isPrint = (e.altKey && isP) || (e.ctrlKey && e.shiftKey && isP);
+
+        if (isCopy || isPrint) {
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab) {
+                const tabToCalcType = {
+                    'cri-tab': 'cri',
+                    'fluid-tab': 'fluid',
+                    'emergency-tab': 'cpr',
+                    'anesthesia-tab': 'anesthesia',
+                    'transfusion-tab': 'transfusion',
+                    'toxicity-tab': 'toxicity',
+                    'mlk-flk-tab': 'mlk-flk'
+                };
+                const calcType = tabToCalcType[activeTab.id];
+                if (calcType) {
+                    e.preventDefault();
+                    if (isCopy) {
+                        window.copyToClipboard(calcType);
+                    } else if (isPrint) {
+                        window.printTreatmentSheet(calcType);
+                    }
+                }
+            }
+        }
+    });
+
 
 
