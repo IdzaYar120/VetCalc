@@ -2090,6 +2090,27 @@ const SVG_ICONS = {
         }
     }
 
+    // --- Кнопка швидкого скролу вгору (Scroll to Top) ---
+    function initScrollToTop() {
+        const btn = document.getElementById('scroll-to-top-btn');
+        if (!btn) return;
+
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        });
+
+        btn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+
     // Первинний запуск при завантаженні для ініціалізації
     document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('vetcalc_theme') || 
@@ -2100,6 +2121,7 @@ const SVG_ICONS = {
         checkLegalConsent();
         initWeightSanityCheck();
         initUnitConverter();
+        initScrollToTop();
 
         // Ініціалізація локального архіву (IndexedDB)
         initIndexedDB()
